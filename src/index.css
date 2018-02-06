@@ -1,0 +1,45 @@
+@import url(http://fonts.googleapis.com/css?family=Montserrat);
+
+body {
+  background-color: #e6f9ff !important;
+  font-family: montserrat;
+  font-size: 12px;
+  color: #007399;
+}
+
+header {
+  font-size: 25px;
+  text-align: center;
+}
+
+.infohead {
+    border: 1px solid #0099cc ;
+    width: 1000px;
+    margin: 10px auto;
+    text-align: left;
+    background: white;
+    border-radius: 3px;
+    padding: 10px 10px;
+    font-size: 15px;
+    box-sizing: border-box;
+    width: 80%;
+    margin: 10 10%;
+}
+
+.Welcome {
+  background: white;
+  border: 0 none;
+  border-radius: 3px;
+  box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.4);
+  padding: 20px 30px;
+  box-sizing: border-box;
+  width: 80%;
+  margin: 0 10%;
+}
+
+.App .title {
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #007399;
+  margin-bottom: 10px;
+}
