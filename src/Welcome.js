@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Patient from './Patient'
 
 // fhirclient seems pretty broken from this perspective, it doesn't
 // export anything and it puts FHIR in window; work around for now
@@ -33,7 +34,7 @@ class Welcome extends Component {
     }
     this.setState({ patients: [] });
     smart.api.search(searchParams).done(function(result) {
-      const patients = result.data.entry.map(function(entry) { return entry.resource; });
+      const patients = result.data.entry.map(function(entry) { return new Patient(entry.resource); });
       this.setState({ patients });
     }.bind(this));
   }
@@ -48,11 +49,7 @@ class Welcome extends Component {
   render() {
 
     const patientLink = function(patient) {
-      // TODO wrap patient resource in a patient object
-      const first = patient.name[0].given.join(' ');
-      const last = patient.name[0].family
-      const name = `${first} ${last}`;
-      return <div key={patient.id}><button type="button" onClick={this.handlePatientClick} id={patient.id}>{name}</button></div>;
+      return <div key={patient.id}><button type="button" onClick={this.handlePatientClick} id={patient.id}>{patient.name}</button></div>;
     }.bind(this);
 
     const patientLinks = function(patients) {

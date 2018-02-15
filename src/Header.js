@@ -5,9 +5,7 @@ function Header(props) {
   let id = '';
   const patient = props.patient;
   if (patient) {
-    const first = patient.name[0].given.join(' ');
-    const last = patient.name[0].family;
-    name = `${first} ${last}`;
+    name = patient.name;
     id = patient.id;
   }
   // TODO Add different info (maybe photo)
