@@ -28,12 +28,6 @@ class Patient {
       return false;
     }
   }
- conditions() {
-    //var pt_id = smart.patient.id;
-    //smart.api.search({type: "Condition", query: {patient: pt_id}}).then(function(r) {
-    //  callback(null, r.data);
-    //})
-  }
 }
 
 export default Patient;

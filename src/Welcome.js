@@ -25,6 +25,7 @@ class Welcome extends Component {
 
   handleSubmit(event) {
     event.preventDefault();
+    // TODO: abstract out this FHIR interface (seeing if patient provided by smart, setting URL, setting patient)
     const smart = FHIR.client({
       serviceUrl: this.state.fhirServer
     });
@@ -42,6 +43,16 @@ class Welcome extends Component {
   handlePatientClick(event) {
     event.preventDefault();
     const patient = this.state.patients.find(function(patient) { return patient.id === event.target.id; });
+    const smart = FHIR.client({
+      serviceUrl: this.state.fhirServer,
+    });
+    smart.api.search({ type: "Condition", query: { patient: patient.id } }).then(function(response) {
+      const conditions = response.data.entry;
+      // TODO: Be better to manage conditions entirely within patient
+      patient.conditions = conditions;
+    });
+    // TODO: This winds up being somewhat awkward, in that conditions on patient are
+    // set asynchronously, and we're assuming they'll be there when needed... refactor!
     this.props.setPatient(patient);
     this.props.nextStep();
   }
