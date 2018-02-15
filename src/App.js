@@ -7,10 +7,10 @@ class App extends Component {
     return (
       <div className="App">
         <h1><header>U.S. Standard Certificate of Death Form</header></h1>
-        <div class="infohead">
-          Patient Name: <span class="data" id="patient_name"></span><br/>
-          Patient ID: <span class="data" id="patient_id"></span><br/>
-          Patient Age: <span class="data" id="patient_age"></span><br/>
+        <div className="infohead">
+          Patient Name: <span className="data" id="patient_name"></span><br/>
+          Patient ID: <span className="data" id="patient_id"></span><br/>
+          Patient Age: <span className="data" id="patient_age"></span><br/>
         </div>
         <Welcome/>
       </div>
