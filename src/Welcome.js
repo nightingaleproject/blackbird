@@ -47,7 +47,7 @@ class Welcome extends Component {
       serviceUrl: this.state.fhirServer,
     });
     smart.api.search({ type: "Condition", query: { patient: patient.id } }).then(function(response) {
-      const conditions = response.data.entry;
+      const conditions = response.data.entry.map(function(entry) { return entry.resource; });
       // TODO: Be better to manage conditions entirely within patient
       patient.conditions = conditions;
     });
