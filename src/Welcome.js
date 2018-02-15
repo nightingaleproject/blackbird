@@ -42,12 +42,13 @@ class Welcome extends Component {
     event.preventDefault();
     const patient = this.state.patients.find(function(patient) { return patient.id === event.target.id; });
     this.props.setPatient(patient);
-    this.props.setStep('form1');
+    this.props.nextStep();
   }
 
   render() {
 
     const patientLink = function(patient) {
+      // TODO wrap patient resource in a patient object
       const first = patient.name[0].given.join(' ');
       const last = patient.name[0].family
       const name = `${first} ${last}`;

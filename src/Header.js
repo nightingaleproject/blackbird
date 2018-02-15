@@ -10,6 +10,7 @@ function Header(props) {
     name = `${first} ${last}`;
     id = patient.id;
   }
+  // TODO Add different info (maybe photo)
   return (
     <div className="infohead">
       Patient Name: <span className="data" id="patient_name">{name}</span><br/>

@@ -5,49 +5,42 @@ import Welcome from './Welcome';
 import Form1 from './Form1';
 import Form2 from './Form2';
 
-
-// page 1: welcome and patient search (test for SMART context)
-//    input: nothing
-//   output: selected patient
-// page 2: form page 1
-//    input: selected patient
-//   output: some fields
-// page 3: form page 2 with timeline
-//    input: selected patient
-//   output: some fields
-// page 4: form page 3 with submit
-//    input: selected patient
-//   output: some fields
-
-
 class App extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { step: 'welcome' };
+    this.state = { step: 1 };
     this.setPatient = this.setPatient.bind(this)
-    this.setStep = this.setStep.bind(this)
+    this.nextStep = this.nextStep.bind(this)
+    this.previousStep = this.previousStep.bind(this)
   }
 
   setPatient(patient) {
     this.setState({ patient });
   }
 
-  setStep(step) {
-    this.setState({ step });
+  nextStep(step) {
+    this.setState({ step: this.state.step + 1 });
+  }
+
+  previousStep(step) {
+    this.setState({ step: this.state.step - 1 });
   }
 
   render() {
 
-    const renderStep = function(stepName) {
-      switch (stepName) {
-      case 'form1':
-        return <Form1 patient={this.state.patient} setStep={this.setStep}/>;
-      case 'form2':
-        return <Form2 patient={this.state.patient} setStep={this.setStep}/>;
-      case 'welcome':
+    const renderStep = function(step) {
+      switch (step) {
+      case 2:
+        return <Form1 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} />;
+      case 3:
+        return <Form2 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} />;
+      case 4:
+        const Form3 = function(props) { return <div>FORM3</div>; }; // TODO: Placeholder
+        return <Form3 patient={this.state.patient} previousStep={this.previousStep}/>;
+      case 1:
       default:
-        return <Welcome setPatient={this.setPatient} setStep={this.setStep}/>;
+        return <Welcome setPatient={this.setPatient} nextStep={this.nextStep}/>;
       }
     }.bind(this);
 

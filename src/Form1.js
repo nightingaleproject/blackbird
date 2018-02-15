@@ -6,8 +6,6 @@ class Form1 extends Component {
     super(props);
     this.state = {};
     this.handleChange = this.handleChange.bind(this);
-    this.previous = this.previous.bind(this);
-    this.next = this.next.bind(this);
   }
 
   handleChange(event) {
@@ -15,16 +13,6 @@ class Form1 extends Component {
     this.setState({
       [target.name]: target.value
     });
-  }
-
-  next(event) {
-    event.preventDefault();
-    this.props.setStep('form2')
-  }
-
-  previous(event) {
-    event.preventDefault();
-    this.props.setStep('welcome')
   }
 
   render() {
@@ -63,8 +51,8 @@ class Form1 extends Component {
         <input className="centered" type="text" name="certifier_number"/><br/>
 
         <br/><br/>
-        <input type="button" name="previous" className="previous action-button" value="Previous" onClick={this.previous}/>
-        <input type="button" name="next" className="next action-button" value="Next" onClick={this.next}/>
+        <input type="button" name="previous" className="previous action-button" value="Previous" onClick={this.props.previousStep}/>
+        <input type="button" name="next" className="next action-button" value="Next" onClick={this.props.nextStep}/>
     
       </div>
     );
