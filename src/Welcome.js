@@ -3,15 +3,16 @@ import React, { Component } from 'react';
 // fhirclient seems pretty broken from this perspective, it doesn't
 // export anything and it puts FHIR in window; work around for now
 import nothing from 'fhirclient';
-var FHIR = window.FHIR;
+const FHIR = window.FHIR;
 
 class Welcome extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { fhirServer: 'https://syntheticmass.mitre.org/fhir', decedentName: ''};
+    this.state = { fhirServer: 'https://syntheticmass.mitre.org/fhir', decedentName: '' };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handlePatientClick = this.handlePatientClick.bind(this);
   }
 
   handleChange(event) {
@@ -30,32 +31,41 @@ class Welcome extends Component {
     if (this.state.decedentName.length > 0) {
       searchParams.name = this.state.decedentName;
     }
-    this.setState({ names: [] });
+    this.setState({ patients: [] });
     smart.api.search(searchParams).done(function(result) {
-      var names = result.data.entry.map(function(entry) {
-        var record = entry.resource;
-        var first = record.name[0].given.join(' ');
-        var last = record.name[0].family
-        return (`${first} ${last}`);
-      });
-      this.setState({ names });
+      const patients = result.data.entry.map(function(entry) { return entry.resource; });
+      this.setState({ patients });
     }.bind(this));
+  }
+
+  handlePatientClick(event) {
+    event.preventDefault();
+    const patient = this.state.patients.find(function(patient) { return patient.id === event.target.id; });
+    this.props.setPatient(patient);
+    this.props.setStep('form1');
   }
 
   render() {
 
-    const Names = function(props) {
-      if (!props.names) {
+    const patientLink = function(patient) {
+      const first = patient.name[0].given.join(' ');
+      const last = patient.name[0].family
+      const name = `${first} ${last}`;
+      return <div key={patient.id}><button type="button" onClick={this.handlePatientClick} id={patient.id}>{name}</button></div>;
+    }.bind(this);
+
+    const patientLinks = function(patients) {
+      if (!patients) {
         return <div/>;
-      } else if (props.names.length === 0) {
+      } else if (patients.length === 0) {
         return <div>Searching...</div>;
       } else {
-        return <div>{props.names.map(function(name) { return <div key={name}>{name}</div>; })}</div>;
+        return <div>{patients.map(patientLink)}</div>;
       }
     };
 
     return (
-      <div className="Welcome">
+      <div className="step">
         <h2 className="title">Welcome</h2>
         <p className="instructions">This prototype application was developed as a collaboration between the <a href="http://miblab.bme.gatech.edu">Wang Lab</a> at Georgia Tech's Wallace H. Coulter Department of Biomedical Engineering and the Centers for Disease Control.</p>
       <p className="instructions">The purpose of this application is to provide visualization, context, and decision support at the point of a patient's death, with the aim of improving the timeliness, accuracy, and completeness of mortality reporting.</p>
@@ -70,7 +80,7 @@ class Welcome extends Component {
           <br/>
           <input type="submit" value="Search"/>
         </form>
-        <Names names={this.state.names}/>
+        {patientLinks(this.state.patients)}
       </div>
     );
   }
