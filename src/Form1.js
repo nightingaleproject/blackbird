@@ -2,20 +2,17 @@ import React, { Component } from 'react';
 
 class Form1 extends Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(event) {
-    const target = event.target;
-    this.setState({
-      [target.name]: target.value
-    });
-  }
-
   render() {
+
+    const input = function(type, name) {
+      return <input type={type} name={name} value={this.props.record[name]} onChange={this.props.handleRecordChange} />;
+    }.bind(this);
+
+    const radio = function(name, value) {
+      const checked = (this.props.record[name] === value);
+      return <input type='radio' name={name} value={value} checked={checked} onChange={this.props.handleRecordChange} />;
+    }.bind(this);
+
     return (
       <div className="step">
 
@@ -23,32 +20,32 @@ class Form1 extends Component {
         <h3 className="fs-subtitle">[Items 24-28] - Must be completed by person who pronounced or certifies death</h3>
 
         Date Pronounced Dead:<br/>
-        <input className="centered" type="text" name="pronounced_death_date"/><br/>
-        Time Pronounced Dead<span className="tod-timezone"></span>:<br/>
-        <input className="centered" type="text" name="pronounced_death_time"/><br/>
+        {input('date', 'pronouncedDeathDate')}<br/>
+        Time Pronounced Dead:<br/>
+        {input('text', 'pronouncedDeathTime')}<br/>
 
-        Actual or Presumed Date of Death: <br/>
-        <input className="centered" type="text" name="actual_death_date"/><br/>
-        Actual or Presumed Time of Death<span className="tod-timezone"></span>: <br/>
-        <input className="centered" type="text" name="actual_death_time"/><br/>
+        Actual or Presumed Date of Death:<br/>
+        {input('date', 'actualDeathDate')}<br/>
+        Actual or Presumed Time of Death:<br/>
+        {input('text', 'actualDeathTime')}<br/>
 
-        Was Medical Examiner or Coroner Contacted?: <br/>
-        <input type="radio" name="examiner_contacted" value="yes" /> Yes<br/>
-        <input type="radio" name="examiner_contacted" value="no" /> No<br/>
+        Was Medical Examiner or Coroner Contacted?:<br/>
+        {radio('examinerContacted', 'yes')} Yes<br/>
+        {radio('examinerContacted', 'no')} No<br/>
 
         Was an Autopsy Performed?: <br/>
-        <input type="radio" name="autopsy" value="yes" /> Yes<br/>
-        <input type="radio" name="autopsy" value="no" /> No<br/>
+        {radio('autopsyPerformed', 'yes')} Yes<br/>
+        {radio('autopsyPerformed', 'no')} No<br/>
 
         Were Autopsy Findings Available to Complete the Case of Death?: <br/>
-        <input type="radio" name="autopsy_available" value="yes" /> Yes<br/>
-        <input type="radio" name="autopsy_available" value="no" /> No<br/><br/>
+        {radio('autopsyAvailable', 'yes')} Yes<br/>
+        {radio('autopsyAvailable', 'no')} No<br/>
 
         <h2 className="fs-title">Person Pronouncing Death</h2>
         Type your full name to electronically sign this document:<br/>
-        <input className="centered" type="text" name="certifier_name"/><br/>
+        {input('text', 'certifierName')}<br/>
         License Number: <br/>
-        <input className="centered" type="text" name="certifier_number"/><br/>
+        {input('text', 'certifierNumber')}<br/>
 
         <br/><br/>
         <input type="button" name="previous" className="previous action-button" value="Previous" onClick={this.props.previousStep}/>

@@ -82,10 +82,10 @@ class Welcome extends Component {
         <h3 className="fs-subtitle">Specify FHIR server and patient name to search for</h3>
         <form onSubmit={this.handleSubmit}>
           <label>FHIR server:</label>
-          <input type="text" name="fhirServer" value={this.state.fhirServer} onChange={this.handleChange}/>
+          <input type="text" name="fhirServer" value={this.state.fhirServer} onChange={this.handleChange} />
           <br/>
           <label>Decedent name:</label>
-          <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange}/>
+          <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange} />
           <br/>
           <input type="submit" value="Search"/>
         </form>

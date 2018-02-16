@@ -9,10 +9,23 @@ class App extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { step: 1 };
-    this.setPatient = this.setPatient.bind(this)
-    this.nextStep = this.nextStep.bind(this)
-    this.previousStep = this.previousStep.bind(this)
+    const record = {
+      pronouncedDeathDate: '',
+      pronouncedDeathTime: '',
+      actualDeathDate: '',
+      actualDeathTime: '',
+      examinerContacted: null,
+      autopsyPerformed: null,
+      autopsyAvailable: null,
+      certifierName: '',
+      certifierNumber: ''
+    };
+    // TODO: Add a FHIR.oauth2.ready that changes step to 2 when called with a valid patient
+    this.state = { step: 1, record: record };
+    this.setPatient = this.setPatient.bind(this);
+    this.nextStep = this.nextStep.bind(this);
+    this.previousStep = this.previousStep.bind(this);
+    this.handleRecordChange = this.handleRecordChange.bind(this);
   }
 
   setPatient(patient) {
@@ -27,12 +40,19 @@ class App extends Component {
     this.setState({ step: this.state.step - 1 });
   }
 
+  handleRecordChange(event) {
+    const target = event.target;
+    const newRecord = Object.assign({}, this.state.record);
+    newRecord[target.name] = target.value;
+    this.setState({ record: newRecord });
+  }
+
   render() {
 
     const renderStep = function(step) {
       switch (step) {
       case 2:
-        return <Form1 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} />;
+        return <Form1 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 3:
         return <Form2 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} />;
       case 4:
