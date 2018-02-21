@@ -77,7 +77,7 @@ class Welcome extends Component {
       <div className="step">
         <h2 className="title">Welcome</h2>
         <p className="instructions">This prototype application was developed as a collaboration between the <a href="http://miblab.bme.gatech.edu">Wang Lab</a> at Georgia Tech's Wallace H. Coulter Department of Biomedical Engineering and the Centers for Disease Control.</p>
-      <p className="instructions">The purpose of this application is to provide visualization, context, and decision support at the point of a patient's death, with the aim of improving the timeliness, accuracy, and completeness of mortality reporting.</p>
+        <p className="instructions">The purpose of this application is to provide visualization, context, and decision support at the point of a patient's death, with the aim of improving the timeliness, accuracy, and completeness of mortality reporting.</p>
         <h2 className="fs-title">Search for Decedent Record</h2>
         <h3 className="fs-subtitle">Specify FHIR server and patient name to search for</h3>
         <form onSubmit={this.handleSubmit}>

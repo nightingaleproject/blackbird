@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
+import FormPage from './FormPage';
 
-class Form2 extends Component {
+class Form2 extends FormPage {
 
   constructor(props) {
     super(props);

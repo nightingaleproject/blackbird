@@ -4,6 +4,7 @@ import Header from './Header';
 import Welcome from './Welcome';
 import Form1 from './Form1';
 import Form2 from './Form2';
+import Form3 from './Form3';
 
 class App extends Component {
 
@@ -18,7 +19,10 @@ class App extends Component {
       autopsyPerformed: null,
       autopsyAvailable: null,
       certifierName: '',
-      certifierNumber: ''
+      certifierNumber: '',
+      tobacco: null,
+      pregnancy: null,
+      mannerOfDeath: null
     };
     // TODO: Add a FHIR.oauth2.ready that changes step to 2 when called with a valid patient
     this.state = { step: 1, record: record };
@@ -54,13 +58,12 @@ class App extends Component {
       case 2:
         return <Form1 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 3:
-        return <Form2 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} />;
+        return <Form2 patient={this.state.patient} nextStep={this.nextStep} previousStep={this.previousStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 4:
-        const Form3 = function(props) { return <div>FORM3</div>; }; // TODO: Placeholder
-        return <Form3 patient={this.state.patient} previousStep={this.previousStep}/>;
+        return <Form3 patient={this.state.patient} previousStep={this.previousStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 1:
       default:
-        return <Welcome setPatient={this.setPatient} nextStep={this.nextStep}/>;
+        return <Welcome setPatient={this.setPatient} nextStep={this.nextStep} />;
       }
     }.bind(this);
 
