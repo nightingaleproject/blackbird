@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "fhirclient": "^0.1.12",
+    "lodash": "^4.17.5",
+    "moment": "^2.20.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.1.0"

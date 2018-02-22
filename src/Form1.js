@@ -40,7 +40,6 @@ class Form1 extends FormPage {
         {this.input('text', 'certifierNumber')}<br/>
 
         <br/><br/>
-        <input type="button" name="previous" className="previous action-button" value="Previous" onClick={this.props.previousStep}/>
         <input type="button" name="next" className="next action-button" value="Next" onClick={this.props.nextStep}/>
     
       </div>

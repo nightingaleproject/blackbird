@@ -7,7 +7,6 @@ class Form2 extends FormPage {
     super(props);
     this.state = {};
     this.handleChange = this.handleChange.bind(this);
-    this.handleConditionClick = this.handleConditionClick.bind(this);
   }
 
   handleChange(event) {
@@ -17,18 +16,11 @@ class Form2 extends FormPage {
     });
   }
 
-  handleConditionClick(event) {
-    event.preventDefault();
-    const condition = this.props.patient.conditions.find(function(condition) { return condition.id === event.target.id; });
-    const text = condition.code.coding[0].display;
-    console.log(text);
-  }
-
   render() {
 
     const conditionLink = function(condition) {
       const text = condition.code.coding[0].display;
-      return <div key={condition.id}><button type="button" onClick={this.handleConditionClick} id={condition.id}>{text}</button></div>;
+      return <div key={condition.id}><button type="button" onClick={this.props.handleConditionClick} id={condition.id}>{text}</button></div>;
     }.bind(this);
 
     const conditionLinks = function(conditions) {
@@ -44,6 +36,19 @@ class Form2 extends FormPage {
         <h2 className="title">Death Certification</h2>
         <p>The patient has {this.props.patient.conditions.length} conditions:</p>
         {conditionLinks(this.props.patient.conditions)}
+
+        {this.input('text', 'cod1Text')}
+        {this.input('text', 'cod1Time')}<br/>
+
+        {this.input('text', 'cod2Text')}
+        {this.input('text', 'cod2Time')}<br/>
+
+        {this.input('text', 'cod3Text')}
+        {this.input('text', 'cod3Time')}<br/>
+
+        {this.input('text', 'cod4Text')}
+        {this.input('text', 'cod4Time')}<br/>
+
         <input type="button" name="previous" className="previous action-button" value="Previous" onClick={this.props.previousStep}/>
         <input type="button" name="next" className="next action-button" value="Next" onClick={this.props.nextStep}/>
       </div>
