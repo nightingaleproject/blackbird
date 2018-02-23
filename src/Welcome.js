@@ -3,7 +3,7 @@ import Patient from './Patient'
 
 // fhirclient seems pretty broken from this perspective, it doesn't
 // export anything and it puts FHIR in window; work around for now
-import nothing from 'fhirclient';
+import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
 const FHIR = window.FHIR;
 
 class Welcome extends Component {
