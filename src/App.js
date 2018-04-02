@@ -4,9 +4,10 @@ import moment from 'moment';
 import './App.css';
 import Header from './Header';
 import Welcome from './Welcome';
-import Form1 from './Form1';
-import Form2 from './Form2';
-import Form3 from './Form3';
+import PronounceForm from './PronounceForm';
+import CauseOfDeathForm from './CauseOfDeathForm';
+import AdditionalQuestionsForm from './AdditionalQuestionsForm';
+import Validate from './Validate';
 
 class App extends Component {
 
@@ -34,11 +35,10 @@ class App extends Component {
       pregnancy: null,
       mannerOfDeath: null
     };
-    // TODO: Add a FHIR.oauth2.ready that changes step to 2 when called with a valid patient
-    this.state = { step: 1, record: record, conditions: [] };
+    // TODO: Add a FHIR.oauth2.ready that changes step to Pronounce when called with a valid patient
+    this.state = { step: 'Welcome', record: record, conditions: [] };
     this.setPatient = this.setPatient.bind(this);
-    this.nextStep = this.nextStep.bind(this);
-    this.previousStep = this.previousStep.bind(this);
+    this.gotoStep = this.gotoStep.bind(this);
     this.handleRecordChange = this.handleRecordChange.bind(this);
     this.handleConditionClick = this.handleConditionClick.bind(this);
   }
@@ -47,12 +47,8 @@ class App extends Component {
     this.setState({ patient });
   }
 
-  nextStep(step) {
-    this.setState((prevState) => ({ step: prevState.step + 1 }));
-  }
-
-  previousStep(step) {
-    this.setState((prevState) => ({ step: prevState.step - 1 }));
+  gotoStep(newStep) {
+    this.setState({ step: newStep });
   }
 
   updateRecord(field, value) {
@@ -100,15 +96,17 @@ class App extends Component {
 
     const renderStep = function(step) {
       switch (step) {
-      case 2:
-        return <Form1 patient={this.state.patient} nextStep={this.nextStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
-      case 3:
-        return <Form2 patient={this.state.patient} previousStep={this.previousStep} nextStep={this.nextStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
-      case 4:
-        return <Form3 patient={this.state.patient} previousStep={this.previousStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
-      case 1:
+      case 'Pronounce':
+        return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+      case 'CauseOfDeath':
+        return <CauseOfDeathForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
+      case 'AdditionalQuestions':
+        return <AdditionalQuestionsForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+      case 'Validate':
+        return <Validate patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+      case 'Welcome':
       default:
-        return <Welcome setPatient={this.setPatient} nextStep={this.nextStep} />;
+        return <Welcome setPatient={this.setPatient} gotoStep={this.gotoStep} />;
       }
     }.bind(this);
 

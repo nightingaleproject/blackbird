@@ -54,7 +54,7 @@ class Welcome extends Component {
     // TODO: This winds up being somewhat awkward, in that conditions on patient are
     // set asynchronously, and we're assuming they'll be there when needed... refactor!
     this.props.setPatient(patient);
-    this.props.nextStep();
+    this.props.gotoStep('Pronounce');
   }
 
   render() {

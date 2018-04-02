@@ -43,3 +43,7 @@ header {
   color: #007399;
   margin-bottom: 10px;
 }
+
+.timeline .menu .item {
+  font-size: 0.7em;
+}

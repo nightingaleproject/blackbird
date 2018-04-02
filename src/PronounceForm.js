@@ -1,12 +1,15 @@
 import React from 'react';
 import FormPage from './FormPage';
 
-class Form1 extends FormPage {
+class PronounceForm extends FormPage {
 
   render() {
 
     return (
+
       <div className="step">
+
+        {this.menu('Pronounce')}
 
         <h2 className="title">Death Certification</h2>
         <h3 className="fs-subtitle">[Items 24-28] - Must be completed by person who pronounced or certifies death</h3>
@@ -38,9 +41,6 @@ class Form1 extends FormPage {
         {this.input('text', 'certifierName')}<br/>
         License Number: <br/>
         {this.input('text', 'certifierNumber')}<br/>
-
-        <br/><br/>
-        <input type="button" name="next" className="next action-button" value="Next" onClick={this.props.nextStep}/>
     
       </div>
     );
@@ -48,4 +48,4 @@ class Form1 extends FormPage {
 
 }
 
-export default Form1;
+export default PronounceForm;

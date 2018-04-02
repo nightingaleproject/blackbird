@@ -1,12 +1,14 @@
 import React from 'react';
 import FormPage from './FormPage';
 
-class Form3 extends FormPage {
+class AdditionalQuestionsForm extends FormPage {
 
   render() {
 
     return (
       <div className="step">
+
+        {this.menu('AdditionalQuestions')}
 
         <h2 className="fs-title">Manner of Death</h2>
 
@@ -31,8 +33,7 @@ class Form3 extends FormPage {
         {this.radio('mannerOfDeath', '185973002')} Pending Investigation<br/>
         {this.radio('mannerOfDeath', '65037004')} Could not be Determined<br/>
 
-        <input type="button" name="previous" className="previous action-button" value="Previous" onClick={this.props.previousStep}/>
-        <input type="button" name="submit" value="Submit"/>
+        <input type="button" name="submit" value="Submit" onClick={() => this.props.gotoStep('Validate')} />
     
       </div>
     );
@@ -40,4 +41,4 @@ class Form3 extends FormPage {
 
 }
 
-export default Form3;
+export default AdditionalQuestionsForm;
