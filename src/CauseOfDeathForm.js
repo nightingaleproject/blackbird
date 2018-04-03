@@ -1,56 +1,24 @@
 import React from 'react';
+import { Grid } from 'semantic-ui-react';
 import FormPage from './FormPage';
-import { Menu } from 'semantic-ui-react';
+import Timeline from './Timeline';
 
 class CauseOfDeathForm extends FormPage {
 
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(event) {
-    const target = event.target;
-    this.setState({
-      [target.name]: target.value
-    });
-  }
-
   render() {
-
-    const conditionLink = function(condition) {
-      const text = condition.code.coding[0].display;
-      return <div key={condition.id}><button type="button" onClick={this.props.handleConditionClick} id={condition.id}>{text}</button></div>;
-    }.bind(this);
-
-    const conditionLinks = function(conditions) {
-      if (!conditions || conditions.length === 0) {
-        return <div>No conditions found</div>;
-      } else {
-        return <div>{conditions.map(conditionLink)}</div>;
-      }
-    };
 
     return (
       <div className="step">
 
         {this.menu('CauseOfDeath')}
 
-        <div className="ui grid">
+        <Grid>
 
-          <div className="six wide column timeline">
-            <Menu tabular>
-              <Menu.Item name="Conditions" active={true} />
-              <Menu.Item name="Procedures" />
-              <Menu.Item name="Tests" />
-              <Menu.Item name="Medications" />
-            </Menu>
-            <p>The patient has {this.props.patient.conditions.length} conditions:</p>
-            {conditionLinks(this.props.patient.conditions)}
-          </div>
+          <Grid.Column width={6}>
+            <Timeline patient={this.props.patient} handleConditionClick={this.props.handleConditionClick} />
+          </Grid.Column>
 
-          <div className="ten wide column">
+          <Grid.Column width={10}>
             <h2 className="title">Death Certification</h2>
 
             {this.input('text', 'cod1Text')}
@@ -64,9 +32,9 @@ class CauseOfDeathForm extends FormPage {
 
             {this.input('text', 'cod4Text')}
             {this.input('text', 'cod4Time')}<br/>
-          </div>
+          </Grid.Column>
 
-        </div>
+        </Grid>
 
       </div>
     );
