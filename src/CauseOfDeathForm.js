@@ -15,7 +15,7 @@ class CauseOfDeathForm extends FormPage {
         <Grid>
 
           <Grid.Column width={6}>
-            <Timeline patient={this.props.patient} handleConditionClick={this.props.handleConditionClick} />
+            <Timeline conditions={this.props.conditions} medications={this.props.medications} procedures={this.props.procedures} observations={this.props.observations} handleConditionClick={this.props.handleConditionClick} />
           </Grid.Column>
 
           <Grid.Column width={10}>

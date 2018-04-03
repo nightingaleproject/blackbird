@@ -28,39 +28,55 @@ class Timeline extends Component {
       }
     };
 
+    // TODO: Use common code for these conditions, procedures, etc
     const Conditions = function(props) {
-      const conditions = props.patient.conditions;
+      const conditions = props.conditions || [];
       return (
         <div>
-          <p>The patient has {conditions ? conditions.length : 0} conditions:</p>
-          {conditionLinks(props.patient.conditions)}
+          <p>The patient has {conditions.length} condition{conditions.length === 1 ? '' : 's'}:</p>
+          {conditionLinks(props.conditions)}
         </div>
       );
     }
 
     const Procedures = function(props) {
-      return <div>Procedures</div>;
+      const procedures = props.procedures || [];
+      return (
+        <div>
+          <p>The patient has {procedures.length} procedure{procedures.length === 1 ? '' : 's'}:</p>
+        </div>
+      );
     }
 
     const Tests = function(props) {
-      return <div>Tests</div>;
+      const observations = props.observations || [];
+      return (
+        <div>
+          <p>The patient has {observations.length} test{observations.length === 1 ? '' : 's'}:</p>
+        </div>
+      );
     }
 
     const Medications = function(props) {
-      return <div>Medications</div>;
+      const medications = props.medications || [];
+      return (
+        <div>
+          <p>The patient has {medications.length} medication{medications.length === 1 ? '' : 's'}:</p>
+        </div>
+      );
     }
 
     const renderTab = function(tab) {
       switch (tab) {
       case 'Procedures':
-        return <Procedures patient={this.props.patient} />;
+        return <Procedures procedures={this.props.procedures} />;
       case 'Tests':
-        return <Tests patient={this.props.patient} />;
+        return <Tests observations={this.props.observations} />;
       case 'Medications':
-        return <Medications patient={this.props.patient} />;
+        return <Medications medications={this.props.medications} />;
       case 'Conditions':
       default:
-        return <Conditions patient={this.props.patient} />;
+        return <Conditions conditions={this.props.conditions} />;
       }
     }.bind(this);
 

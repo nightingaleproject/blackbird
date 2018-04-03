@@ -36,8 +36,9 @@ class App extends Component {
       mannerOfDeath: null
     };
     // TODO: Add a FHIR.oauth2.ready that changes step to Pronounce when called with a valid patient
-    this.state = { step: 'Welcome', record: record, conditions: [] };
+    this.state = { step: 'Welcome', record: record, selectedConditions: [] };
     this.setPatient = this.setPatient.bind(this);
+    this.setResources = this.setResources.bind(this);
     this.gotoStep = this.gotoStep.bind(this);
     this.handleRecordChange = this.handleRecordChange.bind(this);
     this.handleConditionClick = this.handleConditionClick.bind(this);
@@ -45,6 +46,10 @@ class App extends Component {
 
   setPatient(patient) {
     this.setState({ patient });
+  }
+
+  setResources(resourceName, resources) {
+    this.setState({ [resourceName]: resources });
   }
 
   gotoStep(newStep) {
@@ -68,16 +73,16 @@ class App extends Component {
   // TODO: We'll want an interface that allows text to be edited, condition order to be changed, conditions to be added manually, etc
   handleConditionClick(event) {
     event.preventDefault();
-    const clickedCondition = this.state.patient.conditions.find(function(condition) { return condition.id === event.target.id; });
+    const clickedCondition = this.state.conditions.find(function(condition) { return condition.id === event.target.id; });
     // First update our internal conditions state, adding or subtracting as needed and sorting by onset
-    let newConditions = this.state.conditions.slice(); // Create a new copy of the array
+    let newConditions = this.state.selectedConditions.slice(); // Create a new copy of the array
     if (newConditions.some(function(condition) { return condition.id === clickedCondition.id })) {
       newConditions = newConditions.filter(function(condition) { return condition.id !== clickedCondition.id });
     } else {
       newConditions.push(clickedCondition);
       newConditions = _.sortBy(newConditions, function(condition) { return moment(condition.onsetDateTime); });
     }
-    this.setState({ conditions: newConditions });
+    this.setState({ selectedConditions: newConditions });
     // Then update the user display of the conditions
     for (let i = 0; i < 4; i++) {
       if (newConditions[i]) {
@@ -99,14 +104,14 @@ class App extends Component {
       case 'Pronounce':
         return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 'CauseOfDeath':
-        return <CauseOfDeathForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
+        return <CauseOfDeathForm conditions={this.state.conditions} medications={this.state.medications} procedures={this.state.procedures} observations={this.state.observations} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
       case 'AdditionalQuestions':
         return <AdditionalQuestionsForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 'Validate':
         return <Validate patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 'Welcome':
       default:
-        return <Welcome setPatient={this.setPatient} gotoStep={this.gotoStep} />;
+        return <Welcome setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;
       }
     }.bind(this);
 

@@ -46,13 +46,27 @@ class Welcome extends Component {
     const smart = FHIR.client({
       serviceUrl: this.state.fhirServer,
     });
+    // TODO: refactor these 4 searches to use common code
     smart.api.search({ type: "Condition", query: { patient: patient.id } }).then(function(response) {
-      const conditions = response.data.entry.map(function(entry) { return entry.resource; });
-      // TODO: Be better to manage conditions entirely within patient
-      patient.conditions = conditions;
-    });
-    // TODO: This winds up being somewhat awkward, in that conditions on patient are
-    // set asynchronously, and we're assuming they'll be there when needed... refactor!
+      if (response.data.entry) {
+        this.props.setResources('conditions', response.data.entry.map(function(entry) { return entry.resource; }))
+      }
+    }.bind(this));
+    smart.api.search({ type: "MedicationRequest", query: { patient: patient.id } }).then(function(response) {
+      if (response.data.entry) {
+        this.props.setResources('medications', response.data.entry.map(function(entry) { return entry.resource; }))
+      }
+    }.bind(this));
+    smart.api.search({ type: "Procedure", query: { patient: patient.id } }).then(function(response) {
+      if (response.data.entry) {
+        this.props.setResources('procedures', response.data.entry.map(function(entry) { return entry.resource; }))
+      }
+    }.bind(this));
+    smart.api.search({ type: "Observation", query: { patient: patient.id } }).then(function(response) {
+      if (response.data.entry) {
+        this.props.setResources('observations', response.data.entry.map(function(entry) { return entry.resource; }))
+      }
+    }.bind(this));
     this.props.setPatient(patient);
     this.props.gotoStep('Pronounce');
   }
