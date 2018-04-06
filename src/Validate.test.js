@@ -1,7 +1,7 @@
 import React from 'react';
-import App from './App';
+import Validate from './Validate';
 import { mount } from 'enzyme';
 
 it('renders without crashing', () => {
-  mount(<App/>);
+  mount(<Validate/>);
 });
