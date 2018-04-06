@@ -1,20 +1,15 @@
 import React from 'react';
+import { Menu } from 'semantic-ui-react';
+import PatientCard from './PatientCard';
 
 function Header(props) {
-  const patient = props.patient;
-  let name = '';
-  let id = '';
-  let age = '';
-  if (patient) {
-    name = patient.name;
-    id = patient.id;
-    age = patient.age;
-  }
   return (
-    <div className="infohead">
-      Patient Name: <span className="data" id="patient_name">{name}</span><br/>
-      Patient ID: <span className="data" id="patient_id">{id}</span><br/>
-      Patient Age: <span className="data" id="patient_age">{age}</span><br/>
+    <div>
+      <Menu>
+        <Menu.Item header>U.S. Standard Certificate of Death</Menu.Item>
+        <Menu.Item name='about' position='right' />
+      </Menu>
+      <PatientCard patient={props.patient} />
     </div>
   );
 }

@@ -6,11 +6,11 @@ class AdditionalQuestionsForm extends FormPage {
   render() {
 
     return (
-      <div className="step">
+      <div>
 
         {this.menu('AdditionalQuestions')}
 
-        <h2 className="fs-title">Manner of Death</h2>
+        <h2>Manner of Death</h2>
 
         Did tobacco use contribute to death?: <br/>
         {this.radio('tobacco', '373066001')} Yes<br/>

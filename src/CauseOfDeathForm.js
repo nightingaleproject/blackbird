@@ -8,7 +8,7 @@ class CauseOfDeathForm extends FormPage {
   render() {
 
     return (
-      <div className="step">
+      <div>
 
         {this.menu('CauseOfDeath')}
 
@@ -19,7 +19,7 @@ class CauseOfDeathForm extends FormPage {
           </Grid.Column>
 
           <Grid.Column width={10}>
-            <h2 className="title">Death Certification</h2>
+            <h2>Death Certification</h2>
 
             {this.input('text', 'cod1Text')}
             {this.input('text', 'cod1Time')}<br/>

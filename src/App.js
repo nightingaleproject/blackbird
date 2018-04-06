@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import _ from 'lodash';
 import moment from 'moment';
-import './App.css';
 import Header from './Header';
 import Welcome from './Welcome';
 import PronounceForm from './PronounceForm';
@@ -117,7 +116,6 @@ class App extends Component {
 
     return (
       <div className="App">
-        <h1><header>U.S. Standard Certificate of Death Form</header></h1>
         <Header patient={this.state.patient}/>
         {renderStep(this.state.step)}
       </div>

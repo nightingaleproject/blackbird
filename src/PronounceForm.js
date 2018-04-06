@@ -7,12 +7,11 @@ class PronounceForm extends FormPage {
 
     return (
 
-      <div className="step">
+      <div>
 
         {this.menu('Pronounce')}
 
-        <h2 className="title">Death Certification</h2>
-        <h3 className="fs-subtitle">[Items 24-28] - Must be completed by person who pronounced or certifies death</h3>
+        <h2>Death Certification</h2>
 
         Date Pronounced Dead:<br/>
         {this.input('date', 'pronouncedDeathDate')}<br/>
@@ -36,7 +35,7 @@ class PronounceForm extends FormPage {
         {this.radio('autopsyAvailable', 'yes')} Yes<br/>
         {this.radio('autopsyAvailable', 'no')} No<br/>
 
-        <h2 className="fs-title">Person Pronouncing Death</h2>
+        <h2>Person Pronouncing Death</h2>
         Type your full name to electronically sign this document:<br/>
         {this.input('text', 'certifierName')}<br/>
         License Number: <br/>
