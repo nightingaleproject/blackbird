@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Form, Button } from 'semantic-ui-react';
 import Patient from './Patient'
 
 // fhirclient seems pretty broken from this perspective, it doesn't
@@ -94,15 +95,17 @@ class Welcome extends Component {
         <p>The purpose of this application is to provide visualization, context, and decision support at the point of a patient's death, with the aim of improving the timeliness, accuracy, and completeness of mortality reporting.</p>
         <h2>Search for Decedent Record</h2>
         <h3>Specify FHIR server and patient name to search for</h3>
-        <form onSubmit={this.handleSubmit}>
-          <label>FHIR server:</label>
-          <input type="text" name="fhirServer" value={this.state.fhirServer} onChange={this.handleChange} />
-          <br/>
-          <label>Decedent name:</label>
-          <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange} />
-          <br/>
-          <input type="submit" value="Search"/>
-        </form>
+        <Form onSubmit={this.handleSubmit}>
+          <Form.Field>
+            <label>FHIR server:</label>
+            <input type="text" name="fhirServer" value={this.state.fhirServer} onChange={this.handleChange} />
+          </Form.Field>
+          <Form.Field>
+            <label>Decedent name:</label>
+            <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange} />
+          </Form.Field>
+          <Button type="submit">Search</Button>
+        </Form>
         {patientLinks(this.state.patients)}
       </div>
     );

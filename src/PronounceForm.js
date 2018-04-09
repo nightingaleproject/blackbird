@@ -1,4 +1,5 @@
 import React from 'react';
+import { Form } from 'semantic-ui-react';
 import FormPage from './FormPage';
 
 class PronounceForm extends FormPage {
@@ -11,35 +12,57 @@ class PronounceForm extends FormPage {
 
         {this.menu('Pronounce')}
 
-        <h2>Death Certification</h2>
+        <Form>
+          <Form.Field>
+            <label>Date Pronounced Dead:</label>
+            {this.input('date', 'pronouncedDeathDate')}
+          </Form.Field>
 
-        Date Pronounced Dead:<br/>
-        {this.input('date', 'pronouncedDeathDate')}<br/>
-        Time Pronounced Dead:<br/>
-        {this.input('text', 'pronouncedDeathTime')}<br/>
+          <Form.Field>
+            <label>Time Pronounced Dead:</label>
+            {this.input('text', 'pronouncedDeathTime')}
+          </Form.Field>
 
-        Actual or Presumed Date of Death:<br/>
-        {this.input('date', 'actualDeathDate')}<br/>
-        Actual or Presumed Time of Death:<br/>
-        {this.input('text', 'actualDeathTime')}<br/>
+          <Form.Field>
+            <label>Actual or Presumed Date of Death:</label>
+            {this.input('date', 'actualDeathDate')}
+          </Form.Field>
 
-        Was Medical Examiner or Coroner Contacted?:<br/>
-        {this.radio('examinerContacted', 'yes')} Yes<br/>
-        {this.radio('examinerContacted', 'no')} No<br/>
+          <Form.Field>
+            <label>Actual or Presumed Time of Death:</label>
+            {this.input('text', 'actualDeathTime')}
+          </Form.Field>
 
-        Was an Autopsy Performed?: <br/>
-        {this.radio('autopsyPerformed', 'yes')} Yes<br/>
-        {this.radio('autopsyPerformed', 'no')} No<br/>
+          <Form.Field>
+            <label>Was Medical Examiner or Coroner Contacted?:</label>
+          </Form.Field>
+          {this.radio('Yes', 'examinerContacted', 'yes')}
+          {this.radio('No', 'examinerContacted', 'no')}
 
-        Were Autopsy Findings Available to Complete the Case of Death?: <br/>
-        {this.radio('autopsyAvailable', 'yes')} Yes<br/>
-        {this.radio('autopsyAvailable', 'no')} No<br/>
+          <Form.Field>
+            <label>Was an Autopsy Performed?:</label>
+          </Form.Field>
+          {this.radio('Yes', 'autopsyPerformed', 'yes')}
+          {this.radio('No', 'autopsyPerformed', 'no')}
 
-        <h2>Person Pronouncing Death</h2>
-        Type your full name to electronically sign this document:<br/>
-        {this.input('text', 'certifierName')}<br/>
-        License Number: <br/>
-        {this.input('text', 'certifierNumber')}<br/>
+          <Form.Field>
+            <label>Were Autopsy Findings Available to Complete the Case of Death?:</label>
+          </Form.Field>
+          {this.radio('Yes', 'autopsyAvailable', 'yes')}
+          {this.radio('No', 'autopsyAvailable', 'no')}
+
+          <h2>Person Pronouncing Death</h2>
+
+          <Form.Field>
+            <label>Type your full name to electronically sign this document:</label>
+            {this.input('text', 'certifierName')}
+          </Form.Field>
+
+          <Form.Field>
+            <label>License Number:</label>
+            {this.input('text', 'certifierNumber')}
+          </Form.Field>
+        </Form>
     
       </div>
     );

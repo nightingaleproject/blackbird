@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Menu } from 'semantic-ui-react';
+import { Menu, Form, Radio } from 'semantic-ui-react';
 
 class FormPage extends Component {
 
@@ -23,9 +23,16 @@ class FormPage extends Component {
     return <input type={type} name={name} value={this.props.record[name]} onChange={this.props.handleRecordChange} />;
   }
 
-  radio(name, value) {
+  radio(label, name, value) {
     const checked = (this.props.record[name] === value);
-    return <input type='radio' name={name} value={value} checked={checked} onChange={this.props.handleRecordChange} />;
+    // TODO: The Radio component sends handleRecordChange different arguments (an event with the wrong target
+    // and a second argument containing the change)
+    return (
+        <Form.Field>
+          <input type='radio' name={name} value={value} checked={checked} onChange={this.props.handleRecordChange} />
+          {label}
+        </Form.Field>
+    );
   }
 }
 
