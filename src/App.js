@@ -101,7 +101,7 @@ class App extends Component {
 
     const renderStep = function(step) {
       switch (step) {
-      case 'Pronounce':
+      case 'Pronouncing':
         return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 'CauseOfDeath':
         return <CauseOfDeathForm conditions={this.state.conditions} medications={this.state.medications} procedures={this.state.procedures} observations={this.state.observations} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;

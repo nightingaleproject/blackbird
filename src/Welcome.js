@@ -69,7 +69,7 @@ class Welcome extends Component {
       }
     }.bind(this));
     this.props.setPatient(patient);
-    this.props.gotoStep('Pronounce');
+    this.props.gotoStep('Pronouncing');
   }
 
   render() {

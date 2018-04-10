@@ -10,7 +10,7 @@ class PronounceForm extends FormPage {
 
       <div>
 
-        {this.menu('Pronounce')}
+        {this.menu('Pronouncing', ['pronouncedDeathDate', 'pronouncedDeathTime', 'actualDeathDate', 'actualDeathTime', ])}
 
         <Form>
           <Form.Field>
