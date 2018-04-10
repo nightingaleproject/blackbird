@@ -40,7 +40,7 @@ class App extends Component {
     };
     // First page depends on whether we're running in a SMART on FHIR context or not
     if (props.smart) {
-      this.state = { step: 'Pronounce', record: record, selectedConditions: [] };
+      this.state = { step: 'Pronouncing', record: record, selectedConditions: [] };
     } else {
       this.state = { step: 'Welcome', record: record, selectedConditions: [] };
     }
@@ -123,7 +123,7 @@ class App extends Component {
 
     const renderStep = function(step) {
       switch (step) {
-      case 'Pronounce':
+      case 'Pronouncing':
         return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
       case 'CauseOfDeath':
         return <CauseOfDeathForm conditions={this.state.conditions} medications={this.state.medications} procedures={this.state.procedures} observations={this.state.observations} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
