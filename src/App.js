@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
+import { Grid } from 'semantic-ui-react';
 import _ from 'lodash';
 import moment from 'moment';
 import Header from './Header';
+import PatientCard from './PatientCard';
 import Welcome from './Welcome';
 import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
@@ -63,16 +65,15 @@ class App extends Component {
     });
   }
 
-  handleRecordChange(event) {
-    const target = event.target;
-    this.updateRecord(target.name, target.value);
+  handleRecordChange(event, data) {
+    this.updateRecord(data.name, data.value);
   }
 
   // Add/remove a condition from the patient record to/from the death record
   // TODO: We'll want an interface that allows text to be edited, condition order to be changed, conditions to be added manually, etc
-  handleConditionClick(event) {
+  handleConditionClick(event, data) {
     event.preventDefault();
-    const clickedCondition = this.state.conditions.find(function(condition) { return condition.id === event.target.id; });
+    const clickedCondition = this.state.conditions.find(function(condition) { return condition.id === data.id; });
     // First update our internal conditions state, adding or subtracting as needed and sorting by onset
     let newConditions = this.state.selectedConditions.slice(); // Create a new copy of the array
     if (newConditions.some(function(condition) { return condition.id === clickedCondition.id })) {
@@ -115,10 +116,13 @@ class App extends Component {
     }.bind(this);
 
     return (
-      <div className="App">
-        <Header patient={this.state.patient}/>
-        {renderStep(this.state.step)}
-      </div>
+        <div className="App">
+          <Header/>
+          <Grid container>
+            <PatientCard patient={this.state.patient} />
+            {renderStep(this.state.step)}
+          </Grid>
+        </div>
     );
 
   }

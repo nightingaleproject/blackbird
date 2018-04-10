@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Button } from 'semantic-ui-react';
+import { Form, Button, Card } from 'semantic-ui-react';
 import Patient from './Patient'
 
 // fhirclient seems pretty broken from this perspective, it doesn't
@@ -41,9 +41,9 @@ class Welcome extends Component {
     }.bind(this));
   }
 
-  handlePatientClick(event) {
+  handlePatientClick(event, data) {
     event.preventDefault();
-    const patient = this.state.patients.find(function(patient) { return patient.id === event.target.id; });
+    const patient = this.state.patients.find(function(patient) { return patient.id === data.id; });
     const smart = FHIR.client({
       serviceUrl: this.state.fhirServer,
     });
@@ -75,7 +75,7 @@ class Welcome extends Component {
   render() {
 
     const patientLink = function(patient) {
-      return <div key={patient.id}><button type="button" onClick={this.handlePatientClick} id={patient.id}>{patient.name}</button></div>;
+      return <Card key={patient.id} onClick={this.handlePatientClick} id={patient.id} header={patient.name} />;
     }.bind(this);
 
     const patientLinks = function(patients) {

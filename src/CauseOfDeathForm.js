@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid } from 'semantic-ui-react';
+import { Grid, Form } from 'semantic-ui-react';
 import FormPage from './FormPage';
 import Timeline from './Timeline';
 
@@ -14,24 +14,34 @@ class CauseOfDeathForm extends FormPage {
 
         <Grid>
 
-          <Grid.Column width={6}>
+          <Grid.Column width={8}>
             <Timeline conditions={this.props.conditions} medications={this.props.medications} procedures={this.props.procedures} observations={this.props.observations} handleConditionClick={this.props.handleConditionClick} />
           </Grid.Column>
 
-          <Grid.Column width={10}>
-            <h2>Death Certification</h2>
+          <Grid.Column width={8}>
 
-            {this.input('text', 'cod1Text')}
-            {this.input('text', 'cod1Time')}<br/>
+            <Form>
+              <Form.Group>
+                {this.input('text', 'cod1Text')}
+                {this.input('text', 'cod1Time')}
+              </Form.Group>
 
-            {this.input('text', 'cod2Text')}
-            {this.input('text', 'cod2Time')}<br/>
+              <Form.Group>
+                {this.input('text', 'cod2Text')}
+                {this.input('text', 'cod2Time')}
+              </Form.Group>
 
-            {this.input('text', 'cod3Text')}
-            {this.input('text', 'cod3Time')}<br/>
+              <Form.Group>
+                {this.input('text', 'cod3Text')}
+                {this.input('text', 'cod3Time')}
+              </Form.Group>
 
-            {this.input('text', 'cod4Text')}
-            {this.input('text', 'cod4Time')}<br/>
+              <Form.Group>
+                {this.input('text', 'cod4Text')}
+                {this.input('text', 'cod4Time')}
+              </Form.Group>
+            </Form>
+
           </Grid.Column>
 
         </Grid>

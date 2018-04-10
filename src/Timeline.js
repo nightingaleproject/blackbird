@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Menu } from 'semantic-ui-react';
+import { Menu, Card } from 'semantic-ui-react';
 
 class Timeline extends Component {
 
@@ -17,7 +17,7 @@ class Timeline extends Component {
 
     const conditionLink = function(condition) {
       const text = condition.code.coding[0].display;
-      return <div key={condition.id}><button type="button" onClick={this.props.handleConditionClick} id={condition.id}>{text}</button></div>;
+      return <Card header={text} key={condition.id} onClick={this.props.handleConditionClick} id={condition.id} />;
     }.bind(this);
 
     const conditionLinks = function(conditions) {
