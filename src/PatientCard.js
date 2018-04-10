@@ -1,7 +1,5 @@
 import React from 'react';
-import { Card, Grid } from 'semantic-ui-react'
-import FontAwesome from '@fortawesome/react-fontawesome'
-import { faUserCircle } from '@fortawesome/fontawesome-free-solid'
+import { Card, Grid, Icon } from 'semantic-ui-react'
 
 function PatientCard(props) {
   const patient = props.patient;
@@ -10,7 +8,7 @@ function PatientCard(props) {
         <Card fluid>
           <Grid columns={2}>
             <Grid.Column width={2}>
-              <FontAwesome icon={faUserCircle} size="6x" />
+              <Icon name='user circle' size='huge' />
             </Grid.Column>
             <Grid.Column width={14}>
               <Card.Header>{patient.name}</Card.Header>
