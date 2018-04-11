@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Grid } from 'semantic-ui-react';
 import _ from 'lodash';
 import moment from 'moment';
+import Patient from './Patient';
 import Header from './Header';
 import PatientCard from './PatientCard';
 import Welcome from './Welcome';
@@ -9,6 +10,11 @@ import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
 import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import Validate from './Validate';
+
+// fhirclient seems pretty broken from this perspective, it doesn't
+// export anything and it puts FHIR in window; work around for now
+import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
+const FHIR = window.FHIR;
 
 class App extends Component {
 
@@ -36,13 +42,25 @@ class App extends Component {
       pregnancy: null,
       mannerOfDeath: null
     };
-    // TODO: Add a FHIR.oauth2.ready that changes step to Pronounce when called with a valid patient
     this.state = { step: 'Welcome', record: record, selectedConditions: [] };
     this.setPatient = this.setPatient.bind(this);
     this.setResources = this.setResources.bind(this);
     this.gotoStep = this.gotoStep.bind(this);
     this.handleRecordChange = this.handleRecordChange.bind(this);
     this.handleConditionClick = this.handleConditionClick.bind(this);
+  }
+
+  componentDidMount() {
+    // TODO: Use common code with Welcome.js
+    // TODO: Adding code to index.js so that if launch is accessed we don't show Welcome.js
+    FHIR.oauth2.ready(function(smart) {
+      // If we're called from within a SMART context, set the patient to what is provided and go to certification
+      smart.api.search({ type: 'Patient', query: { _id: smart.patient.id } }).then(function(result) {
+        const patient = result.data.entry[0].resource;
+        this.setPatient(new Patient(patient));
+        this.gotoStep('Pronounce');
+      }.bind(this));
+    }.bind(this));
   }
 
   setPatient(patient) {
