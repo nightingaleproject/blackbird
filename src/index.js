@@ -12,13 +12,18 @@ import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
 const FHIR = window.FHIR;
 
 // See if we're being launched from within a SMART on FHIR context
-if (window.location.pathname === '/launch') {
-  FHIR.oauth2.authorize({
-    "client_id": "fhir_death",
-    "scope":  "patient/*.read"
-  });
+switch (window.location.pathname) {
+case '/launch':
+  const launchUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
+  const redirectUri = launchUri.replace('launch', 'smart');
+  FHIR.oauth2.authorize({ client_id: 'fhir_death', scope: 'patient/*.read', redirect_uri: redirectUri });
   ReactDOM.render(<Loading />, document.getElementById('root'));
-} else {
+  break;
+case '/smart':
+  ReactDOM.render(<App smart/>, document.getElementById('root'));
+  break;
+default:
   ReactDOM.render(<App />, document.getElementById('root'));
-  registerServiceWorker();
+  break;
 }
+registerServiceWorker();

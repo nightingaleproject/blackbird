@@ -42,7 +42,12 @@ class App extends Component {
       pregnancy: null,
       mannerOfDeath: null
     };
-    this.state = { step: 'Welcome', record: record, selectedConditions: [] };
+    // First page depends on whether we're running in a SMART on FHIR context or not
+    if (props.smart) {
+      this.state = { step: 'Pronounce', record: record, selectedConditions: [] };
+    } else {
+      this.state = { step: 'Welcome', record: record, selectedConditions: [] };
+    }
     this.setPatient = this.setPatient.bind(this);
     this.setResources = this.setResources.bind(this);
     this.gotoStep = this.gotoStep.bind(this);
@@ -50,15 +55,13 @@ class App extends Component {
     this.handleConditionClick = this.handleConditionClick.bind(this);
   }
 
-  componentDidMount() {
+  componentWillMount() {
     // TODO: Use common code with Welcome.js
-    // TODO: Adding code to index.js so that if launch is accessed we don't show Welcome.js
     FHIR.oauth2.ready(function(smart) {
       // If we're called from within a SMART context, set the patient to what is provided and go to certification
       smart.api.search({ type: 'Patient', query: { _id: smart.patient.id } }).then(function(result) {
         const patient = result.data.entry[0].resource;
         this.setPatient(new Patient(patient));
-        this.gotoStep('Pronounce');
       }.bind(this));
     }.bind(this));
   }
