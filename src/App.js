@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Grid } from 'semantic-ui-react';
 import _ from 'lodash';
 import moment from 'moment';
-import Patient from './Patient';
 import Header from './Header';
 import PatientCard from './PatientCard';
 import Welcome from './Welcome';
@@ -10,17 +9,14 @@ import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
 import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import Validate from './Validate';
-
-// fhirclient seems pretty broken from this perspective, it doesn't
-// export anything and it puts FHIR in window; work around for now
-import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
-const FHIR = window.FHIR;
+import { SMARTWrap } from './FHIRClientWrapper';
 
 class App extends Component {
 
   constructor(props) {
     super(props);
     const record = {
+      // TODO: pull information on date/time of death from patient record if present
       pronouncedDeathDate: '',
       pronouncedDeathTime: '',
       actualDeathDate: '',
@@ -56,22 +52,21 @@ class App extends Component {
   }
 
   componentWillMount() {
-    // TODO: Use common code with Welcome.js
-    FHIR.oauth2.ready(function(smart) {
-      // If we're called from within a SMART context, set the patient to what is provided and go to certification
-      smart.api.search({ type: 'Patient', query: { _id: smart.patient.id } }).then(function(result) {
-        const patient = result.data.entry[0].resource;
-        this.setPatient(new Patient(patient));
-      }.bind(this));
-    }.bind(this));
+    // If we're running in a SMART on FHIR context, load the patient and all resources
+    if (this.props.smart) {
+      SMARTWrap.load().then(([patient, conditions, medications, procedures, observations]) => {
+        this.setPatient(patient);
+        this.setResources(conditions, medications, procedures, observations);
+      });
+    }
   }
 
   setPatient(patient) {
     this.setState({ patient });
   }
 
-  setResources(resourceName, resources) {
-    this.setState({ [resourceName]: resources });
+  setResources(conditions, medications, procedures, observations) {
+    this.setState({ conditions, medications, procedures, observations });
   }
 
   gotoStep(newStep) {

@@ -1,11 +1,6 @@
 import React, { Component } from 'react';
 import { Form, Button, Card } from 'semantic-ui-react';
-import Patient from './Patient'
-
-// fhirclient seems pretty broken from this perspective, it doesn't
-// export anything and it puts FHIR in window; work around for now
-import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
-const FHIR = window.FHIR;
+import { FHIRWrap } from './FHIRClientWrapper';
 
 class Welcome extends Component {
 
@@ -26,48 +21,18 @@ class Welcome extends Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    // TODO: abstract out this FHIR interface (seeing if patient provided by smart, setting URL, setting patient)
-    const smart = FHIR.client({
-      serviceUrl: this.state.fhirServer
-    });
-    const searchParams = { type: 'Patient' }
-    if (this.state.decedentName.length > 0) {
-      searchParams.name = this.state.decedentName;
-    }
     this.setState({ patients: [] });
-    smart.api.search(searchParams).done(function(result) {
-      const patients = result.data.entry.map(function(entry) { return new Patient(entry.resource); });
+    FHIRWrap.loadPatients(this.state.fhirServer, this.state.decedentName).then((patients) => {
       this.setState({ patients });
-    }.bind(this));
+    });
   }
 
   handlePatientClick(event, data) {
     event.preventDefault();
     const patient = this.state.patients.find(function(patient) { return patient.id === data.id; });
-    const smart = FHIR.client({
-      serviceUrl: this.state.fhirServer,
+    FHIRWrap.loadResources(this.state.fhirServer, patient).then(([conditions, medications, procedures, observations]) => {
+      this.props.setResources(conditions, medications, procedures, observations);
     });
-    // TODO: refactor these 4 searches to use common code
-    smart.api.search({ type: "Condition", query: { patient: patient.id } }).then(function(response) {
-      if (response.data.entry) {
-        this.props.setResources('conditions', response.data.entry.map(function(entry) { return entry.resource; }))
-      }
-    }.bind(this));
-    smart.api.search({ type: "MedicationRequest", query: { patient: patient.id } }).then(function(response) {
-      if (response.data.entry) {
-        this.props.setResources('medications', response.data.entry.map(function(entry) { return entry.resource; }))
-      }
-    }.bind(this));
-    smart.api.search({ type: "Procedure", query: { patient: patient.id } }).then(function(response) {
-      if (response.data.entry) {
-        this.props.setResources('procedures', response.data.entry.map(function(entry) { return entry.resource; }))
-      }
-    }.bind(this));
-    smart.api.search({ type: "Observation", query: { patient: patient.id } }).then(function(response) {
-      if (response.data.entry) {
-        this.props.setResources('observations', response.data.entry.map(function(entry) { return entry.resource; }))
-      }
-    }.bind(this));
     this.props.setPatient(patient);
     this.props.gotoStep('Pronounce');
   }
