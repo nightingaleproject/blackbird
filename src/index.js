@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import _ from 'lodash';
 import 'semantic-ui-css/semantic.min.css';
 import './index.css';
 import Loading from './Loading';
@@ -12,14 +13,14 @@ import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
 const FHIR = window.FHIR;
 
 // See if we're being launched from within a SMART on FHIR context
-switch (window.location.pathname) {
-case '/launch':
+switch (_.last(window.location.pathname.split('/'))) {
+case 'launch':
   const launchUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
   const redirectUri = launchUri.replace('launch', 'smart');
   FHIR.oauth2.authorize({ client_id: 'fhir_death', scope: 'patient/*.read', redirect_uri: redirectUri });
   ReactDOM.render(<Loading />, document.getElementById('root'));
   break;
-case '/smart':
+case 'smart':
   ReactDOM.render(<App smart/>, document.getElementById('root'));
   break;
 default:
