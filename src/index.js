@@ -2,8 +2,28 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import 'semantic-ui-css/semantic.min.css';
 import './index.css';
+import Loading from './Loading';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+// fhirclient seems pretty broken from this perspective, it doesn't
+// export anything and it puts FHIR in window; work around for now
+import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
+const FHIR = window.FHIR;
+
+// See if we're being launched from within a SMART on FHIR context
+switch (window.location.pathname) {
+case '/launch':
+  const launchUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
+  const redirectUri = launchUri.replace('launch', 'smart');
+  FHIR.oauth2.authorize({ client_id: 'fhir_death', scope: 'patient/*.read', redirect_uri: redirectUri });
+  ReactDOM.render(<Loading />, document.getElementById('root'));
+  break;
+case '/smart':
+  ReactDOM.render(<App smart/>, document.getElementById('root'));
+  break;
+default:
+  ReactDOM.render(<App />, document.getElementById('root'));
+  break;
+}
 registerServiceWorker();

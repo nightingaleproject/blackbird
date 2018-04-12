@@ -9,12 +9,14 @@ import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
 import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import Validate from './Validate';
+import { SMARTWrap } from './FHIRClientWrapper';
 
 class App extends Component {
 
   constructor(props) {
     super(props);
     const record = {
+      // TODO: pull information on date/time of death from patient record if present
       pronouncedDeathDate: '',
       pronouncedDeathTime: '',
       actualDeathDate: '',
@@ -36,8 +38,12 @@ class App extends Component {
       pregnancy: null,
       mannerOfDeath: null
     };
-    // TODO: Add a FHIR.oauth2.ready that changes step to Pronounce when called with a valid patient
-    this.state = { step: 'Welcome', record: record, selectedConditions: [] };
+    // First page depends on whether we're running in a SMART on FHIR context or not
+    if (props.smart) {
+      this.state = { step: 'Pronounce', record: record, selectedConditions: [] };
+    } else {
+      this.state = { step: 'Welcome', record: record, selectedConditions: [] };
+    }
     this.setPatient = this.setPatient.bind(this);
     this.setResources = this.setResources.bind(this);
     this.gotoStep = this.gotoStep.bind(this);
@@ -45,12 +51,22 @@ class App extends Component {
     this.handleConditionClick = this.handleConditionClick.bind(this);
   }
 
+  componentWillMount() {
+    // If we're running in a SMART on FHIR context, load the patient and all resources
+    if (this.props.smart) {
+      SMARTWrap.load().then(([patient, conditions, medications, procedures, observations]) => {
+        this.setPatient(patient);
+        this.setResources(conditions, medications, procedures, observations);
+      });
+    }
+  }
+
   setPatient(patient) {
     this.setState({ patient });
   }
 
-  setResources(resourceName, resources) {
-    this.setState({ [resourceName]: resources });
+  setResources(conditions, medications, procedures, observations) {
+    this.setState({ conditions, medications, procedures, observations });
   }
 
   gotoStep(newStep) {
