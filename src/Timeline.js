@@ -15,78 +15,54 @@ class Timeline extends Component {
 
   render() {
 
-    const conditionLink = function(condition) {
-      const text = condition.code.coding[0].display;
-      return <Card header={text} key={condition.id} onClick={this.props.handleConditionClick} id={condition.id} />;
-    }.bind(this);
+    const conditionLink = (condition) => {
+      return <Card header={condition.description} key={condition.id} onClick={this.props.handleConditionClick} id={condition.id} />;
+    };
 
-    const conditionLinks = function(conditions) {
+    const conditionLinks = (conditions) => {
       if (!conditions || conditions.length === 0) {
         return <div>No conditions found</div>;
       } else {
-        return <div>{conditions.map(conditionLink)}</div>;
+        return conditions.map(conditionLink);
       }
     };
 
-    // TODO: Use common code for these conditions, procedures, etc
-    const Conditions = function(props) {
-      const conditions = props.conditions || [];
-      return (
-        <div>
-          <p>The patient has {conditions.length} condition{conditions.length === 1 ? '' : 's'}:</p>
-          {conditionLinks(props.conditions)}
-        </div>
-      );
-    }
+    const resourceCards = (resources) => {
+      return resources.map((resource) => {
+        return <Card header={resource.description} key={resource.id} />;
+      });
+    };
 
-    const Procedures = function(props) {
-      const procedures = props.procedures || [];
-      return (
-        <div>
-          <p>The patient has {procedures.length} procedure{procedures.length === 1 ? '' : 's'}:</p>
-        </div>
-      );
-    }
-
-    const Tests = function(props) {
-      const observations = props.observations || [];
-      return (
-        <div>
-          <p>The patient has {observations.length} test{observations.length === 1 ? '' : 's'}:</p>
-        </div>
-      );
-    }
-
-    const Medications = function(props) {
-      const medications = props.medications || [];
-      return (
-        <div>
-          <p>The patient has {medications.length} medication{medications.length === 1 ? '' : 's'}:</p>
-        </div>
-      );
-    }
-
-    const renderTab = function(tab) {
+    const renderTab = (tab) => {
       switch (tab) {
-      case 'Procedures':
-        return <Procedures procedures={this.props.procedures} />;
-      case 'Tests':
-        return <Tests observations={this.props.observations} />;
-      case 'Medications':
-        return <Medications medications={this.props.medications} />;
       case 'Conditions':
       default:
-        return <Conditions conditions={this.props.conditions} />;
+        return conditionLinks(this.props.conditions);
+      case 'Procedures':
+        return resourceCards(this.props.procedures);
+      case 'Tests':
+        return resourceCards(this.props.observations);
+      case 'Medications':
+        return resourceCards(this.props.medications);
       }
-    }.bind(this);
+    };
+
+    const menuItem = (name, resources) => {
+      resources = resources || [];
+      return (
+          <Menu.Item active={this.state.tab === name} onClick={() => this.gotoTab(name)}>
+            {name} ({resources.length})
+          </Menu.Item>
+      );
+    }
 
     return (
       <div className="timeline">
         <Menu tabular>
-          <Menu.Item name="Conditions" active={this.state.tab === "Conditions"} onClick={() => this.gotoTab("Conditions")}/>
-          <Menu.Item name="Procedures" active={this.state.tab === "Procedures"} onClick={() => this.gotoTab("Procedures")}/>
-          <Menu.Item name="Tests" active={this.state.tab === "Tests"} onClick={() => this.gotoTab("Tests")}/>
-          <Menu.Item name="Medications" active={this.state.tab === "Medications"} onClick={() => this.gotoTab("Medications")}/>
+          {menuItem('Conditions', this.props.conditions)}
+          {menuItem('Procedures', this.props.procedures)}
+          {menuItem('Tests', this.props.observations)}
+          {menuItem('Medications', this.props.medications)}
         </Menu>
         {renderTab(this.state.tab)}
       </div>

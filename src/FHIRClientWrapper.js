@@ -1,4 +1,5 @@
 import Patient from './Patient';
+import Resource from './Resource';
 
 // Wrap our usage of fhirclient with some simple utilities
 
@@ -30,7 +31,7 @@ const FHIRWrap = {
     const getResources = (type) => {
       return smart.api.search({ type: type, query: { patient: patient.id } }).then((response) => {
         if (response.data.entry) {
-          return response.data.entry.map((entry) => entry.resource);
+          return response.data.entry.map((entry) => new Resource(entry.resource));
         } else {
           return [];
         }
