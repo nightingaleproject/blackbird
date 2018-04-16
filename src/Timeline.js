@@ -1,97 +1,96 @@
 import React, { Component } from 'react';
-import { Menu, Card } from 'semantic-ui-react';
+import { Menu, Card, Input } from 'semantic-ui-react';
 
 class Timeline extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { tab: "Conditions" };
+    this.state = {
+      tab: "Conditions",
+      displayedConditions: props.conditions.slice(),
+      displayedProcedures: props.procedures.slice(),
+      displayedObservations: props.observations.slice(),
+      displayedMedications: props.medications.slice()
+    };
     this.gotoTab = this.gotoTab.bind(this);
+    this.handleSearchChange = this.handleSearchChange.bind(this);
   }
 
   gotoTab(newTab) {
     this.setState({ tab: newTab });
   }
 
+  handleSearchChange(event, input) {
+    const regex = new RegExp(input.value, 'gi');
+    const filter = (element) => element.description.match(regex);
+    this.setState({
+      displayedConditions: this.props.conditions.filter(filter),
+      displayedProcedures: this.props.procedures.filter(filter),
+      displayedObservations: this.props.observations.filter(filter),
+      displayedMedications: this.props.medications.filter(filter)
+    });
+  }
+
   render() {
 
-    const conditionLink = function(condition) {
-      const text = condition.code.coding[0].display;
-      return <Card header={text} key={condition.id} onClick={this.props.handleConditionClick} id={condition.id} />;
-    }.bind(this);
-
-    const conditionLinks = function(conditions) {
+    const conditionLinks = (conditions) => {
       if (!conditions || conditions.length === 0) {
-        return <div>No conditions found</div>;
+        return <p>No conditions found</p>;
       } else {
-        return <div>{conditions.map(conditionLink)}</div>;
+        return conditions.map((condition) => {
+          return <Card fluid header={condition.description}
+                       key={condition.id}
+                       onClick={this.props.handleConditionClick}
+                       id={condition.id} />;
+        });
       }
     };
 
-    // TODO: Use common code for these conditions, procedures, etc
-    const Conditions = function(props) {
-      const conditions = props.conditions || [];
-      return (
-        <div>
-          <p>The patient has {conditions.length} condition{conditions.length === 1 ? '' : 's'}:</p>
-          {conditionLinks(props.conditions)}
-        </div>
-      );
-    }
+    const resourceCards = (name, resources) => {
+      if (!resources || resources.length === 0) {
+        return <p>No {name} found</p>;
+      } else {
+        return resources.map((resource) => {
+          return <Card fluid header={resource.description} key={resource.id} />;
+        });
+      }
+    };
 
-    const Procedures = function(props) {
-      const procedures = props.procedures || [];
-      return (
-        <div>
-          <p>The patient has {procedures.length} procedure{procedures.length === 1 ? '' : 's'}:</p>
-        </div>
-      );
-    }
-
-    const Tests = function(props) {
-      const observations = props.observations || [];
-      return (
-        <div>
-          <p>The patient has {observations.length} test{observations.length === 1 ? '' : 's'}:</p>
-        </div>
-      );
-    }
-
-    const Medications = function(props) {
-      const medications = props.medications || [];
-      return (
-        <div>
-          <p>The patient has {medications.length} medication{medications.length === 1 ? '' : 's'}:</p>
-        </div>
-      );
-    }
-
-    const renderTab = function(tab) {
+    const renderTab = (tab) => {
       switch (tab) {
-      case 'Procedures':
-        return <Procedures procedures={this.props.procedures} />;
-      case 'Tests':
-        return <Tests observations={this.props.observations} />;
-      case 'Medications':
-        return <Medications medications={this.props.medications} />;
       case 'Conditions':
       default:
-        return <Conditions conditions={this.props.conditions} />;
+        return conditionLinks(this.state.displayedConditions);
+      case 'Procedures':
+        return resourceCards('procedures', this.state.displayedProcedures);
+      case 'Tests':
+        return resourceCards('tests', this.state.displayedObservations);
+      case 'Medications':
+        return resourceCards('medications', this.state.displayedMedications);
       }
-    }.bind(this);
+    };
+
+    const menuItem = (name, resources) => {
+      resources = resources || [];
+      return (
+          <Menu.Item active={this.state.tab === name} onClick={() => this.gotoTab(name)}>
+            {name} ({resources.length})
+          </Menu.Item>
+      );
+    }
 
     return (
       <div className="timeline">
         <Menu tabular>
-          <Menu.Item name="Conditions" active={this.state.tab === "Conditions"} onClick={() => this.gotoTab("Conditions")}/>
-          <Menu.Item name="Procedures" active={this.state.tab === "Procedures"} onClick={() => this.gotoTab("Procedures")}/>
-          <Menu.Item name="Tests" active={this.state.tab === "Tests"} onClick={() => this.gotoTab("Tests")}/>
-          <Menu.Item name="Medications" active={this.state.tab === "Medications"} onClick={() => this.gotoTab("Medications")}/>
+          {menuItem('Conditions', this.state.displayedConditions)}
+          {menuItem('Procedures', this.state.displayedProcedures)}
+          {menuItem('Tests', this.state.displayedObservations)}
+          {menuItem('Medications', this.state.displayedMedications)}
         </Menu>
+        <Input fluid icon='search' placeholder='Search...' onChange={this.handleSearchChange} />
         {renderTab(this.state.tab)}
       </div>
     );
-
   }
 }
 

@@ -96,14 +96,14 @@ class App extends Component {
       newConditions = newConditions.filter(function(condition) { return condition.id !== clickedCondition.id });
     } else {
       newConditions.push(clickedCondition);
-      newConditions = _.sortBy(newConditions, function(condition) { return moment(condition.onsetDateTime); });
+      newConditions = _.sortBy(newConditions, function(condition) { return moment(condition.date); });
     }
     this.setState({ selectedConditions: newConditions });
     // Then update the user display of the conditions
     for (let i = 0; i < 4; i++) {
       if (newConditions[i]) {
-        const text = newConditions[i].code.coding[0].display;
-        const onset = newConditions[i].onsetDateTime;
+        const text = newConditions[i].description;
+        const onset = newConditions[i].date;
         this.updateRecord(`cod${i+1}Text`, text);
         this.updateRecord(`cod${i+1}Time`, onset);
       } else {

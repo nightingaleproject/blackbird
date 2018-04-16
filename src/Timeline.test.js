@@ -3,5 +3,5 @@ import Timeline from './Timeline';
 import { mount } from 'enzyme';
 
 it('renders without crashing', () => {
-  mount(<Timeline/>);
+  mount(<Timeline conditions={[]} medications={[]} procedures={[]} observations={[]} />);
 });
