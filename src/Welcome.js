@@ -30,7 +30,7 @@ class Welcome extends Component {
   handlePatientClick(event, data) {
     event.preventDefault();
     const patient = this.state.patients.find(function(patient) { return patient.id === data.id; });
-    FHIRWrap.loadResources(this.state.fhirServer, patient).then(([conditions, medications, procedures, observations]) => {
+    FHIRWrap.loadResources(this.state.fhirServer, patient.id).then(([conditions, medications, procedures, observations]) => {
       this.props.setResources(conditions, medications, procedures, observations);
     });
     this.props.setPatient(patient);

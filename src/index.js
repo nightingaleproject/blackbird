@@ -15,9 +15,10 @@ const FHIR = window.FHIR;
 // See if we're being launched from within a SMART on FHIR context
 switch (_.last(window.location.pathname.split('/'))) {
 case 'launch':
+  const scope = 'patient/*.read user/Patient.read openid profile online_access';
   const launchUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
   const redirectUri = launchUri.replace('launch', 'smart');
-  FHIR.oauth2.authorize({ client_id: 'fhir_death', scope: 'patient/*.read', redirect_uri: redirectUri });
+  FHIR.oauth2.authorize({ client_id: 'fhir_death', scope: scope, redirect_uri: redirectUri });
   ReactDOM.render(<Loading />, document.getElementById('root'));
   break;
 case 'smart':

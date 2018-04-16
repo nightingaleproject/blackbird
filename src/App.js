@@ -45,6 +45,7 @@ class App extends Component {
       this.state = { step: 'Welcome', record: record, selectedConditions: [] };
     }
     this.setPatient = this.setPatient.bind(this);
+    this.setUser = this.setUser.bind(this);
     this.setResources = this.setResources.bind(this);
     this.gotoStep = this.gotoStep.bind(this);
     this.handleRecordChange = this.handleRecordChange.bind(this);
@@ -54,7 +55,8 @@ class App extends Component {
   componentWillMount() {
     // If we're running in a SMART on FHIR context, load the patient and all resources
     if (this.props.smart) {
-      SMARTWrap.load().then(([patient, conditions, medications, procedures, observations]) => {
+      SMARTWrap.load().then(([user, patient, conditions, medications, procedures, observations]) => {
+        this.setUser(user);
         this.setPatient(patient);
         this.setResources(conditions, medications, procedures, observations);
       });
@@ -62,6 +64,10 @@ class App extends Component {
   }
 
   setPatient(patient) {
+    this.setState({ patient });
+  }
+
+  setUser(patient) {
     this.setState({ patient });
   }
 

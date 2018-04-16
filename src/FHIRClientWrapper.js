@@ -1,4 +1,5 @@
 import Patient from './Patient';
+import Practitioner from './Practitioner';
 import Resource from './Resource';
 
 // Wrap our usage of fhirclient with some simple utilities
@@ -25,11 +26,11 @@ const FHIRWrap = {
 
   // Given a FHIR server URL and a patient, returns a promise that provides the patient's
   // conditions, medications, procedures, and observations loaded from the server
-  loadResources: (fhirServer, patient) => {
+  loadResources: (fhirServer, patientId) => {
     const smart = FHIR.client({ serviceUrl: fhirServer });
 
     const getResources = (type) => {
-      return smart.api.search({ type: type, query: { patient: patient.id } }).then((response) => {
+      return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
         if (response.data.entry) {
           return response.data.entry.map((entry) => new Resource(entry.resource));
         } else {
@@ -47,16 +48,18 @@ const FHIRWrap = {
 
 const SMARTWrap = {
   // Return a promise that, if the app is loaded in a SMART context, provides the loaded
-  // patient, conditions, medications, procedures, and observations
+  // user, patient, conditions, medications, procedures, and observations
   load: () => {
     return new Promise((resolve, reject) => {
       FHIR.oauth2.ready((smart) => {
-        smart.api.search({ type: 'Patient', query: { _id: smart.patient.id } }).then((result) => {
-          const patient = new Patient(result.data.entry[0].resource);
-          FHIRWrap.loadResources(smart.server.serviceUrl, patient).then(([conditions, medications, procedures, observations]) => {
-            resolve([patient, conditions, medications, procedures, observations]);
-          }).catch((e) => reject(e));
-        });
+        const user = smart.user.read();
+        const patient = smart.patient.read();
+        const resources = FHIRWrap.loadResources(smart.server.serviceUrl, smart.patient.id);
+        Promise.all([user, patient, resources]).then(([user, patient, resources]) => {
+          patient = new Patient(patient);
+          user = new Practitioner(user);
+          resolve([user, patient].concat(resources));
+        }).catch((e) => reject(e));
       });
     });
   }
