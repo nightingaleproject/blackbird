@@ -30,50 +30,39 @@ const FHIRWrap = {
     const smart = FHIR.client({ serviceUrl: fhirServer });
 
     const getResources = (type) => {
-      return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
-        if (response.data.entry) {
-          return response.data.entry.map((entry) => new Resource(entry.resource));
-        } else {
-          return [];
-        }
-      });
-    };
-
-    // TODO: SUPER CRAZY HACK, REFACTOR INTO THE RIGHT WAY...
-    // MedicationRequests might have information on which medication in a separate resource
-    const getMedicationRequests = () => {
-
-      return getResources('MedicationRequest').then((medicationRequests) => {
-
-        const medicationRequestPromises = medicationRequests.map((medicationRequest) => {
-
-          if (medicationRequest.resource.medicationReference) {
-            const medicationId = medicationRequest.resource.medicationReference.reference.split('/')[1];
-            return smart.api.read({ type: 'Medication', id: medicationId }).then((response) => {
-              medicationRequest.medication = response.data;
-              return medicationRequest;
-            });
+      // We need to wrap the results of smart.api.search with a real promise, using the jQuery
+      // promise directly results in unexpected behavior
+      return new Promise((resolve) => {
+        return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
+          if (response.data.entry) {
+            resolve(response.data.entry.map((entry) => new Resource(entry.resource)));
           } else {
-            return Promise.resolve(medicationRequest);
+            resolve([]);
           }
-
         });
-
-        return Promise.all(medicationRequestPromises);
       });
-
     };
 
-    const medicationRequests2 = new Promise((resolve) => {
-      getMedicationRequests().then((mrs) => {
-        mrs.then((mrs2) => {
-          resolve(mrs2)
+    // MedicationRequests might have information on which medication in a separate resource
+    const addMedication = (medicationRequest) => {
+      if (medicationRequest.resource.medicationReference) {
+        // TODO: this approach of accessing/manipulating the medicationRequest directly is a bad one
+        const medicationId = medicationRequest.resource.medicationReference.reference.split('/')[1];
+        return smart.api.read({ type: 'Medication', id: medicationId }).then((response) => {
+          medicationRequest.medication = response.data;
+          return medicationRequest;
         });
-      });
-    });
+      } else {
+        return Promise.resolve(medicationRequest);
+      }
+    }
+
+    const addMedications = (medicationRequests) => {
+      return Promise.all(medicationRequests.map(addMedication));
+    }
 
     return Promise.all([getResources('Condition'),
-                        medicationRequests2,
+                        getResources('MedicationRequest').then(addMedications),
                         getResources('Procedure'),
                         getResources('Observation')]);
   }
