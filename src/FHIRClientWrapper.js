@@ -39,8 +39,41 @@ const FHIRWrap = {
       });
     };
 
+    // TODO: SUPER CRAZY HACK, REFACTOR INTO THE RIGHT WAY...
+    // MedicationRequests might have information on which medication in a separate resource
+    const getMedicationRequests = () => {
+
+      return getResources('MedicationRequest').then((medicationRequests) => {
+
+        const medicationRequestPromises = medicationRequests.map((medicationRequest) => {
+
+          if (medicationRequest.resource.medicationReference) {
+            const medicationId = medicationRequest.resource.medicationReference.reference.split('/')[1];
+            return smart.api.read({ type: 'Medication', id: medicationId }).then((response) => {
+              medicationRequest.medication = response.data;
+              return medicationRequest;
+            });
+          } else {
+            return Promise.resolve(medicationRequest);
+          }
+
+        });
+
+        return Promise.all(medicationRequestPromises);
+      });
+
+    };
+
+    const medicationRequests2 = new Promise((resolve) => {
+      getMedicationRequests().then((mrs) => {
+        mrs.then((mrs2) => {
+          resolve(mrs2)
+        });
+      });
+    });
+
     return Promise.all([getResources('Condition'),
-                        getResources('MedicationRequest'),
+                        medicationRequests2,
                         getResources('Procedure'),
                         getResources('Observation')]);
   }

@@ -7,14 +7,23 @@ class Resource {
     return this.resource.id;
   }
   get description() {
-    switch (this.resource.resourceType) {
-    case 'Condition':
-    case 'Procedure':
-    case 'Observation':
-    default:
-      return this.resource.code.coding[0].display;
-    case 'MedicationRequest':
-      return this.resource.medicationCodeableConcept.coding[0].display;
+    try {
+      switch (this.resource.resourceType) {
+      case 'Condition':
+      case 'Procedure':
+      case 'Observation':
+      default:
+        return this.resource.code.coding[0].display;
+      case 'MedicationRequest':
+        // TODO: THIS IS A HACK
+        if (this.medication) {
+          return this.medication.code.coding[0].display;
+        } else {
+          return this.resource.medicationCodeableConcept.coding[0].display;
+        }
+      }
+    } catch(err) {
+      return null;
     }
   }
   get date() {
