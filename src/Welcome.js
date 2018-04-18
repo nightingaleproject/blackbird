@@ -34,7 +34,7 @@ class Welcome extends Component {
       this.props.setResources(conditions, medications, procedures, observations);
     });
     this.props.setPatient(patient);
-    this.props.gotoStep('Pronounce');
+    this.props.gotoStep('Pronouncing');
   }
 
   render() {

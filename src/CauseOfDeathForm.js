@@ -27,18 +27,18 @@ class CauseOfDeathForm extends FormPage {
               </Form.Group>
 
               <Form.Group>
-                {this.input('text', 'cod2Text')}
-                {this.input('text', 'cod2Time')}
+                {this.input('text', 'cod2Text', { optional: true })}
+                {this.input('text', 'cod2Time', { optional: true })}
               </Form.Group>
 
               <Form.Group>
-                {this.input('text', 'cod3Text')}
-                {this.input('text', 'cod3Time')}
+                {this.input('text', 'cod3Text', { optional: true })}
+                {this.input('text', 'cod3Time', { optional: true })}
               </Form.Group>
 
               <Form.Group>
-                {this.input('text', 'cod4Text')}
-                {this.input('text', 'cod4Time')}
+                {this.input('text', 'cod4Text', { optional: true })}
+                {this.input('text', 'cod4Time', { optional: true })}
               </Form.Group>
             </Form>
 

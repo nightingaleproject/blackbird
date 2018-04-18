@@ -13,7 +13,7 @@ const FHIRWrap = {
 
   // Given a FHIR server URL and a search string (which can be blank), returns a promise
   // that provides a list of patients loaded from the server
-  loadPatients: (fhirServer, searchString) => {
+  loadPatients(fhirServer, searchString) {
     const smart = FHIR.client({ serviceUrl: fhirServer });
     const searchParams = { type: 'Patient' };
     if (searchString.length > 0) {
@@ -26,7 +26,7 @@ const FHIRWrap = {
 
   // Given a FHIR server URL and a patient, returns a promise that provides the patient's
   // conditions, medications, procedures, and observations loaded from the server
-  loadResources: (fhirServer, patientId) => {
+  loadResources(fhirServer, patientId) {
     const smart = FHIR.client({ serviceUrl: fhirServer });
 
     const getResources = (type) => {
@@ -49,7 +49,7 @@ const FHIRWrap = {
 const SMARTWrap = {
   // Return a promise that, if the app is loaded in a SMART context, provides the loaded
   // user, patient, conditions, medications, procedures, and observations
-  load: () => {
+  load() {
     return new Promise((resolve, reject) => {
       FHIR.oauth2.ready((smart) => {
         const user = smart.user.read();

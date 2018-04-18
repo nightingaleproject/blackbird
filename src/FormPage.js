@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Menu, Form, Input, Radio } from 'semantic-ui-react';
+import { Menu, Form, Input, Radio, Icon } from 'semantic-ui-react';
+import Completion from './Completion';
 
 class FormPage extends Component {
 
@@ -9,21 +10,41 @@ class FormPage extends Component {
     this.radio = this.radio.bind(this);
   }
 
-  menu(step) {
+  menuItem(stepName, currentStep) {
+    const isComplete = Completion.isComplete(stepName, this.props.record);
+    return (
+        <Menu.Item name={stepName} active={currentStep === stepName} onClick={() => this.props.gotoStep(stepName)}>
+          {stepName}
+          {isComplete ? <Icon name='check' /> : <Icon name='exclamation' />}
+        </Menu.Item>
+    );
+  }
+
+  menu(currentStep) {
+    // Track what step this form page is for tracking fields for completion
+    this.currentStep = currentStep;
     return (
       <Menu tabular>
-        <Menu.Item name='Pronouncing' active={step === 'Pronounce'} onClick={() => this.props.gotoStep('Pronounce')} />
-        <Menu.Item name='Cause of Death' active={step === 'CauseOfDeath'} onClick={() => this.props.gotoStep('CauseOfDeath')} />
-        <Menu.Item name='Additional Questions' active={step === 'AdditionalQuestions'} onClick={() => this.props.gotoStep('AdditionalQuestions')} />
+        {this.menuItem('Pronouncing', currentStep)}
+        {this.menuItem('CauseOfDeath', currentStep)}
+        {this.menuItem('AdditionalQuestions', currentStep)}
       </Menu>
     );
   }
 
-  input(type, name) {
+  input(type, name, options = { optional: false }) {
+    // Register this field for the current step unless noted as optional
+    if (!options['optional']) {
+      Completion.register(name, this.currentStep);
+    }
     return <Input type={type} name={name} value={this.props.record[name]} onChange={this.props.handleRecordChange} />;
   }
 
-  radio(label, name, value) {
+  radio(label, name, value, options = { optional: false }) {
+    // Register this field for the current step unless noted as optional
+    if (!options['optional']) {
+      Completion.register(name, this.currentStep);
+    }
     const checked = (this.props.record[name] === value);
     return (
         <Form.Field>
