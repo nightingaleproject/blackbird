@@ -8,6 +8,7 @@ class CauseOfDeathForm extends FormPage {
   render() {
 
     return (
+      // TODO: use some sort of dynamic options passing like _.pick(this.props, ['conditions', 'selectedConditions'])?
       <div>
 
         {this.menu('CauseOfDeath')}
@@ -15,7 +16,7 @@ class CauseOfDeathForm extends FormPage {
         <Grid>
 
           <Grid.Column width={8}>
-            <Timeline conditions={this.props.conditions} medications={this.props.medications} procedures={this.props.procedures} observations={this.props.observations} handleConditionClick={this.props.handleConditionClick} />
+            <Timeline conditions={this.props.conditions} selectedConditions={this.props.selectedConditions} medications={this.props.medications} procedures={this.props.procedures} observations={this.props.observations} handleConditionClick={this.props.handleConditionClick} />
           </Grid.Column>
 
           <Grid.Column width={8}>
