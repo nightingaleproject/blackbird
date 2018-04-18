@@ -35,7 +35,7 @@ const FHIRWrap = {
       return new Promise((resolve) => {
         return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
           if (response.data.entry) {
-            resolve(response.data.entry.map((entry) => new Resource(entry.resource)));
+            resolve(response.data.entry.map((entry) => Resource.wrap(entry.resource)));
           } else {
             resolve([]);
           }
