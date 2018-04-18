@@ -30,17 +30,26 @@ const FHIRWrap = {
     const smart = FHIR.client({ serviceUrl: fhirServer });
 
     const getResources = (type) => {
-      return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
-        if (response.data.entry) {
-          return response.data.entry.map((entry) => new Resource(entry.resource));
-        } else {
-          return [];
-        }
+      // We need to wrap the results of smart.api.search with a real promise, using the jQuery
+      // promise directly results in unexpected behavior
+      return new Promise((resolve) => {
+        return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
+          if (response.data.entry) {
+            resolve(response.data.entry.map((entry) => Resource.wrap(entry.resource)));
+          } else {
+            resolve([]);
+          }
+        });
       });
     };
 
+    // MedicationRequests might have information on which medication in a separate resource
+    const withMedications = (medicationRequests) => {
+      return Promise.all(medicationRequests.map((medicationRequest) => medicationRequest.withMedication(smart)));
+    }
+
     return Promise.all([getResources('Condition'),
-                        getResources('MedicationRequest'),
+                        getResources('MedicationRequest').then(withMedications),
                         getResources('Procedure'),
                         getResources('Observation')]);
   }
