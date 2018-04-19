@@ -29,7 +29,7 @@ class Welcome extends Component {
 
   handlePatientClick(event, data) {
     event.preventDefault();
-    const patient = this.state.patients.find(function(patient) { return patient.id === data.id; });
+    const patient = this.state.patients.find((patient) => patient.id === data.id);
     FHIRWrap.loadResources(this.state.fhirServer, patient.id).then(([conditions, medications, procedures, observations]) => {
       this.props.setResources(conditions, medications, procedures, observations);
     });
@@ -39,11 +39,11 @@ class Welcome extends Component {
 
   render() {
 
-    const patientLink = function(patient) {
+    const patientLink = (patient) => {
       return <Card key={patient.id} onClick={this.handlePatientClick} id={patient.id} header={patient.name} />;
-    }.bind(this);
+    };
 
-    const patientLinks = function(patients) {
+    const patientLinks = (patients) => {
       if (!patients) {
         return <div/>;
       } else if (patients.length === 0) {

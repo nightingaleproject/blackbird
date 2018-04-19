@@ -95,14 +95,14 @@ class App extends Component {
   // TODO: We'll want an interface that allows text to be edited, condition order to be changed, conditions to be added manually, etc
   handleConditionClick(event, data) {
     event.preventDefault();
-    const clickedCondition = this.state.conditions.find(function(condition) { return condition.id === data.id; });
+    const clickedCondition = this.state.conditions.find((condition) => condition.id === data.id);
     // First update our internal conditions state, adding or subtracting as needed and sorting by onset
     let newConditions = this.state.selectedConditions.slice(); // Create a new copy of the array
-    if (newConditions.some(function(condition) { return condition.id === clickedCondition.id })) {
-      newConditions = newConditions.filter(function(condition) { return condition.id !== clickedCondition.id });
+    if (newConditions.some((condition) => condition.id === clickedCondition.id)) {
+      newConditions = newConditions.filter((condition) => condition.id !== clickedCondition.id);
     } else {
       newConditions.push(clickedCondition);
-      newConditions = _.sortBy(newConditions, function(condition) { return moment(condition.date); });
+      newConditions = _.sortBy(newConditions, (condition) => moment(condition.date));
     }
     this.setState({ selectedConditions: newConditions });
     // Then update the user display of the conditions
@@ -121,7 +121,7 @@ class App extends Component {
 
   render() {
 
-    const renderStep = function(step) {
+    const renderStep = (step) => {
       switch (step) {
       case 'Pronouncing':
         return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
@@ -135,7 +135,7 @@ class App extends Component {
       default:
         return <Welcome setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;
       }
-    }.bind(this);
+    };
 
     return (
         <div className="App">
