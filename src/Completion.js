@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+// Track the completion of forms that get filled out by the user for each step
 const Completion = {
 
   // Register that a particular field is presented on a step

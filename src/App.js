@@ -126,13 +126,30 @@ class App extends Component {
     const renderStep = (step) => {
       switch (step) {
       case 'Pronouncing':
-        return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+        return <PronounceForm patient={this.state.patient}
+                              gotoStep={this.gotoStep}
+                              handleRecordChange={this.handleRecordChange}
+                              record={this.state.record} />;
       case 'CauseOfDeath':
-        return <CauseOfDeathForm conditions={this.state.conditions} selectedConditions={this.state.selectedConditions} medications={this.state.medications} procedures={this.state.procedures} observations={this.state.observations} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
+        return <CauseOfDeathForm conditions={this.state.conditions}
+                                 selectedConditions={this.state.selectedConditions}
+                                 medications={this.state.medications}
+                                 procedures={this.state.procedures}
+                                 observations={this.state.observations}
+                                 gotoStep={this.gotoStep}
+                                 handleRecordChange={this.handleRecordChange}
+                                 handleConditionClick={this.handleConditionClick}
+record={this.state.record} />;
       case 'AdditionalQuestions':
-        return <AdditionalQuestionsForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+        return <AdditionalQuestionsForm patient={this.state.patient}
+                                        gotoStep={this.gotoStep}
+                                        handleRecordChange={this.handleRecordChange}
+                                        record={this.state.record} />;
       case 'Validate':
-        return <Validate patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+        return <Validate patient={this.state.patient}
+                         gotoStep={this.gotoStep}
+                         handleRecordChange={this.handleRecordChange}
+                         record={this.state.record} />;
       case 'Welcome':
       default:
         return <Welcome setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;
@@ -148,9 +165,7 @@ class App extends Component {
           </Grid>
         </div>
     );
-
   }
-
 }
 
 export default App;
