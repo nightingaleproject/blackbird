@@ -93,6 +93,7 @@ class App extends Component {
 
   // Add/remove a condition from the patient record to/from the death record
   // TODO: We'll want an interface that allows text to be edited, condition order to be changed, conditions to be added manually, etc
+  // TODO: This is getting long, we should refactor into additional functions
   handleConditionClick(event, data) {
     event.preventDefault();
     const clickedCondition = this.state.conditions.find((condition) => condition.id === data.id);
@@ -102,14 +103,15 @@ class App extends Component {
       newConditions = newConditions.filter((condition) => condition.id !== clickedCondition.id);
     } else {
       newConditions.push(clickedCondition);
-      newConditions = _.sortBy(newConditions, (condition) => moment(condition.date));
+      newConditions = _.sortBy(newConditions, (condition) => moment(condition.startDate));
     }
     this.setState({ selectedConditions: newConditions });
     // Then update the user display of the conditions
     for (let i = 0; i < 4; i++) {
       if (newConditions[i]) {
         const text = newConditions[i].description;
-        const onset = newConditions[i].date;
+        // TODO: Use user or record supplied death time, not current time, if available
+        const onset = moment(newConditions[i].startDate).fromNow(true);
         this.updateRecord(`cod${i+1}Text`, text);
         this.updateRecord(`cod${i+1}Time`, onset);
       } else {

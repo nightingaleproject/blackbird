@@ -46,6 +46,9 @@ class Timeline extends Component {
                   {condition.description}
                   {selected ? <Icon name='check' /> : null}
                 </Card.Header>
+                <Card.Description>
+                  {condition.formattedDateRange}
+                </Card.Description>
               </Card.Content>
             </Card>
           );
@@ -58,7 +61,17 @@ class Timeline extends Component {
         return <p>No {name} found</p>;
       } else {
         return resources.map((resource) => {
-          return <Card fluid header={resource.description} key={resource.id} />;
+          return (
+            <Card fluid key={resource.id}>
+              <Card.Content>
+                <Card.Header>{resource.description}</Card.Header>
+                <Card.Description>
+                  <p>{resource.formattedDateRange}</p>
+                  <p>{resource.additionalText}</p>
+                </Card.Description>
+              </Card.Content>
+            </Card>
+          );
         });
       }
     };
