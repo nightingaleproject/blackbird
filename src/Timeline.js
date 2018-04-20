@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Menu, Card, Input } from 'semantic-ui-react';
+import { Menu, Card, Input, Icon } from 'semantic-ui-react';
 
 class Timeline extends Component {
 
@@ -38,10 +38,15 @@ class Timeline extends Component {
         return <p>No conditions found</p>;
       } else {
         return conditions.map((condition) => {
-          return <Card fluid header={condition.description}
-                       key={condition.id}
-                       onClick={this.props.handleConditionClick}
-                       id={condition.id} />;
+          const selected = this.props.selectedConditions.includes(condition);
+          return (
+            <Card fluid key={condition.id} id={condition.id} onClick={this.props.handleConditionClick}>
+              <Card.Content>
+                <Card.Header>{condition.description} {selected ? <Icon name='check' /> : null}</Card.Header>
+                <Card.Meta>{condition.formattedDateRange}</Card.Meta>
+              </Card.Content>
+            </Card>
+          );
         });
       }
     };
@@ -51,7 +56,15 @@ class Timeline extends Component {
         return <p>No {name} found</p>;
       } else {
         return resources.map((resource) => {
-          return <Card fluid header={resource.description} key={resource.id} />;
+          return (
+            <Card fluid key={resource.id}>
+              <Card.Content>
+                <Card.Header>{resource.description}</Card.Header>
+                <Card.Meta>{resource.formattedDateRange}</Card.Meta>
+                <Card.Description>{resource.additionalText}</Card.Description>
+              </Card.Content>
+            </Card>
+          );
         });
       }
     };

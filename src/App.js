@@ -93,23 +93,25 @@ class App extends Component {
 
   // Add/remove a condition from the patient record to/from the death record
   // TODO: We'll want an interface that allows text to be edited, condition order to be changed, conditions to be added manually, etc
+  // TODO: This is getting long, we should refactor into additional functions
   handleConditionClick(event, data) {
     event.preventDefault();
-    const clickedCondition = this.state.conditions.find(function(condition) { return condition.id === data.id; });
+    const clickedCondition = this.state.conditions.find((condition) => condition.id === data.id);
     // First update our internal conditions state, adding or subtracting as needed and sorting by onset
     let newConditions = this.state.selectedConditions.slice(); // Create a new copy of the array
-    if (newConditions.some(function(condition) { return condition.id === clickedCondition.id })) {
-      newConditions = newConditions.filter(function(condition) { return condition.id !== clickedCondition.id });
+    if (newConditions.some((condition) => condition.id === clickedCondition.id)) {
+      newConditions = newConditions.filter((condition) => condition.id !== clickedCondition.id);
     } else {
       newConditions.push(clickedCondition);
-      newConditions = _.sortBy(newConditions, function(condition) { return moment(condition.date); });
+      newConditions = _.sortBy(newConditions, (condition) => moment(condition.startDate));
     }
     this.setState({ selectedConditions: newConditions });
     // Then update the user display of the conditions
     for (let i = 0; i < 4; i++) {
       if (newConditions[i]) {
         const text = newConditions[i].description;
-        const onset = newConditions[i].date;
+        // TODO: Use user or record supplied death time, not current time, if available
+        const onset = moment(newConditions[i].startDate).fromNow(true);
         this.updateRecord(`cod${i+1}Text`, text);
         this.updateRecord(`cod${i+1}Time`, onset);
       } else {
@@ -121,21 +123,38 @@ class App extends Component {
 
   render() {
 
-    const renderStep = function(step) {
+    const renderStep = (step) => {
       switch (step) {
       case 'Pronouncing':
-        return <PronounceForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+        return <PronounceForm patient={this.state.patient}
+                              gotoStep={this.gotoStep}
+                              handleRecordChange={this.handleRecordChange}
+                              record={this.state.record} />;
       case 'CauseOfDeath':
-        return <CauseOfDeathForm conditions={this.state.conditions} medications={this.state.medications} procedures={this.state.procedures} observations={this.state.observations} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} handleConditionClick={this.handleConditionClick} record={this.state.record} />;
+        return <CauseOfDeathForm conditions={this.state.conditions}
+                                 selectedConditions={this.state.selectedConditions}
+                                 medications={this.state.medications}
+                                 procedures={this.state.procedures}
+                                 observations={this.state.observations}
+                                 gotoStep={this.gotoStep}
+                                 handleRecordChange={this.handleRecordChange}
+                                 handleConditionClick={this.handleConditionClick}
+record={this.state.record} />;
       case 'AdditionalQuestions':
-        return <AdditionalQuestionsForm patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+        return <AdditionalQuestionsForm patient={this.state.patient}
+                                        gotoStep={this.gotoStep}
+                                        handleRecordChange={this.handleRecordChange}
+                                        record={this.state.record} />;
       case 'Validate':
-        return <Validate patient={this.state.patient} gotoStep={this.gotoStep} handleRecordChange={this.handleRecordChange} record={this.state.record} />;
+        return <Validate patient={this.state.patient}
+                         gotoStep={this.gotoStep}
+                         handleRecordChange={this.handleRecordChange}
+                         record={this.state.record} />;
       case 'Welcome':
       default:
         return <Welcome setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;
       }
-    }.bind(this);
+    };
 
     return (
         <div className="App">
@@ -146,9 +165,7 @@ class App extends Component {
           </Grid>
         </div>
     );
-
   }
-
 }
 
 export default App;

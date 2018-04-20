@@ -1,3 +1,12 @@
+import moment from 'moment';
+
+// Helper function for formatting a date
+function formatDate(date) {
+  if (date) {
+    return moment(date).format('MMMM Do YYYY');
+  }
+}
+
 // Simple wrapper for FHIR resources (conditions, medications, procedures, observations)
 class Resource {
 
@@ -22,23 +31,60 @@ class Resource {
   get description() {
     return this.resource.code.coding[0].display;
   }
+
+  get formattedStartDate() {
+    return formatDate(this.startDate);
+  }
+
+  get formattedEndDate() {
+    return formatDate(this.endDate);
+  }
+
+  get formattedDateRange() {
+    if (this.formattedStartDate && this.formattedEndDate && this.formattedStartDate !== this.formattedEndDate) {
+      return `${this.formattedStartDate} through ${this.formattedEndDate}`;
+    } else if (this.startDate) {
+      return this.formattedStartDate;
+    }
+  }
 }
 
 class Condition extends Resource {
-  get date() {
+  get startDate() {
     return this.resource.onsetDateTime;
+  }
+  get endDate() {
+    return this.resource.abatementDateTime;
   }
 }
 
 class Procedure extends Resource {
-  get date() {
-    return this.resource.performedDateTime;
+  get startDate() {
+    return this.resource.performedDateTime || this.resource.performedPeriod.start;
+  }
+  get endDate() {
+    if (this.resource.performedPeriod) {
+      return this.resource.performedPeriod.end;
+    }
+  }
+  get additionalText() {
+    if (this.resource.reasonReference && this.resource.reasonReference[0] && this.resource.reasonReference[0].display) {
+      return `Reason: ${this.resource.reasonReference[0].display}`;
+    }
   }
 }
 
 class Observation extends Resource {
-  get date() {
+  get startDate() {
     return this.resource.effectiveDateTime;
+  }
+  get endDate() {
+    return this.resource.effectiveDateTime;
+  }
+  get additionalText() {
+    if (this.resource.valueQuantity && this.resource.valueQuantity.value) {
+      return `Value: ${this.resource.valueQuantity.value} ${this.resource.valueQuantity.unit}`;
+    }
   }
 }
 
@@ -54,8 +100,11 @@ class MedicationRequest extends Resource {
       return this.resource.medicationCodeableConcept.coding[0].display;
     }
   }
-  get date() {
-    return this.resource.dateWritten;
+  get startDate() {
+    return this.resource.dateWritten || this.resource.authoredOn;
+  }
+  get endDate() {
+    return this.resource.dateWritten || this.resource.authoredOn;
   }
   // Some FHIR implementations don't include details on the medication in the MedicationRequest;
   // in those cases we may need to request the associated Medication resource; this returns a

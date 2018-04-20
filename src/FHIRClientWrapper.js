@@ -1,6 +1,8 @@
 import Patient from './Patient';
 import Practitioner from './Practitioner';
 import Resource from './Resource';
+import _ from 'lodash';
+import moment from 'moment';
 
 // Wrap our usage of fhirclient with some simple utilities
 
@@ -35,7 +37,8 @@ const FHIRWrap = {
       return new Promise((resolve) => {
         return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
           if (response.data.entry) {
-            resolve(response.data.entry.map((entry) => Resource.wrap(entry.resource)));
+            const resources = response.data.entry.map((entry) => Resource.wrap(entry.resource));
+            resolve(_.sortBy(resources, (resource) => moment(resource.startDate)).reverse());
           } else {
             resolve([]);
           }
