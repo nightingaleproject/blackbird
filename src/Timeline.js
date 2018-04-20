@@ -42,13 +42,8 @@ class Timeline extends Component {
           return (
             <Card fluid key={condition.id} id={condition.id} onClick={this.props.handleConditionClick}>
               <Card.Content>
-                <Card.Header>
-                  {condition.description}
-                  {selected ? <Icon name='check' /> : null}
-                </Card.Header>
-                <Card.Description>
-                  {condition.formattedDateRange}
-                </Card.Description>
+                <Card.Header>{condition.description} {selected ? <Icon name='check' /> : null}</Card.Header>
+                <Card.Meta>{condition.formattedDateRange}</Card.Meta>
               </Card.Content>
             </Card>
           );
@@ -65,10 +60,8 @@ class Timeline extends Component {
             <Card fluid key={resource.id}>
               <Card.Content>
                 <Card.Header>{resource.description}</Card.Header>
-                <Card.Description>
-                  <p>{resource.formattedDateRange}</p>
-                  <p>{resource.additionalText}</p>
-                </Card.Description>
+                <Card.Meta>{resource.formattedDateRange}</Card.Meta>
+                <Card.Description>{resource.additionalText}</Card.Description>
               </Card.Content>
             </Card>
           );
