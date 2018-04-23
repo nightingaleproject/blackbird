@@ -1,4 +1,32 @@
 import moment from 'moment';
+//import fhirpath from 'fhirpath.js';
+
+import _ from 'lodash';
+function fhirpathish(resource, path) {
+  if (path.length === 0) {
+    return [];
+  }
+  if (!path.includes('.')) {
+    return resource[path];
+  }
+  const [fullpath, first, rest] = path.match(/([^.]+)\.(.+)/);
+  const value = resource[first];
+  if (_.isUndefined(value) || _.isString(value)) {
+    return [];
+  }
+  if (_.isArray(value)) {
+    return _.compact(_.flatten(value.map((v) => fhirpathish(v, rest))));
+  }
+  if (_.isObject(value)) {
+    return _.flatten([fhirpathish(value, rest)]);
+  }
+  throw('Unexpected value found in resource');
+}
+
+const fhirpath = {
+  evaluate: fhirpathish
+}
+
 
 // Helper function for formatting a date
 function formatDate(date) {
@@ -12,6 +40,7 @@ class Resource {
 
   constructor(resource) {
     this.resource = resource;
+    this.pathCache = {};
   }
 
   static wrap(resource) {
@@ -24,12 +53,20 @@ class Resource {
     }
   }
 
+  // Given a FHIR path return the first resulting expression from this resource
+  path(path) {
+    if (this.pathCache.hasOwnProperty(path)) {
+      return this.pathCache[path];
+    }
+    return this.pathCache[path] = fhirpath.evaluate(this.resource, path)[0];
+  }
+
   get id() {
     return this.resource.id;
   }
 
   get description() {
-    return this.resource.code.coding[0].display;
+    return this.path('code.text') || this.path('code.coding.display');
   }
 
   get formattedStartDate() {
@@ -60,16 +97,14 @@ class Condition extends Resource {
 
 class Procedure extends Resource {
   get startDate() {
-    return this.resource.performedDateTime || this.resource.performedPeriod.start;
+    return this.resource.performedDateTime || this.path('performedPeriod.start');
   }
   get endDate() {
-    if (this.resource.performedPeriod) {
-      return this.resource.performedPeriod.end;
-    }
+    return this.path('performedPeriod.end');
   }
   get additionalText() {
-    if (this.resource.reasonReference && this.resource.reasonReference[0] && this.resource.reasonReference[0].display) {
-      return `Reason: ${this.resource.reasonReference[0].display}`;
+    if (this.path('reasonReference.display')) {
+      return `Reason: ${this.path('reasonReference.display')}`;
     }
   }
 }
@@ -82,8 +117,8 @@ class Observation extends Resource {
     return this.resource.effectiveDateTime;
   }
   get additionalText() {
-    if (this.resource.valueQuantity && this.resource.valueQuantity.value) {
-      return `Value: ${this.resource.valueQuantity.value} ${this.resource.valueQuantity.unit}`;
+    if (this.path('valueQuantity.value')) {
+      return `Result: ${this.path('valueQuantity.value')} ${this.path('valueQuantity.unit')}`;
     }
   }
 }
@@ -93,12 +128,14 @@ class MedicationRequest extends Resource {
     super(resource);
     this.medicationResource = medicationResource;
   }
-  get description() {
+  // Given a FHIR path return the first resulting expression from the medication resource (if present)
+  mrPath(path) {
     if (this.medicationResource) {
-      return this.medicationResource.code.coding[0].display;
-    } else {
-      return this.resource.medicationCodeableConcept.coding[0].display;
+      return fhirpath.evaluate(this.medicationResource, path)[0];
     }
+  }
+  get description() {
+    return this.mrPath('code.coding.display') || this.path('medicationCodeableConcept.coding.display');
   }
   get startDate() {
     return this.resource.dateWritten || this.resource.authoredOn;
@@ -111,7 +148,7 @@ class MedicationRequest extends Resource {
   // promise wrapping a new MedicationRequest with the desired information (if available)
   withMedication(smart) {
     if (this.resource.medicationReference) {
-      const medicationId = this.resource.medicationReference.reference.split('/')[1];
+      const medicationId = this.path('medicationReference.reference').split('/')[1];
       return smart.api.read({ type: 'Medication', id: medicationId }).then((response) => {
         return new MedicationRequest(this.resource, response.data);
       });

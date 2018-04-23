@@ -7,6 +7,7 @@
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "fhirclient": "^0.1.12",
+    "fhirpath.js": "^0.0.6",
     "lodash": "^4.17.5",
     "moment": "^2.20.1",
     "react": "^16.2.0",

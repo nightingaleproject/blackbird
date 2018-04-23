@@ -2596,6 +2596,10 @@ fhirclient@^0.1.12:
   version "0.1.12"
   resolved "https://registry.yarnpkg.com/fhirclient/-/fhirclient-0.1.12.tgz#d9529de1f5c63b76120038a6898382bfc500d916"
 
+fhirpath.js@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/fhirpath.js/-/fhirpath.js-0.0.6.tgz#387f6442b8674fcea395ea81dbe6ee0969fe0457"
+
 figures@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/figures/-/figures-2.0.0.tgz#3ab1a2d2a62c8bfb431a0c94cb797a2fce27c962"
