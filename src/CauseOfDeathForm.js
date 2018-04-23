@@ -8,12 +8,13 @@ class CauseOfDeathForm extends FormPage {
   render() {
 
     return (
-      <div>
+      <React.Fragment>
 
-        {this.menu('CauseOfDeath')}
+        <Grid.Row>
+          {this.menu('CauseOfDeath')}
+        </Grid.Row>
 
-        <Grid>
-
+        <Grid.Row>
           <Grid.Column width={8}>
             <Timeline conditions={this.props.conditions}
                       selectedConditions={this.props.selectedConditions}
@@ -26,32 +27,39 @@ class CauseOfDeathForm extends FormPage {
           <Grid.Column width={8}>
 
             <Form>
+
+              <Form.Field>
+                <label>Immediate Cause</label>
+              </Form.Field>
+
               <Form.Group>
-                {this.input('text', 'cod1Text')}
-                {this.input('text', 'cod1Time')}
+                {this.input('text', 'cod1Time', { width: 4 })}
+                {this.input('text', 'cod1Text', { width: 12 })}
+              </Form.Group>
+
+              <Form.Field>
+                <label>Underlying Causes</label>
+              </Form.Field>
+
+              <Form.Group>
+                {this.input('text', 'cod2Time', { width: 4, optional: true })}
+                {this.input('text', 'cod2Text', { width: 12, optional: true })}
               </Form.Group>
 
               <Form.Group>
-                {this.input('text', 'cod2Text', { optional: true })}
-                {this.input('text', 'cod2Time', { optional: true })}
+                {this.input('text', 'cod3Time', { width: 4, optional: true })}
+                {this.input('text', 'cod3Text', { width: 12, optional: true })}
               </Form.Group>
 
               <Form.Group>
-                {this.input('text', 'cod3Text', { optional: true })}
-                {this.input('text', 'cod3Time', { optional: true })}
-              </Form.Group>
-
-              <Form.Group>
-                {this.input('text', 'cod4Text', { optional: true })}
-                {this.input('text', 'cod4Time', { optional: true })}
+                {this.input('text', 'cod4Time', { width: 4, optional: true })}
+                {this.input('text', 'cod4Text', { width: 12, optional: true })}
               </Form.Group>
             </Form>
 
           </Grid.Column>
-
-        </Grid>
-
-      </div>
+        </Grid.Row>
+      </React.Fragment>
     );
   }
 

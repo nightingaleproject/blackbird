@@ -1,20 +1,20 @@
 import React from 'react';
-import { Card, Grid, Icon } from 'semantic-ui-react'
+import { Card, Icon } from 'semantic-ui-react'
 
 function PatientCard(props) {
   const patient = props.patient;
   if (patient) {
     return (
-        <Card fluid>
-          <Grid columns={2}>
-            <Grid.Column width={2}>
-              <Icon name='user circle' size='huge' />
-            </Grid.Column>
-            <Grid.Column width={14}>
-              <Card.Header>{patient.name}</Card.Header>
-              <Card.Meta>{patient.age}</Card.Meta>
-            </Grid.Column>
-          </Grid>
+        <Card fluid color='blue' className='patient'>
+          <div>
+            <div className='patient-icon'>
+              <Icon color='blue' name='user circle' size='huge' />
+            </div>
+            <div className='patient-info'>
+              <h4>{patient.name}</h4>
+              <p>{patient.age} old</p>
+            </div>
+          </div>
         </Card>
     );
   } else {

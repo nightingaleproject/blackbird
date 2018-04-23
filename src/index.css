@@ -7,3 +7,34 @@
   top: 45%;
   left: 45%;
 }
+
+.patients {
+  padding-top: 2em;
+}
+
+.ui.card.patient {
+  margin-top: 1em;
+  margin-bottom: -1em;
+}
+
+.patient .icon {
+  margin: 0.1em;
+}
+
+.patient .patient-icon {
+  width: 80px;
+  float: left;
+}
+
+.patient .patient-info {
+  float: left;
+}
+
+.patient .patient-info h4 {
+  margin-top: 0.4em;
+  margin-bottom: 0.1em;
+}
+
+.completion-icon {
+  padding-left: 0.5em;
+}

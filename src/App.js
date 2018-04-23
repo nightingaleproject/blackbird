@@ -67,8 +67,8 @@ class App extends Component {
     this.setState({ patient });
   }
 
-  setUser(patient) {
-    this.setState({ patient });
+  setUser(user) {
+    this.setState({ user });
   }
 
   setResources(conditions, medications, procedures, observations) {
@@ -103,7 +103,7 @@ class App extends Component {
       newConditions = newConditions.filter((condition) => condition.id !== clickedCondition.id);
     } else {
       newConditions.push(clickedCondition);
-      newConditions = _.sortBy(newConditions, (condition) => moment(condition.startDate));
+      newConditions = _.sortBy(newConditions, (condition) => moment(condition.startDate)).reverse();
     }
     this.setState({ selectedConditions: newConditions });
     // Then update the user display of the conditions
@@ -160,7 +160,9 @@ record={this.state.record} />;
         <div className="App">
           <Header/>
           <Grid container>
-            <PatientCard patient={this.state.patient} />
+            <Grid.Row>
+              <PatientCard patient={this.state.patient} />
+            </Grid.Row>
             {renderStep(this.state.step)}
           </Grid>
         </div>
