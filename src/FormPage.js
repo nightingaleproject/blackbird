@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Menu, Form, Icon } from 'semantic-ui-react';
+import { Input, Menu, Form, Icon } from 'semantic-ui-react';
 import Completion from './Completion';
 
 class FormPage extends Component {
@@ -37,12 +37,14 @@ class FormPage extends Component {
     if (!options['optional']) {
       Completion.register(name, this.currentStep);
     }
-    return <Form.Input type={type}
-                       name={name}
-                       value={this.props.record[name]}
-                       width={options['width']}
-                       label={options['label']}
-                       onChange={this.props.handleRecordChange} />;
+    return <Form.Input width={options['width']}>
+             <Input type={type}
+                    name={name}
+                    value={this.props.record[name]}
+                    label={options['label']}
+                    labelPosition={options['label'] ? 'right' : null}
+                    onChange={this.props.handleRecordChange} />
+           </Form.Input>;
   }
 
   radio(label, name, value, options = { optional: false }) {

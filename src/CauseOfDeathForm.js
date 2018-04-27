@@ -1,11 +1,17 @@
 import React from 'react';
-import { Grid, Form } from 'semantic-ui-react';
+import { Grid, Form, Button } from 'semantic-ui-react';
 import FormPage from './FormPage';
 import Timeline from './Timeline';
 
 class CauseOfDeathForm extends FormPage {
 
   render() {
+
+    const deleteButton = (condition) => {
+      if (condition) {
+        return <Button icon='delete' id={condition.id} onClick={this.props.handleConditionClick} />;
+      }
+    };
 
     return (
       <React.Fragment>
@@ -34,7 +40,7 @@ class CauseOfDeathForm extends FormPage {
 
               <Form.Group>
                 {this.input('text', 'cod1Time', { width: 4 })}
-                {this.input('text', 'cod1Text', { width: 12 })}
+                {this.input('text', 'cod1Text', { width: 12, label: deleteButton(this.props.selectedConditions[0]) })}
               </Form.Group>
 
               <Form.Field>
@@ -43,17 +49,17 @@ class CauseOfDeathForm extends FormPage {
 
               <Form.Group>
                 {this.input('text', 'cod2Time', { width: 4, optional: true })}
-                {this.input('text', 'cod2Text', { width: 12, optional: true })}
+                {this.input('text', 'cod2Text', { width: 12, optional: true, label: deleteButton(this.props.selectedConditions[1]) })}
               </Form.Group>
 
               <Form.Group>
                 {this.input('text', 'cod3Time', { width: 4, optional: true })}
-                {this.input('text', 'cod3Text', { width: 12, optional: true })}
+                {this.input('text', 'cod3Text', { width: 12, optional: true, label: deleteButton(this.props.selectedConditions[2]) })}
               </Form.Group>
 
               <Form.Group>
                 {this.input('text', 'cod4Time', { width: 4, optional: true })}
-                {this.input('text', 'cod4Text', { width: 12, optional: true })}
+                {this.input('text', 'cod4Text', { width: 12, optional: true, label: deleteButton(this.props.selectedConditions[3]) })}
               </Form.Group>
             </Form>
 
