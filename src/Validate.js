@@ -4,7 +4,8 @@ class Validate extends Component {
   render() {
     return (
         <div>
-          Validation
+          <h3>Validation</h3>
+          <pre>{JSON.stringify(this.props.record, null, 2)}</pre>
         </div>
     );
   }

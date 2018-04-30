@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Button, Card } from 'semantic-ui-react';
+import { Form, Button, Loader, Card } from 'semantic-ui-react';
 import { FHIRWrap } from './FHIRClientWrapper';
 
 class Welcome extends Component {
@@ -45,11 +45,11 @@ class Welcome extends Component {
 
     const patientLinks = (patients) => {
       if (!patients) {
-        return <div/>;
+        return null;
       } else if (patients.length === 0) {
-        return <div>Searching...</div>;
+        return <Loader active inline='centered' content='Loading' />;
       } else {
-        return <div>{patients.map(patientLink)}</div>;
+        return <Card.Group className='patients'>{patients.map(patientLink)}</Card.Group>;
       }
     };
 
@@ -69,7 +69,7 @@ class Welcome extends Component {
             <label>Decedent name:</label>
             <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange} />
           </Form.Field>
-          <Button type="submit">Search</Button>
+          <Button primary type="submit">Search</Button>
         </Form>
         {patientLinks(this.state.patients)}
       </div>

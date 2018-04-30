@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button } from 'semantic-ui-react';
+import { Grid, Form, Button } from 'semantic-ui-react';
 import FormPage from './FormPage';
 
 class AdditionalQuestionsForm extends FormPage {
@@ -7,7 +7,7 @@ class AdditionalQuestionsForm extends FormPage {
   render() {
 
     return (
-      <div>
+      <Grid.Row>
 
         {this.menu('AdditionalQuestions')}
 
@@ -38,11 +38,11 @@ class AdditionalQuestionsForm extends FormPage {
           {this.radio('Suicide', 'mannerOfDeath', '44301001')}
           {this.radio('Pending Investigation', 'mannerOfDeath', '185973002')}
           {this.radio('Could not be Determined', 'mannerOfDeath', '65037004')}
+
+          <Button className='validate' primary onClick={() => this.props.gotoStep('Validate')}>Complete</Button>
+
         </Form>
-
-        <Button onClick={() => this.props.gotoStep('Validate')}>Submit</Button>
-
-      </div>
+      </Grid.Row>
     );
   }
 
