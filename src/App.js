@@ -34,6 +34,7 @@ class App extends Component {
       cod3Time: '',
       cod4Text: '',
       cod4Time: '',
+      contributing: '',
       tobacco: null,
       pregnancy: null,
       mannerOfDeath: null

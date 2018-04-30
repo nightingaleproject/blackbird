@@ -47,6 +47,14 @@ class FormPage extends Component {
            </Form.Input>;
   }
 
+  textarea(name, options = {}) {
+    // Register this field for the current step unless noted as optional
+    if (!options['optional']) {
+      Completion.register(name, this.currentStep);
+    }
+    return <Form.TextArea rows={5} name={name} value={this.props.record[name]} onChange={this.props.handleRecordChange} />;
+  }
+
   radio(label, name, value, options = { optional: false }) {
     // Register this field for the current step unless noted as optional
     if (!options['optional']) {

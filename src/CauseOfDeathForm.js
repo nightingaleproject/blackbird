@@ -61,6 +61,13 @@ class CauseOfDeathForm extends FormPage {
                 {this.input('text', 'cod4Time', { width: 4, optional: true })}
                 {this.input('text', 'cod4Text', { width: 12, optional: true, label: deleteButton(this.props.selectedConditions[3]) })}
               </Form.Group>
+
+              <Form.Field>
+                <label>Other Significant Conditions</label>
+              </Form.Field>
+
+              {this.textarea('contributing', { optional: true })}
+
             </Form>
 
           </Grid.Column>
