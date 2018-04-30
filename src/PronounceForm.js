@@ -47,18 +47,6 @@ class PronounceForm extends FormPage {
               {this.radio('Yes', 'examinerContacted', 'yes')}
               {this.radio('No', 'examinerContacted', 'no')}
 
-              <Form.Field>
-                <label>Was an Autopsy Performed?:</label>
-              </Form.Field>
-              {this.radio('Yes', 'autopsyPerformed', 'yes')}
-              {this.radio('No', 'autopsyPerformed', 'no')}
-
-              <Form.Field>
-                <label>Were Autopsy Findings Available to Complete the Case of Death?:</label>
-              </Form.Field>
-              {this.radio('Yes', 'autopsyAvailable', 'yes')}
-              {this.radio('No', 'autopsyAvailable', 'no')}
-
               <h2>Person Pronouncing Death</h2>
 
               <Form.Field>

@@ -12,6 +12,19 @@ class AdditionalQuestionsForm extends FormPage {
         {this.menu('AdditionalQuestions')}
 
         <Form>
+
+          <Form.Field>
+            <label>Was an Autopsy Performed?:</label>
+          </Form.Field>
+          {this.radio('Yes', 'autopsyPerformed', 'yes')}
+          {this.radio('No', 'autopsyPerformed', 'no')}
+
+          <Form.Field>
+            <label>Were Autopsy Findings Available to Complete the Case of Death?:</label>
+          </Form.Field>
+          {this.radio('Yes', 'autopsyAvailable', 'yes')}
+          {this.radio('No', 'autopsyAvailable', 'no')}
+
           <Form.Field>
             <label>Did tobacco use contribute to death?:</label>
           </Form.Field>
