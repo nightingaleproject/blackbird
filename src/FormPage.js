@@ -28,15 +28,14 @@ class FormPage extends Component {
         {this.menuItem('Pronouncing', currentStep)}
         {this.menuItem('CauseOfDeath', currentStep)}
         {this.menuItem('AdditionalQuestions', currentStep)}
+        {this.menuItem('InjuryQuestions', currentStep)}
       </Menu>
     );
   }
 
   input(type, name, options = {}) {
-    // Register this field for the current step unless noted as optional; default if not provided is that the field is required
-    if (!options['optional']) {
-      Completion.register(name, this.currentStep);
-    }
+    // Register this field for the current step for tracking form completion
+    Completion.register(name, this.currentStep, options['optional']);
     return <Form.Input width={options['width']}>
              <Input type={type}
                     name={name}
@@ -48,24 +47,28 @@ class FormPage extends Component {
   }
 
   textarea(name, options = {}) {
-    // Register this field for the current step unless noted as optional
-    if (!options['optional']) {
-      Completion.register(name, this.currentStep);
-    }
+    // Register this field for the current step for tracking form completion
+    Completion.register(name, this.currentStep, options['optional']);
     return <Form.TextArea rows={5} name={name} value={this.props.record[name]} onChange={this.props.handleRecordChange} />;
   }
 
-  radio(label, name, value, options = { optional: false }) {
-    // Register this field for the current step unless noted as optional
-    if (!options['optional']) {
-      Completion.register(name, this.currentStep);
-    }
+  radio(label, name, value, options = {}) {
+    // Register this field for the current step for tracking form completion
+    Completion.register(name, this.currentStep, options['optional']);
     const checked = (this.props.record[name] === value);
     return (
         <Form.Field>
           <Form.Radio label={label} name={name} value={value} checked={checked} onChange={this.props.handleRecordChange} />
         </Form.Field>
     );
+  }
+
+  componentDidMount() {
+    // When we first render, the menu can't know if the form is complete because the form fields haven't been
+    // registered yet; this call to componentDidMount happens after render, when the fields are registered; by
+    // setting a state value (which isn't actually referenced anywhere) we force a re-render if needed to
+    // update the completion based on the now registered form fields
+    this.setState({ isComplete: Completion.isComplete(this.currentStep, this.props.record) });
   }
 }
 

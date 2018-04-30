@@ -42,7 +42,7 @@ class PronounceForm extends FormPage {
               </Form.Group>
 
               <Form.Field>
-                <label>Was Medical Examiner or Coroner Contacted?:</label>
+                <label>Was Medical Examiner or Coroner Contacted?</label>
               </Form.Field>
               {this.radio('Yes', 'examinerContacted', 'yes')}
               {this.radio('No', 'examinerContacted', 'no')}

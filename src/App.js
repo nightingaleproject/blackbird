@@ -8,6 +8,7 @@ import Welcome from './Welcome';
 import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
 import AdditionalQuestionsForm from './AdditionalQuestionsForm';
+import InjuryQuestionsForm from './InjuryQuestionsForm';
 import Validate from './Validate';
 import { SMARTWrap } from './FHIRClientWrapper';
 
@@ -37,7 +38,16 @@ class App extends Component {
       contributing: '',
       tobacco: null,
       pregnancy: null,
-      mannerOfDeath: null
+      mannerOfDeath: null,
+      dateOfInjury: '',
+      timeOfInjury: '',
+      placeOfInjury: '',
+      injuryAtWork: null,
+      locationOfInjuryState: '',
+      locationOfInjuryCity: '',
+      locationOfInjuryStreet: '',
+      locationOfInjuryApt: '',
+      locationOfInjuryZip: ''
     };
     // First page depends on whether we're running in a SMART on FHIR context or not
     if (props.smart) {
@@ -140,12 +150,17 @@ class App extends Component {
                                  gotoStep={this.gotoStep}
                                  handleRecordChange={this.handleRecordChange}
                                  handleConditionClick={this.handleConditionClick}
-record={this.state.record} />;
+                                 record={this.state.record} />;
       case 'AdditionalQuestions':
         return <AdditionalQuestionsForm patient={this.state.patient}
                                         gotoStep={this.gotoStep}
                                         handleRecordChange={this.handleRecordChange}
                                         record={this.state.record} />;
+      case 'InjuryQuestions':
+        return <InjuryQuestionsForm patient={this.state.patient}
+                                    gotoStep={this.gotoStep}
+                                    handleRecordChange={this.handleRecordChange}
+                                    record={this.state.record} />;
       case 'Validate':
         return <Validate patient={this.state.patient}
                          gotoStep={this.gotoStep}
