@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Input, Menu, Form, Icon } from 'semantic-ui-react';
+import { Input, Menu, Form, Icon, Button } from 'semantic-ui-react';
 import Completion from './Completion';
 
 class FormPage extends Component {
@@ -10,12 +10,14 @@ class FormPage extends Component {
     this.radio = this.radio.bind(this);
   }
 
-  menuItem(stepName, currentStep) {
+  menuItem(stepName, currentStep, showCompletion) {
     const isComplete = Completion.isComplete(stepName, this.props.record);
+    const iconName = isComplete ? 'check' : 'exclamation triangle';
+    const icon = <Icon className='completion-icon' color='blue' size='large' name={iconName} />;
     return (
         <Menu.Item name={stepName} active={currentStep === stepName} onClick={() => this.props.gotoStep(stepName)}>
           {stepName}
-          <Icon className='completion-icon' color='blue' size='large' name={isComplete ? 'check' : 'exclamation triangle'} />
+          {showCompletion ? icon : null}
         </Menu.Item>
     );
   }
@@ -25,10 +27,11 @@ class FormPage extends Component {
     this.currentStep = currentStep;
     return (
       <Menu pointing fluid>
-        {this.menuItem('Pronouncing', currentStep)}
-        {this.menuItem('CauseOfDeath', currentStep)}
-        {this.menuItem('AdditionalQuestions', currentStep)}
-        {this.menuItem('InjuryQuestions', currentStep)}
+        {this.menuItem('Pronouncing', currentStep, true)}
+        {this.menuItem('CauseOfDeath', currentStep, true)}
+        {this.menuItem('AdditionalQuestions', currentStep, true)}
+        {this.menuItem('InjuryQuestions', currentStep, true)}
+        {this.menuItem('Validation', currentStep, false)}
       </Menu>
     );
   }
@@ -61,6 +64,10 @@ class FormPage extends Component {
           <Form.Radio label={label} name={name} value={value} checked={checked} onChange={this.props.handleRecordChange} />
         </Form.Field>
     );
+  }
+
+  nextStepButton(step) {
+    return <Button primary floated='right' onClick={() => this.props.gotoStep(step)}>Go to {step}</Button>;
   }
 
   componentDidMount() {

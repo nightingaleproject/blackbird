@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Form, Button } from 'semantic-ui-react';
+import { Grid, Form } from 'semantic-ui-react';
 import FormPage from './FormPage';
 
 class InjuryQuestionsForm extends FormPage {
@@ -67,8 +67,8 @@ class InjuryQuestionsForm extends FormPage {
                   {this.input('text', 'locationOfInjuryZip', { optional: true })}
                 </Form.Field>
               </Form.Group>
-              { /* TODO: Move button to right */ }
-              <Button className='validate' primary onClick={() => this.props.gotoStep('Validate')}>Complete</Button>
+
+              {this.nextStepButton('Validation')}
 
             </Form>
 

@@ -68,6 +68,8 @@ class CauseOfDeathForm extends FormPage {
 
               {this.textarea('contributing', { optional: true })}
 
+              {this.nextStepButton('AdditionalQuestions')}
+
             </Form>
 
           </Grid.Column>

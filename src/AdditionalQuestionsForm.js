@@ -14,10 +14,10 @@ class AdditionalQuestionsForm extends FormPage {
         </Grid.Row>
 
         <Grid.Row>
-          <Grid.Column>
+
+          <Grid.Column width={8}>
 
             <Form>
-
               <Form.Field>
                 <label>Was an Autopsy Performed?</label>
               </Form.Field>
@@ -30,6 +30,21 @@ class AdditionalQuestionsForm extends FormPage {
               {this.radio('Yes', 'autopsyAvailable', 'yes')}
               {this.radio('No', 'autopsyAvailable', 'no')}
 
+              <Form.Field>
+                <label>Manner of Death:</label>
+              </Form.Field>
+              {this.radio('Natural', 'mannerOfDeath', '38605008')}
+              {this.radio('Homicide', 'mannerOfDeath', '27935005')}
+              {this.radio('Accident', 'mannerOfDeath', '7878000')}
+              {this.radio('Suicide', 'mannerOfDeath', '44301001')}
+              {this.radio('Pending Investigation', 'mannerOfDeath', '185973002')}
+              {this.radio('Could not be Determined', 'mannerOfDeath', '65037004')}
+            </Form>
+
+          </Grid.Column>
+          <Grid.Column width={8}>
+
+            <Form>
               <Form.Field>
                 <label>Did tobacco use contribute to death?</label>
               </Form.Field>
@@ -47,16 +62,7 @@ class AdditionalQuestionsForm extends FormPage {
               {this.radio('Not pregnant, but pregnant 43 days to 1 year before death', 'pregnancy', 'PHC1263')}
               {this.radio('Unknown if pregnant within the past year', 'pregnancy', 'PHC1264')}
 
-              <Form.Field>
-                <label>Manner of Death:</label>
-              </Form.Field>
-              {this.radio('Natural', 'mannerOfDeath', '38605008')}
-              {this.radio('Homicide', 'mannerOfDeath', '27935005')}
-              {this.radio('Accident', 'mannerOfDeath', '7878000')}
-              {this.radio('Suicide', 'mannerOfDeath', '44301001')}
-              {this.radio('Pending Investigation', 'mannerOfDeath', '185973002')}
-              {this.radio('Could not be Determined', 'mannerOfDeath', '65037004')}
-
+              {this.nextStepButton('InjuryQuestions')}
             </Form>
 
           </Grid.Column>

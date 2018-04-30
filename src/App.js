@@ -9,7 +9,7 @@ import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
 import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import InjuryQuestionsForm from './InjuryQuestionsForm';
-import Validate from './Validate';
+import Validation from './Validation';
 import { SMARTWrap } from './FHIRClientWrapper';
 
 class App extends Component {
@@ -161,11 +161,11 @@ class App extends Component {
                                     gotoStep={this.gotoStep}
                                     handleRecordChange={this.handleRecordChange}
                                     record={this.state.record} />;
-      case 'Validate':
-        return <Validate patient={this.state.patient}
-                         gotoStep={this.gotoStep}
-                         handleRecordChange={this.handleRecordChange}
-                         record={this.state.record} />;
+      case 'Validation':
+        return <Validation patient={this.state.patient}
+                           gotoStep={this.gotoStep}
+                           handleRecordChange={this.handleRecordChange}
+                           record={this.state.record} />;
       case 'Welcome':
       default:
         return <Welcome setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;

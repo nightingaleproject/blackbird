@@ -58,6 +58,9 @@ class PronounceForm extends FormPage {
                 <label>License Number:</label>
                 {this.input('text', 'certifierNumber')}
               </Form.Field>
+
+              {this.nextStepButton('CauseOfDeath')}
+
             </Form>
 
           </Grid.Column>
