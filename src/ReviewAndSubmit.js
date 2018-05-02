@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Message, Button } from 'semantic-ui-react';
+import { Grid, Message, Form, Button } from 'semantic-ui-react';
 import FormPage from './FormPage';
 
 class ReviewAndSubmit extends FormPage {
@@ -35,8 +35,8 @@ class ReviewAndSubmit extends FormPage {
               {reviewRow('Was Medical Examiner or Coroner Contacted?', this.props.record.examinerContacted)}
               {reviewRow('Was an Autopsy Performed?', this.props.record.autopsyPerformed)}
               {reviewRow('Were Autopsy Findings Available to Complete the Cause of Death?', this.props.record.autopsyAvailable)}
-              {reviewRow('certifierName', this.props.record.certifierName)}
-              {reviewRow('certifierNumber', this.props.record.certifierNumber)}
+              {reviewRow('Person Pronouncing Death', this.props.record.pronouncerName)}
+              {reviewRow('License Number of Person Pronouncing Death', this.props.record.pronouncerNumber)}
               {reviewRow('Immediate Cause of Death', this.props.record.cod1Text)}
               {reviewRow('Approximate Interval', this.props.record.cod1Time)}
               {reviewRow('Underlying Cause of Death', this.props.record.cod2Text)}
@@ -65,7 +65,45 @@ class ReviewAndSubmit extends FormPage {
 
         <Grid.Row>
           <Grid.Column>
-            <Button primary floated='right' onClick={() => alert('No EDRS Configured')}>Submit</Button>
+            <Form>
+
+              <Form.Group widths='equal'>
+                <Form.Field>
+                  <label>Certifier Name:</label>
+                  {this.input('text', 'certifierName')}
+                </Form.Field>
+                <Form.Field>
+                  <label>Certifier License Number:</label>
+                  {this.input('text', 'certifierNumber')}
+                </Form.Field>
+              </Form.Group>
+              <Form.Field>
+                <label>Address of Certifier</label>
+              </Form.Field>
+              <Form.Group>
+                <Form.Field width={16}>
+                  <label>Street:</label>
+                  {this.input('text', 'certifierStreet')}
+                </Form.Field>
+              </Form.Group>
+              <Form.Group widths='equal'>
+                <Form.Field>
+                  <label>City:</label>
+                  {this.input('text', 'certifierCity')}
+                </Form.Field>
+                <Form.Field>
+                  <label>State:</label>
+                  {this.input('text', 'certifierState')}
+                </Form.Field>
+                <Form.Field>
+                  <label>Zip Code:</label>
+                  {this.input('text', 'certifierZip')}
+                </Form.Field>
+              </Form.Group>
+
+              <Button primary floated='right' onClick={() => alert('No EDRS Configured')}>Submit</Button>
+
+            </Form>
           </Grid.Column>
         </Grid.Row>
 

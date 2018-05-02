@@ -51,12 +51,12 @@ class PronounceForm extends FormPage {
 
               <Form.Field>
                 <label>Type your full name to electronically sign this document:</label>
-                {this.input('text', 'certifierName')}
+                {this.input('text', 'pronouncerName')}
               </Form.Field>
 
               <Form.Field>
                 <label>License Number:</label>
-                {this.input('text', 'certifierNumber')}
+                {this.input('text', 'pronouncerNumber')}
               </Form.Field>
 
               {this.nextStepButton('CauseOfDeath')}

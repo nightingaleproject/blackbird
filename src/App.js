@@ -17,7 +17,6 @@ class App extends Component {
   constructor(props) {
     super(props);
     const record = {
-      // TODO: pull information on date/time of death from patient record if present
       pronouncedDeathDate: '',
       pronouncedDeathTime: '',
       actualDeathDate: '',
@@ -25,8 +24,15 @@ class App extends Component {
       examinerContacted: null,
       autopsyPerformed: null,
       autopsyAvailable: null,
+      pronouncerName: '',
+      pronouncerNumber: '',
       certifierName: '',
       certifierNumber: '',
+      certifierStreet: '',
+      certifierCity: '',
+      certifierState: '',
+      certifierZip: '',
+      certifiedDate: '',
       cod1Text: '',
       cod1Time: '',
       cod2Text: '',
@@ -76,10 +82,27 @@ class App extends Component {
 
   setPatient(patient) {
     this.setState({ patient });
+    // Pull information on decedent from patient to populate fields
+    this.setState((prevState) => {
+      const newRecord = Object.assign({}, prevState.record);
+      newRecord.actualDeathDate = patient.deceasedDate;
+      newRecord.actualDeathTime = patient.deceasedTime;
+      return ({ record: newRecord });
+    });
   }
 
   setUser(user) {
     this.setState({ user });
+    // Pull information on certifier from user to populate fields
+    this.setState((prevState) => {
+      const newRecord = Object.assign({}, prevState.record);
+      newRecord.certifierName = user.name;
+      newRecord.certifierStreet = user.street;
+      newRecord.certifierCity = user.city;
+      newRecord.certifierState = user.state;
+      newRecord.certifierZip = user.zip;
+      return ({ record: newRecord });
+    });
   }
 
   setResources(conditions, medications, procedures, observations) {
@@ -121,8 +144,13 @@ class App extends Component {
     for (let i = 0; i < 4; i++) {
       if (newConditions[i]) {
         const text = newConditions[i].description;
-        // TODO: Use user or record supplied death time, not current time, if available
-        const onset = moment(newConditions[i].startDate).fromNow(true);
+        // Use user or record supplied death time if available, otherwise current time
+        let startDateTime = null;
+        if (this.state.record.actualDeathDate) {
+          startDateTime = moment(`${this.state.record.actualDeathDate} ${this.state.record.actualDeathTime}`);
+        }
+        startDateTime = startDateTime || moment().format('YYYY-MM-DD HH:mm');
+        const onset = moment(newConditions[i].startDate).from(startDateTime, true);
         this.updateRecord(`cod${i+1}Text`, text);
         this.updateRecord(`cod${i+1}Time`, onset);
       } else {
