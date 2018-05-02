@@ -68,7 +68,7 @@ class InjuryQuestionsForm extends FormPage {
                 </Form.Field>
               </Form.Group>
 
-              {this.nextStepButton('Validation')}
+              {this.nextStepButton('ReviewAndSubmit')}
 
             </Form>
 
