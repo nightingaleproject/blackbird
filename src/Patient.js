@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 // Simple wrapper for FHIR Patient resource
 class Patient {
   constructor(resource) {
@@ -17,6 +19,16 @@ class Patient {
     const endDate = this.resource.deceasedDateTime || (new Date()).toISOString();
     const ageInSeconds = (Date.parse(endDate) - Date.parse(startDate)) / 1000;
     return `${Math.round(ageInSeconds / (60*60*24*365))} years`;
+  }
+  get deceasedDate() {
+    if (this.resource.deceasedDateTime) {
+      return moment(this.resource.deceasedDateTime).format('YYYY-MM-DD');
+    }
+  }
+  get deceasedTime() {
+    if (this.resource.deceasedDateTime) {
+      return moment(this.resource.deceasedDateTime).format('HH:mm');
+    }
   }
 }
 
