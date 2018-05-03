@@ -4,8 +4,11 @@ import _ from 'lodash';
 const Completion = {
 
   // Register that a particular field is presented on a step
-  register(field, step) {
-    this.fields[step] = _.union(this.fields[step] || [], [field])
+  register(field, step, optional) {
+    this.fields[step] = this.fields[step] || [];
+    if (!optional) {
+      this.fields[step] = _.union(this.fields[step], [field]);
+    }
   },
 
   // Return result of whether a particular step is complete given the overall record

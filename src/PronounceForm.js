@@ -42,22 +42,10 @@ class PronounceForm extends FormPage {
               </Form.Group>
 
               <Form.Field>
-                <label>Was Medical Examiner or Coroner Contacted?:</label>
+                <label>Was Medical Examiner or Coroner Contacted?</label>
               </Form.Field>
               {this.radio('Yes', 'examinerContacted', 'yes')}
               {this.radio('No', 'examinerContacted', 'no')}
-
-              <Form.Field>
-                <label>Was an Autopsy Performed?:</label>
-              </Form.Field>
-              {this.radio('Yes', 'autopsyPerformed', 'yes')}
-              {this.radio('No', 'autopsyPerformed', 'no')}
-
-              <Form.Field>
-                <label>Were Autopsy Findings Available to Complete the Case of Death?:</label>
-              </Form.Field>
-              {this.radio('Yes', 'autopsyAvailable', 'yes')}
-              {this.radio('No', 'autopsyAvailable', 'no')}
 
               <h2>Person Pronouncing Death</h2>
 
@@ -70,6 +58,9 @@ class PronounceForm extends FormPage {
                 <label>License Number:</label>
                 {this.input('text', 'certifierNumber')}
               </Form.Field>
+
+              {this.nextStepButton('CauseOfDeath')}
+
             </Form>
 
           </Grid.Column>
