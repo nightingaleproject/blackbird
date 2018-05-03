@@ -1,17 +1,19 @@
 class FHIRExport {
   constructor(resourceObject) {
-    bundle = {}
-    bundle.resourceType = "Bundle";
-    bundle.type = "document"
-    bundle.entry = [];
-    bundle.entry << generateComposition(resourceObject)
-    bundle.entry << generateDecedent(resourceObject)
+    this.bundle = {}
+    this.bundle.resourceType = "Bundle"
+    this.bundle.type = "document"
+    this.bundle.entry = []
+    this.bundle.entry.push(this.generateComposition(resourceObject))
+    this.bundle.entry.push(this.generateDecedent(resourceObject))
   }
 
-  function generateComposition(resourceObject) {
+  generateComposition(resourceObject) {
     //construct death certification record composition
-    comp.resourceType = "Composition"
-    comp.type = {
+    console.log("composition")
+    var composition = {}
+    composition.resourceType = "Composition"
+    composition.type = {
       "coding": [{
         "system": "http://loinc.org",
         "code": "64297-5",
@@ -19,11 +21,11 @@ class FHIRExport {
       }],
       "text": "Death certificate"
     }
-    comp.status = "preliminary";
-    comp.date = (new Date(Date.now())).toISOString();]
-    comp.title = "Death certificate for " + resourceObject.patient.name
+    composition.status = "preliminary";
+    composition.date = new Date(Date.now()).toISOString()
+    composition.title = "Death certificate for " + resourceObject.patient.name
 
-    comp.section = {
+    composition.section = {
       "code": {
         "coding": [{
           "system": "http://loinc.org",
@@ -32,43 +34,43 @@ class FHIRExport {
         }],
       },
     }
-    comp.section.entry = []
-    comp.subject = {
+    composition.section.entry = []
+    composition.subject = {
       "reference": "Patient/" + resourceObject.patient.id,
       "display": "Decedent Referenced"
     }
+    return composition
   }
 
-  function generateDecedent(resourceObject) {
-    dec = resourceObject.patient
-    dec.text = "Decedent Record for " + resourceObject.patient.name
-    dec.age = {"ageinyears": patient.age}
-    dec.birthplace = {} //sdr birthplace extension
-    dec.servedinarmedforces = false
-    dec.maritalstatusatdeath = "coding": [{
+  generateDecedent(resourceObject) {
+    var decedent = {}
+    decedent.text = "Decedent Record for " + resourceObject.patient.name
+    decedent.age = {"ageinyears": resourceObject.patient.age}
+    decedent.birthplace = {} //sdr birthplace extension
+    decedent.servedinarmedforces = false
+    decedent.maritalstatusatdeath = {"coding": [{
       "system": "http://hl7.org/fhir/v3/MaritalStatus",
       "code": "",
       "display": ""
-    }]
+    }]}
 
-    dec.placeofdeath = {}
-    dec.placeofdeath.placeofdeathtype = "coding": [{
-        "system": "http://hl7.org/fhir/v3/MaritalStatus",
+    decedent.placeofdeath = {}
+    decedent.placeofdeath.placeofdeathtype = {"coding": [{
+        "system": "http://github.com/nightingaleproject/fhirDeathRecord/sdr/decedent/vs/PlaceOfDeathTypeVS",
         "code": "",
         "display": ""
-    }]
-    dec.placeofdeath.facilityname = ""
-    dec.placeofdeath.address = {} //sdr address extension
+    }]}
+    decedent.placeofdeath.facilityname = ""
+    decedent.placeofdeath.address = {} //sdr address extension
 
-    dec.disposition = {}
-    dec.disposition.dispositiontype = "coding": [{
+    decedent.disposition = {}
+    decedent.disposition.dispositiontype = {"coding": [{
         "system": "http://snomed.info/sct",
         "code": "",
         "display": ""
-    }]
-    dec.education =
-    dec.occupation =
-    return dec
+    }]}
+    return decedent
   }
-
 }
+
+export default FHIRExport;

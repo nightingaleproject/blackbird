@@ -1,6 +1,7 @@
 import React from 'react';
 import { Grid } from 'semantic-ui-react';
 import FormPage from './FormPage';
+import FHIRExport from './FHIRExport'
 
 class Validation extends FormPage {
   render() {
@@ -13,7 +14,7 @@ class Validation extends FormPage {
 
         <Grid.Row>
           <Grid.Column>
-            <pre>{JSON.stringify(this.props.record, null, 2)}</pre>
+            <pre>{JSON.stringify(new FHIRExport({record: this.props.record, patient: this.props.patient}), null, 2)}</pre>
           </Grid.Column>
         </Grid.Row>
 
