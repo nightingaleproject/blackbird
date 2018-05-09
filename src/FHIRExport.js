@@ -22,7 +22,7 @@ class Base {
 
 class Bundle extends Base {
   constructor(options = {}) {
-    super(options)
+    super(options);
     this.resourceType = 'Bundle';
   }
   addEntry(entry) {
@@ -38,16 +38,29 @@ class Composition extends Base {
   }
 }
 
+class Condition extends Base {
+  constructor(options = {}) {
+    super(options);
+    this.resourceType = 'Condition';
+  }
+  setProfile(profile) {
+    this.resource = { meta: { profile } };
+  }
+}
+
 class Observation extends Base {
   constructor(options = {}) {
-    super(options)
+    super(options);
     this.resourceType = 'Observation';
+  }
+  setProfile(profile) {
+    this.resource = { meta: { profile } };
   }
 }
 
 class Practitioner extends Base {
   constructor(options = {}) {
-    super(options)
+    super(options);
     this.resourceType = 'Practitioner';
   }
   addName(name) {
@@ -146,11 +159,43 @@ class Certifier extends Practitioner {
   }
 }
 
+class CauseOfDeath extends Condition {
+  constructor(literalText, onsetString) {
+    super();
+    this.clinicalStatus = 'active';
+    this.text = {
+      status: 'additional',
+      div: literalText
+    };
+    this.onsetString = onsetString;
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-CauseOfDeathCondition');
+  }
+}
+
 class AutopsyPerformed extends Observation {
   constructor(value) {
     super();
     this.code = new CodableConcept('http://loinc.org', '85699-7', 'Autopsy was performed');
     this.valueBoolean = value;
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyPerformed');
+  }
+}
+
+class AutopsyResultsAvailable extends Observation {
+  constructor(value) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '69436-4', 'Autopsy results available');
+    this.valueBoolean = value;
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyResultsAvailable');
+  }
+}
+
+class DeathFromWorkInjury extends Observation {
+  constructor(value) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '69444-8', 'Did death result from injury at work');
+    this.valueBoolean = value;
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromWorkInjury');
   }
 }
 
@@ -180,6 +225,7 @@ class MannerOfDeath extends Observation {
     default:
       throw `MannerOfDeath ${value} not in value set`;
     }
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MannerOfDeath');
   }
 }
 
@@ -188,7 +234,8 @@ class MannerOfDeath extends Observation {
 class DeathRecord extends Bundle {
   constructor(options = {}) {
     // Figure out what options we'll handle locally and pass the rest up
-    const local = ['autopsyPerformed', 'mannerOfDeath', 'decedent', 'certifier'];
+    const local = ['decedent', 'certifier', 'causeOfDeath', 'autopsyPerformed', 'autopsyResultsAvailable', 'mannerOfDeath',
+                   'deathFromWorkInjury'];
     super(_.omit(options, local));
 
     // Indicate that this Bundle is a document
@@ -202,9 +249,19 @@ class DeathRecord extends Bundle {
     deathRecordContents.addDecedentReference(this.createAndAdd(options.decedent, Decedent));
     deathRecordContents.addCertifierReference(this.createAndAdd(options.certifier, Certifier));
 
+    // Add the cause of death information
+    options.causeOfDeath = options.causeOfDeath || [];
+    for (let cod of options.causeOfDeath) {
+      const causeOfDeath = new CauseOfDeath(cod.literalText, cod.onsetString);
+      this.addEntry(causeOfDeath);
+      deathRecordContents.addReference(causeOfDeath);
+    }
+
     // Add all the observations
     deathRecordContents.addReference(this.createAndAdd(options.autopsyPerformed, AutopsyPerformed));
+    deathRecordContents.addReference(this.createAndAdd(options.autopsyResultsAvailable, AutopsyResultsAvailable));
     deathRecordContents.addReference(this.createAndAdd(options.mannerOfDeath, MannerOfDeath));
+    deathRecordContents.addReference(this.createAndAdd(options.deathFromWorkInjury, DeathFromWorkInjury));
   }
   createAndAdd(value, valueClass) {
     if (!_.isNil(value)) {
@@ -215,10 +272,17 @@ class DeathRecord extends Bundle {
   }
 }
 
+// TODO: Just for local testing during development
 const x = new DeathRecord({
   id: 1,
-  autopsyPerformed: false,
+  autopsyPerformed: true,
+  autopsyResultsAvailable: false,
   mannerOfDeath: 'Natural',
+  deathFromWorkInjury: false,
+  causeOfDeath: [
+    { literalText: 'Example COD 1', onsetString: 'Hours' },
+    { literalText: 'Example COD 2', onsetString: 'Days' }
+  ],
   decedent: {
     name: 'Example Decedent',
     servedInArmedForces: true,
