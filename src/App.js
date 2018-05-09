@@ -11,6 +11,7 @@ import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import InjuryQuestionsForm from './InjuryQuestionsForm';
 import ReviewAndSubmit from './ReviewAndSubmit';
 import { SMARTWrap } from './FHIRClientWrapper';
+import FH from './FHIRExport';
 
 class App extends Component {
 
