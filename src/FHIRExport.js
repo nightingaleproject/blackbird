@@ -246,28 +246,45 @@ class DeathRecord extends Bundle {
     this.addEntry(deathRecordContents);
 
     // Add the decedent and certifier information
-    deathRecordContents.addDecedentReference(this.createAndAdd(options.decedent, Decedent));
-    deathRecordContents.addCertifierReference(this.createAndAdd(options.certifier, Certifier));
+    this.addDecedent(options.decedent, deathRecordContents);
+    this.addCertifier(options.certifier, deathRecordContents);
 
     // Add the cause of death information
     options.causeOfDeath = options.causeOfDeath || [];
-    for (let cod of options.causeOfDeath) {
-      const causeOfDeath = new CauseOfDeath(cod.literalText, cod.onsetString);
-      this.addEntry(causeOfDeath);
-      deathRecordContents.addReference(causeOfDeath);
-    }
+    options.causeOfDeath.forEach((cod) => this.addCauseOfDeath(cod.literalText, cod.onsetString, deathRecordContents));
 
     // Add all the observations
-    deathRecordContents.addReference(this.createAndAdd(options.autopsyPerformed, AutopsyPerformed));
-    deathRecordContents.addReference(this.createAndAdd(options.autopsyResultsAvailable, AutopsyResultsAvailable));
-    deathRecordContents.addReference(this.createAndAdd(options.mannerOfDeath, MannerOfDeath));
-    deathRecordContents.addReference(this.createAndAdd(options.deathFromWorkInjury, DeathFromWorkInjury));
+    this.addObservation(options.autopsyPerformed, AutopsyPerformed, deathRecordContents);
+    this.addObservation(options.autopsyResultsAvailable, AutopsyResultsAvailable, deathRecordContents);
+    this.addObservation(options.mannerOfDeath, MannerOfDeath,deathRecordContents);
+    this.addObservation(options.deathFromWorkInjury, DeathFromWorkInjury,deathRecordContents);
   }
-  createAndAdd(value, valueClass) {
-    if (!_.isNil(value)) {
-      const object = new valueClass(value);
-      this.addEntry(object);
-      return object;
+  addDecedent(decedent, deathRecordContents) {
+    if (!_.isNil(decedent)) {
+      const decedentResource = new Decedent(decedent);
+      this.addEntry(decedentResource);
+      deathRecordContents.addDecedentReference(decedentResource);
+    }
+  }
+  addCertifier(certifier, deathRecordContents) {
+    if (!_.isNil(certifier)) {
+      const certifierResource = new Certifier(certifier);
+      this.addEntry(certifierResource);
+      deathRecordContents.addCertifierReference(certifierResource);
+    }
+  }
+  addCauseOfDeath(literalText, onsetString, deathRecordContents) {
+    if (!_.isNil(literalText) && !_.isNil(onsetString)) {
+      const causeOfDeathResource = new CauseOfDeath(literalText, onsetString);
+      this.addEntry(causeOfDeathResource);
+      deathRecordContents.addReference(causeOfDeathResource);
+    }
+  }
+  addObservation(observation, observationClass, deathRecordContents) {
+    if (!_.isNil(observation)) {
+      const observationResource = new observationClass(observation);
+      this.addEntry(observationResource);
+      deathRecordContents.addReference(observationResource);
     }
   }
 }
