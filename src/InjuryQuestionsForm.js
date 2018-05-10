@@ -2,6 +2,8 @@ import React from 'react';
 import { Grid, Form } from 'semantic-ui-react';
 import FormPage from './FormPage';
 
+// TODO: Need to add field to describe how injury occurred
+
 class InjuryQuestionsForm extends FormPage {
 
   render() {

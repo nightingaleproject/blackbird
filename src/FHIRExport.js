@@ -81,7 +81,11 @@ class Patient extends Base {
 
 class CodableConcept {
   constructor(system, code, display) {
-    this.coding = [{ system, code, display }];
+    if (system) {
+      this.coding = [{ system, code, display }];
+    } else {
+      this.coding = [{ code, display }];
+    }
     this.text = display;
   }
 }
@@ -95,6 +99,13 @@ class HumanName {
     this.use = 'official';
     this.first = first;
     this.family = last;
+  }
+}
+
+class Address {
+  constructor(address) {
+    this.type = 'postal';
+    Object.assign(this, address);
   }
 }
 
@@ -170,6 +181,16 @@ class CauseOfDeath extends Condition {
   }
 }
 
+class ActualOrPresumedDateOfDeath extends Observation {
+   constructor(value, subjectEntry) {
+     super();
+     this.code = new CodableConcept('http://loinc.org', '81956-5', 'Date and time of death');
+     this.valueDateTime = value;
+     this.subject = { reference: subjectEntry.fullUrl };
+     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-ActualOrPresumedDateOfDeath');
+   }
+}
+
 class AutopsyPerformed extends Observation {
   constructor(value, subjectEntry) {
     super();
@@ -190,6 +211,16 @@ class AutopsyResultsAvailable extends Observation {
   }
 }
 
+class DatePronouncedDead extends Observation {
+   constructor(value, subjectEntry) {
+     super();
+     this.code = new CodableConcept('http://loinc.org', '80616-6', 'Date and time pronounced dead');
+     this.valueDateTime = value;
+     this.subject = { reference: subjectEntry.fullUrl };
+     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DatePronouncedDead');
+   }
+}
+
 class DeathFromWorkInjury extends Observation {
   constructor(value, subjectEntry) {
     super();
@@ -197,6 +228,57 @@ class DeathFromWorkInjury extends Observation {
     this.valueBoolean = value;
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromWorkInjury');
+  }
+}
+
+class InjuryAssociatedWithTransport extends Observation {
+  constructor(value, subjectEntry) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '69448-9', 'Injury leading to death associated with transportation event');
+    switch (value) {
+    case 'Vehicle driver':
+      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '236320001', value);
+      break;
+    case 'Passenger':
+      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '257500003', value);
+      break;
+    case 'Pedestrian':
+      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '257518000', value);
+      break;
+    case 'Other':
+      this.valueCodableConcept = new CodableConcept('http://hl7.org/fhir/v3/NullFlavor', 'OTH', value);
+      break;
+    default:
+      throw `InjuryAssociatedWithTransport ${value} not in value set`;
+    }
+    this.subject = { reference: subjectEntry.fullUrl };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromTransportInjury');
+  }
+}
+
+class DetailsOfInjury extends Observation {
+  constructor(details, subjectEntry) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '11374-6', 'Injury incident description');
+    this.valueString = details.value;
+    // TODO: need to sensibly handle null values
+    this.effectiveDateTime = details.effectiveDateTime;
+    if (details.placeOfInjury) {
+      this.extension = this.extension || [];
+      this.extension.push({
+        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-PlaceOfInjury-extension',
+        valueString: details.placeOfInjury
+      });
+    }
+    if (details.address) {
+      this.extension = this.extension || [];
+      this.extension.push({
+        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension',
+        valueAddress: new Address(details.placeOfInjury)
+      });
+    }
+    this.subject = { reference: subjectEntry.fullUrl };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DetailsOfInjury');
   }
 }
 
@@ -231,13 +313,78 @@ class MannerOfDeath extends Observation {
   }
 }
 
+class MedicalExaminerOrCoronerContacted extends Observation {
+  constructor(value, subjectEntry) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '74497-9', 'Medical examiner or coroner was contacted');
+    this.valueBoolean = value;
+    this.subject = { reference: subjectEntry.fullUrl };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MedicalExaminerContacted');
+  }
+}
+
+class TimingOfPregnancy extends Observation {
+  constructor(value, subjectEntry) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '69442-2', 'Timing of recent pregnancy in relation to death');
+    switch (value) {
+    case 'Not pregnant within past year':
+      this.valueCodableConcept = new CodableConcept(null, 'PHC1260', value);
+      break;
+    case 'Pregnant at time of death':
+      this.valueCodableConcept = new CodableConcept(null, 'PHC1261', value);
+      break;
+    case 'Not pregnant, but pregnant within 42 days of death':
+      this.valueCodableConcept = new CodableConcept(null, 'PHC1262', value);
+      break;
+    case 'Not pregnant, but pregnant 43 days to 1 year before death':
+      this.valueCodableConcept = new CodableConcept(null, 'PHC1263', value);
+      break;
+    case 'Unknown if pregnant within the past year':
+      this.valueCodableConcept = new CodableConcept(null, 'PHC1264', value);
+      break;
+    default:
+      throw `TimingOfPregnancy ${value} not in value set`;
+    }
+    this.subject = { reference: subjectEntry.fullUrl };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-TimingOfRecentPregnancyInRelationToDeath');
+  }
+}
+
+class TobaccoUseContributedToDeath extends Observation {
+  constructor(value, subjectEntry) {
+    super();
+    this.code = new CodableConcept('http://loinc.org', '69443-0', 'Did tobacco use contribute to death');
+    switch (value) {
+    case 'Yes':
+      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '373066001', value);
+      break;
+    case 'No':
+      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '373067005', value);
+      break;
+    case 'Probably':
+      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '2931005', value);
+      break;
+    case 'Unknown':
+      this.valueCodableConcept = new CodableConcept('http://hl7.org/fhir/v3/NullFlavor', 'UNK', value);
+      break;
+    default:
+      throw `TobaccoUseContributedToDeath ${value} not in value set`;
+    }
+    this.subject = { reference: subjectEntry.fullUrl };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-TobaccoUseContributedToDeath');
+  }
+}
+
 // Top level class to represent the Death Record, which provides the basic interface for creating itself
 
 class DeathRecord extends Bundle {
   constructor(options = {}) {
     // Figure out what options we'll handle locally and pass the rest up
-    const local = ['decedent', 'certifier', 'causeOfDeath', 'autopsyPerformed', 'autopsyResultsAvailable', 'mannerOfDeath',
-                   'deathFromWorkInjury'];
+    const local = ['decedent', 'certifier', 'causeOfDeath', 'actualOrPresumedDateOfDeath', 'autopsyPerformed',
+                   'autopsyResultsAvailable', 'datePronouncedDead', 'deathFromWorkInjury', 'injuryAssociatedWithTransport',
+                   'detailsOfInjury', 'mannerOfDeath', 'medicalExaminerOrCoronerContacted', 'timingOfPregnancy',
+                   'tobaccoUseContributedToDeath'];
     super(_.omit(options, local));
 
     // Indicate that this Bundle is a document
@@ -256,10 +403,17 @@ class DeathRecord extends Bundle {
     options.causeOfDeath.forEach((cod) => this.addCauseOfDeath(cod.literalText, cod.onsetString, deathRecordContents, decedentEntry));
 
     // Add all the observations
+    this.addObservation(options.actualOrPresumedDateOfDeath, ActualOrPresumedDateOfDeath, deathRecordContents, decedentEntry);
     this.addObservation(options.autopsyPerformed, AutopsyPerformed, deathRecordContents, decedentEntry);
     this.addObservation(options.autopsyResultsAvailable, AutopsyResultsAvailable, deathRecordContents, decedentEntry);
-    this.addObservation(options.mannerOfDeath, MannerOfDeath,deathRecordContents, decedentEntry);
-    this.addObservation(options.deathFromWorkInjury, DeathFromWorkInjury,deathRecordContents, decedentEntry);
+    this.addObservation(options.datePronouncedDead, DatePronouncedDead, deathRecordContents, decedentEntry);
+    this.addObservation(options.deathFromWorkInjury, DeathFromWorkInjury, deathRecordContents, decedentEntry);
+    this.addObservation(options.injuryAssociatedWithTransport, InjuryAssociatedWithTransport, deathRecordContents, decedentEntry);
+    this.addObservation(options.detailsOfInjury, DetailsOfInjury, deathRecordContents, decedentEntry);
+    this.addObservation(options.mannerOfDeath, MannerOfDeath, deathRecordContents, decedentEntry);
+    this.addObservation(options.medicalExaminerOrCoronerContacted, MedicalExaminerOrCoronerContacted, deathRecordContents, decedentEntry);
+    this.addObservation(options.timingOfPregnancy, TimingOfPregnancy, deathRecordContents, decedentEntry);
+    this.addObservation(options.tobaccoUseContributedToDeath, TobaccoUseContributedToDeath, deathRecordContents, decedentEntry);
   }
   addDecedent(decedent, deathRecordContents) {
     if (!_.isNil(decedent)) {
@@ -295,10 +449,31 @@ class DeathRecord extends Bundle {
 // TODO: Just for local testing during development
 const x = new DeathRecord({
   id: 1,
+  actualOrPresumedDateOfDeath: moment().format(),
   autopsyPerformed: true,
   autopsyResultsAvailable: false,
-  mannerOfDeath: 'Natural',
+  datePronouncedDead: moment().format(),
   deathFromWorkInjury: false,
+  injuryAssociatedWithTransport: 'Passenger',
+  detailsOfInjury: {
+    value: 'Example details of injury',
+    effectiveDateTime: moment().format(),
+    placeOfInjury: 'Example place of injury',
+    address: {
+      line: [
+        "7 Example Street",
+        "Bedford Massachusetts 01730"
+      ],
+      city: "Bedford",
+      state: "Massachusetts",
+      postalCode: "01730",
+      country: "United States"
+    },
+  },
+  mannerOfDeath: 'Natural',
+  medicalExaminerOrCoronerContacted: false,
+  timingOfPregnancy: 'Unknown if pregnant within the past year',
+  tobaccoUseContributedToDeath: 'Probably',
   causeOfDeath: [
     { literalText: 'Example COD 1', onsetString: 'Hours' },
     { literalText: 'Example COD 2', onsetString: 'Days' }
@@ -312,6 +487,7 @@ const x = new DeathRecord({
     name: 'Example Certifier'
   }
 });
+
 
 debugger
 
