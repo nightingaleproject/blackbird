@@ -159,11 +159,41 @@ class Decedent extends Patient {
 
 class Certifier extends Practitioner {
   constructor(options = {}) {
-    const local = ['name'];
+    const local = ['name', 'certifierType', 'identifier', 'address'];
     super(_.omit(options, local));
     if (options.name) {
       this.addName(options.name);
     }
+    const certifierCodeLookup = {
+      'Physician (Certifier)': '434641000124105',
+      'Physician (Pronouncer and Certifier)': '434651000124107',
+      'Coroner': '310193003',
+      'Medical Examiner': '440051000124108'
+    };
+    const certifierCode = certifierCodeLookup[options.certifierType];
+    if (certifierCode) {
+      this.addExtension({
+        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-CertifierType-extension',
+        valueCodeableConcept: new CodableConcept('http://snomed.info/sct', certifierCode, options.certifierType)
+      });
+    }
+    if (options.identifier) {
+      this.identifier = [{
+        use: 'official',
+        value: options.identifier
+      }];
+    }
+    if (options.address) {
+      this.address = new Address(options.address);
+    }
+    // Assuming MD by default, TODO: Investigate how to better capture this
+    this.qualification = {
+      code: new CodableConcept('http://hl7.org/fhir/v2/0360/2.7', 'MD', 'Doctor of Medicine')
+    }
+    this.setProfile([
+      'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-Certifier',
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner'
+    ]);
   }
 }
 
@@ -274,7 +304,7 @@ class DetailsOfInjury extends Observation {
       this.extension = this.extension || [];
       this.extension.push({
         url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension',
-        valueAddress: new Address(details.placeOfInjury)
+        valueAddress: new Address(details.address)
       });
     }
     this.subject = { reference: subjectEntry.fullUrl };
@@ -484,7 +514,19 @@ const x = new DeathRecord({
     birthSex: 'M'
   },
   certifier: {
-    name: 'Example Certifier'
+    name: 'Example Certifier',
+    certifierType: 'Physician (Pronouncer and Certifier)',
+    identifier: '123456',
+    address:  {
+      line: [
+        "8 Example Street",
+        "Bedford Massachusetts 01730"
+      ],
+      city: "Bedford",
+      state: "Massachusetts",
+      postalCode: "01730",
+      country: "United States"
+    },
   }
 });
 
