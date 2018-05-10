@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import moment from 'moment';
 import uuid from 'uuid/v4';
 
 // Infrastructure for creating FHIR death records based on the profile at
@@ -103,6 +104,9 @@ class DeathRecordContents extends Composition {
   constructor(options = {}) {
     super(options);
     this.type = new CodableConcept('http://loinc.org', '64297-5', 'Death certificate');
+    this.status = 'final';
+    this.date = moment().format('YYYY-MM-DD');
+    this.title = 'Record of Death';
     this.section = {
       code: new CodableConcept('http://loinc.org', '69453-9', 'Cause of death')
     };
@@ -153,7 +157,7 @@ class Certifier extends Practitioner {
 }
 
 class CauseOfDeath extends Condition {
-  constructor(literalText, onsetString) {
+  constructor(literalText, onsetString, subjectEntry) {
     super();
     this.clinicalStatus = 'active';
     this.text = {
@@ -161,39 +165,43 @@ class CauseOfDeath extends Condition {
       div: literalText
     };
     this.onsetString = onsetString;
+    this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-CauseOfDeathCondition');
   }
 }
 
 class AutopsyPerformed extends Observation {
-  constructor(value) {
+  constructor(value, subjectEntry) {
     super();
     this.code = new CodableConcept('http://loinc.org', '85699-7', 'Autopsy was performed');
     this.valueBoolean = value;
+    this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyPerformed');
   }
 }
 
 class AutopsyResultsAvailable extends Observation {
-  constructor(value) {
+  constructor(value, subjectEntry) {
     super();
     this.code = new CodableConcept('http://loinc.org', '69436-4', 'Autopsy results available');
     this.valueBoolean = value;
+    this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyResultsAvailable');
   }
 }
 
 class DeathFromWorkInjury extends Observation {
-  constructor(value) {
+  constructor(value, subjectEntry) {
     super();
     this.code = new CodableConcept('http://loinc.org', '69444-8', 'Did death result from injury at work');
     this.valueBoolean = value;
+    this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromWorkInjury');
   }
 }
 
 class MannerOfDeath extends Observation {
-  constructor(value) {
+  constructor(value, subjectEntry) {
     super();
     this.code = new CodableConcept('http://loinc.org', '69449-7', 'Manner of Death');
     switch (value) {
@@ -218,6 +226,7 @@ class MannerOfDeath extends Observation {
     default:
       throw `MannerOfDeath ${value} not in value set`;
     }
+    this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MannerOfDeath');
   }
 }
@@ -239,24 +248,25 @@ class DeathRecord extends Bundle {
     this.addEntry(deathRecordContents);
 
     // Add the decedent and certifier information
-    this.addDecedent(options.decedent, deathRecordContents);
+    const decedentEntry = this.addDecedent(options.decedent, deathRecordContents);
     this.addCertifier(options.certifier, deathRecordContents);
 
     // Add the cause of death information
     options.causeOfDeath = options.causeOfDeath || [];
-    options.causeOfDeath.forEach((cod) => this.addCauseOfDeath(cod.literalText, cod.onsetString, deathRecordContents));
+    options.causeOfDeath.forEach((cod) => this.addCauseOfDeath(cod.literalText, cod.onsetString, deathRecordContents, decedentEntry));
 
     // Add all the observations
-    this.addObservation(options.autopsyPerformed, AutopsyPerformed, deathRecordContents);
-    this.addObservation(options.autopsyResultsAvailable, AutopsyResultsAvailable, deathRecordContents);
-    this.addObservation(options.mannerOfDeath, MannerOfDeath,deathRecordContents);
-    this.addObservation(options.deathFromWorkInjury, DeathFromWorkInjury,deathRecordContents);
+    this.addObservation(options.autopsyPerformed, AutopsyPerformed, deathRecordContents, decedentEntry);
+    this.addObservation(options.autopsyResultsAvailable, AutopsyResultsAvailable, deathRecordContents, decedentEntry);
+    this.addObservation(options.mannerOfDeath, MannerOfDeath,deathRecordContents, decedentEntry);
+    this.addObservation(options.deathFromWorkInjury, DeathFromWorkInjury,deathRecordContents, decedentEntry);
   }
   addDecedent(decedent, deathRecordContents) {
     if (!_.isNil(decedent)) {
       const decedentResource = new Decedent(decedent);
       const decedentEntry = this.addEntry(decedentResource);
       deathRecordContents.addDecedentReference(decedentEntry);
+      return decedentEntry;
     }
   }
   addCertifier(certifier, deathRecordContents) {
@@ -266,16 +276,16 @@ class DeathRecord extends Bundle {
       deathRecordContents.addCertifierReference(certifierEntry);
     }
   }
-  addCauseOfDeath(literalText, onsetString, deathRecordContents) {
+  addCauseOfDeath(literalText, onsetString, deathRecordContents, decedentEntry) {
     if (!_.isNil(literalText) && !_.isNil(onsetString)) {
-      const causeOfDeathResource = new CauseOfDeath(literalText, onsetString);
+      const causeOfDeathResource = new CauseOfDeath(literalText, onsetString, decedentEntry);
       const causeOfDeathEntry = this.addEntry(causeOfDeathResource);
       deathRecordContents.addReference(causeOfDeathEntry);
     }
   }
-  addObservation(observation, observationClass, deathRecordContents) {
+  addObservation(observation, observationClass, deathRecordContents, decedentEntry) {
     if (!_.isNil(observation)) {
-      const observationResource = new observationClass(observation);
+      const observationResource = new observationClass(observation, decedentEntry);
       const observationEntry = this.addEntry(observationResource);
       deathRecordContents.addReference(observationEntry);
     }
