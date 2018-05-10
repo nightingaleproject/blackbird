@@ -9,14 +9,13 @@ import uuid from 'uuid/v4';
 class Base {
   constructor(options = {}) {
     Object.assign(this, options);
-    this.fullUrl = `urn:uuid:${uuid()}`;
-  }
-  reference() {
-    return { reference: this.fullUrl };
   }
   addExtension(extension) {
     this.extension = this.extension || [];
     this.extension.push(extension);
+  }
+  setProfile(profile) {
+    this.meta = { profile };
   }
 }
 
@@ -25,9 +24,14 @@ class Bundle extends Base {
     super(options);
     this.resourceType = 'Bundle';
   }
-  addEntry(entry) {
+  addEntry(resource) {
     this.entry = this.entry || [];
+    const entry = {
+      fullUrl: `urn:uuid:${uuid()}`,
+      resource: resource
+    }
     this.entry.push(entry);
+    return entry;
   }
 }
 
@@ -43,18 +47,12 @@ class Condition extends Base {
     super(options);
     this.resourceType = 'Condition';
   }
-  setProfile(profile) {
-    this.resource = { meta: { profile } };
-  }
 }
 
 class Observation extends Base {
   constructor(options = {}) {
     super(options);
     this.resourceType = 'Observation';
-  }
-  setProfile(profile) {
-    this.resource = { meta: { profile } };
   }
 }
 
@@ -108,22 +106,17 @@ class DeathRecordContents extends Composition {
     this.section = {
       code: new CodableConcept('http://loinc.org', '69453-9', 'Cause of death')
     };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-DeathRecordContents');
   }
-  addDecedentReference(decedent) {
-    if (decedent) {
-      this.subject = decedent.reference();
-    }
+  addDecedentReference(decedentEntry) {
+    this.subject = { reference: decedentEntry.fullUrl };
   }
-  addCertifierReference(certifier) {
-    if (certifier) {
-      this.author = certifier.reference();
-    }
+  addCertifierReference(certifierEntry) {
+    this.author = { reference: certifierEntry.fullUrl };
   }
   addReference(entry) {
-    if (entry) {
-      this.section.entry = this.section.entry || [];
-      this.section.entry.push(entry.reference());
-    }
+    this.section.entry = this.section.entry || [];
+    this.section.entry.push({ reference: entry.fullUrl });
   }
 }
 
@@ -262,29 +255,29 @@ class DeathRecord extends Bundle {
   addDecedent(decedent, deathRecordContents) {
     if (!_.isNil(decedent)) {
       const decedentResource = new Decedent(decedent);
-      this.addEntry(decedentResource);
-      deathRecordContents.addDecedentReference(decedentResource);
+      const decedentEntry = this.addEntry(decedentResource);
+      deathRecordContents.addDecedentReference(decedentEntry);
     }
   }
   addCertifier(certifier, deathRecordContents) {
     if (!_.isNil(certifier)) {
       const certifierResource = new Certifier(certifier);
-      this.addEntry(certifierResource);
-      deathRecordContents.addCertifierReference(certifierResource);
+      const certifierEntry = this.addEntry(certifierResource);
+      deathRecordContents.addCertifierReference(certifierEntry);
     }
   }
   addCauseOfDeath(literalText, onsetString, deathRecordContents) {
     if (!_.isNil(literalText) && !_.isNil(onsetString)) {
       const causeOfDeathResource = new CauseOfDeath(literalText, onsetString);
-      this.addEntry(causeOfDeathResource);
-      deathRecordContents.addReference(causeOfDeathResource);
+      const causeOfDeathEntry = this.addEntry(causeOfDeathResource);
+      deathRecordContents.addReference(causeOfDeathEntry);
     }
   }
   addObservation(observation, observationClass, deathRecordContents) {
     if (!_.isNil(observation)) {
       const observationResource = new observationClass(observation);
-      this.addEntry(observationResource);
-      deathRecordContents.addReference(observationResource);
+      const observationEntry = this.addEntry(observationResource);
+      deathRecordContents.addReference(observationEntry);
     }
   }
 }
