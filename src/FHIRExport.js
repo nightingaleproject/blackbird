@@ -137,10 +137,33 @@ class DeathRecordContents extends Composition {
 
 class Decedent extends Patient {
   constructor(options = {}) {
-    const local = ['name', 'servedInArmedForces', 'birthSex'];
+    const local = ['name', 'birthDate', 'deceasedDateTime', 'address', 'gender', 'ssn', 'servedInArmedForces', 'birthSex'];
+
+    // TODO: Missing fields (we only need to implement the ones where we have data from our test patients):
+    // race, ethnicity, ageAtDeath (derive), placeOfBirth, maritalStatus, placeOfDeath, disposition,
+    // education, occupation, motherMaidenName
+
     super(_.omit(options, local));
     if (options.name) {
       this.addName(options.name);
+    }
+    if (options.birthDate) {
+      this.birthDate = options.birthDate;
+    }
+    if (options.deceasedDateTime) {
+      this.deceasedDateTime = options.deceasedDateTime;
+    }
+    if (options.address) {
+      this.address = new Address(options.address);
+    }
+    if (options.gender) {
+      this.gender = options.gender;
+    }
+    if (options.ssn) {
+      this.identifier = {
+        system: 'http://hl7.org/fhir/sid/us-ssn',
+        value: options.ssn
+      };
     }
     if (!_.isNil(options.servedInArmedForces)) {
       this.addExtension({
@@ -148,7 +171,7 @@ class Decedent extends Patient {
         valueBoolean: options.servedInArmedForces
       });
     }
-    if (!_.isNil(options.birthSex)) {
+    if (options.birthSex) {
       this.addExtension({
         url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
         valueCode: options.birthSex
@@ -491,8 +514,7 @@ const x = new DeathRecord({
     placeOfInjury: 'Example place of injury',
     address: {
       line: [
-        "7 Example Street",
-        "Bedford Massachusetts 01730"
+        "7 Example Street"
       ],
       city: "Bedford",
       state: "Massachusetts",
@@ -510,6 +532,19 @@ const x = new DeathRecord({
   ],
   decedent: {
     name: 'Example Decedent',
+    birthDate: moment().format('YYYY-MM-DD'),
+    deceasedDateTime: moment().format(),
+    address:  {
+      line: [
+        "9 Example Street"
+      ],
+      city: "Bedford",
+      state: "Massachusetts",
+      postalCode: "01730",
+      country: "United States"
+    },
+    gender: 'M',
+    ssn: '111-22-3333',
     servedInArmedForces: true,
     birthSex: 'M'
   },
@@ -519,8 +554,7 @@ const x = new DeathRecord({
     identifier: '123456',
     address:  {
       line: [
-        "8 Example Street",
-        "Bedford Massachusetts 01730"
+        "8 Example Street"
       ],
       city: "Bedford",
       state: "Massachusetts",
