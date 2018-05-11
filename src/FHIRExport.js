@@ -54,6 +54,7 @@ class Observation extends Base {
   constructor(options = {}) {
     super(options);
     this.resourceType = 'Observation';
+    this.status = 'final';
   }
 }
 
@@ -79,7 +80,7 @@ class Patient extends Base {
   }
 }
 
-class CodableConcept {
+class CodeableConcept {
   constructor(system, code, display) {
     if (system) {
       this.coding = [{ system, code, display }];
@@ -93,12 +94,11 @@ class CodableConcept {
 class HumanName {
   constructor(name, use) {
     // Start with a simple decomposition
-    const match = name.match(/(\S+)\s+(.+)/);
-    const first = match[1];
-    const last = match[2].split(/\s+/);
+    // TODO: This won't hold up to more complex examples with prefixes and suffixes
+    const match = name.match(/(.+)\s+(\S+)/);
+    this.given = match[1].split(/\s+/);
+    this.family = match[2];
     this.use = 'official';
-    this.first = first;
-    this.family = last;
   }
 }
 
@@ -114,24 +114,24 @@ class Address {
 class DeathRecordContents extends Composition {
   constructor(options = {}) {
     super(options);
-    this.type = new CodableConcept('http://loinc.org', '64297-5', 'Death certificate');
+    this.type = new CodeableConcept('http://loinc.org', '64297-5', 'Death certificate');
     this.status = 'final';
     this.date = moment().format('YYYY-MM-DD');
     this.title = 'Record of Death';
-    this.section = {
-      code: new CodableConcept('http://loinc.org', '69453-9', 'Cause of death')
-    };
+    this.section = [{
+      code: new CodeableConcept('http://loinc.org', '69453-9', 'Cause of death')
+    }];
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-DeathRecordContents');
   }
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
   }
   addCertifierReference(certifierEntry) {
-    this.author = { reference: certifierEntry.fullUrl };
+    this.author = [{ reference: certifierEntry.fullUrl }];
   }
   addReference(entry) {
-    this.section.entry = this.section.entry || [];
-    this.section.entry.push({ reference: entry.fullUrl });
+    this.section[0].entry = this.section[0].entry || [];
+    this.section[0].entry.push({ reference: entry.fullUrl });
   }
 }
 
@@ -142,6 +142,11 @@ class Decedent extends Patient {
     // TODO: Missing fields (we only need to implement the ones where we have data from our test patients):
     // race, ethnicity, ageAtDeath (derive), placeOfBirth, maritalStatus, placeOfDeath, disposition,
     // education, occupation, motherMaidenName
+
+    // We can get: race, ethnicity, birthPlace, mothersMaidenName, birthSex, ssn, gender, birthDate,
+    // deceasedDateTime (user supplied, not from record!), address, maritalStatus
+
+    // TODO: Where is support for father's name in profile?
 
     super(_.omit(options, local));
     if (options.name) {
@@ -154,16 +159,16 @@ class Decedent extends Patient {
       this.deceasedDateTime = options.deceasedDateTime;
     }
     if (options.address) {
-      this.address = new Address(options.address);
+      this.address = [new Address(options.address)];
     }
     if (options.gender) {
       this.gender = options.gender;
     }
     if (options.ssn) {
-      this.identifier = {
+      this.identifier = [{
         system: 'http://hl7.org/fhir/sid/us-ssn',
         value: options.ssn
-      };
+      }];
     }
     if (!_.isNil(options.servedInArmedForces)) {
       this.addExtension({
@@ -177,6 +182,10 @@ class Decedent extends Patient {
         valueCode: options.birthSex
       });
     }
+    this.setProfile([
+      'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-Decedent',
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+    ]);
   }
 }
 
@@ -197,7 +206,7 @@ class Certifier extends Practitioner {
     if (certifierCode) {
       this.addExtension({
         url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-CertifierType-extension',
-        valueCodeableConcept: new CodableConcept('http://snomed.info/sct', certifierCode, options.certifierType)
+        valueCodeableConcept: new CodeableConcept('http://snomed.info/sct', certifierCode, options.certifierType)
       });
     }
     if (options.identifier) {
@@ -207,11 +216,11 @@ class Certifier extends Practitioner {
       }];
     }
     if (options.address) {
-      this.address = new Address(options.address);
+      this.address = [new Address(options.address)];
     }
     // Assuming MD by default, TODO: Investigate how to better capture this
     this.qualification = {
-      code: new CodableConcept('http://hl7.org/fhir/v2/0360/2.7', 'MD', 'Doctor of Medicine')
+      code: new CodeableConcept('http://hl7.org/fhir/v2/0360/2.7', 'MD', 'Doctor of Medicine')
     }
     this.setProfile([
       'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-Certifier',
@@ -226,7 +235,7 @@ class CauseOfDeath extends Condition {
     this.clinicalStatus = 'active';
     this.text = {
       status: 'additional',
-      div: literalText
+      div: `<div xmlns='http://www.w3.org/1999/xhtml'>${literalText}</div>`
     };
     this.onsetString = onsetString;
     this.subject = { reference: subjectEntry.fullUrl };
@@ -237,7 +246,7 @@ class CauseOfDeath extends Condition {
 class ActualOrPresumedDateOfDeath extends Observation {
    constructor(value, subjectEntry) {
      super();
-     this.code = new CodableConcept('http://loinc.org', '81956-5', 'Date and time of death');
+     this.code = new CodeableConcept('http://loinc.org', '81956-5', 'Date and time of death');
      this.valueDateTime = value;
      this.subject = { reference: subjectEntry.fullUrl };
      this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-ActualOrPresumedDateOfDeath');
@@ -247,7 +256,7 @@ class ActualOrPresumedDateOfDeath extends Observation {
 class AutopsyPerformed extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '85699-7', 'Autopsy was performed');
+    this.code = new CodeableConcept('http://loinc.org', '85699-7', 'Autopsy was performed');
     this.valueBoolean = value;
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyPerformed');
@@ -257,7 +266,7 @@ class AutopsyPerformed extends Observation {
 class AutopsyResultsAvailable extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '69436-4', 'Autopsy results available');
+    this.code = new CodeableConcept('http://loinc.org', '69436-4', 'Autopsy results available');
     this.valueBoolean = value;
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyResultsAvailable');
@@ -267,7 +276,7 @@ class AutopsyResultsAvailable extends Observation {
 class DatePronouncedDead extends Observation {
    constructor(value, subjectEntry) {
      super();
-     this.code = new CodableConcept('http://loinc.org', '80616-6', 'Date and time pronounced dead');
+     this.code = new CodeableConcept('http://loinc.org', '80616-6', 'Date and time pronounced dead');
      this.valueDateTime = value;
      this.subject = { reference: subjectEntry.fullUrl };
      this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DatePronouncedDead');
@@ -277,7 +286,7 @@ class DatePronouncedDead extends Observation {
 class DeathFromWorkInjury extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '69444-8', 'Did death result from injury at work');
+    this.code = new CodeableConcept('http://loinc.org', '69444-8', 'Did death result from injury at work');
     this.valueBoolean = value;
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromWorkInjury');
@@ -287,19 +296,19 @@ class DeathFromWorkInjury extends Observation {
 class InjuryAssociatedWithTransport extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '69448-9', 'Injury leading to death associated with transportation event');
+    this.code = new CodeableConcept('http://loinc.org', '69448-9', 'Injury leading to death associated with transportation event');
     switch (value) {
     case 'Vehicle driver':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '236320001', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '236320001', value);
       break;
     case 'Passenger':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '257500003', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '257500003', value);
       break;
     case 'Pedestrian':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '257518000', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '257518000', value);
       break;
     case 'Other':
-      this.valueCodableConcept = new CodableConcept('http://hl7.org/fhir/v3/NullFlavor', 'OTH', value);
+      this.valueCodeableConcept = new CodeableConcept('http://hl7.org/fhir/v3/NullFlavor', 'OTH', value);
       break;
     default:
       throw `InjuryAssociatedWithTransport ${value} not in value set`;
@@ -312,7 +321,7 @@ class InjuryAssociatedWithTransport extends Observation {
 class DetailsOfInjury extends Observation {
   constructor(details, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '11374-6', 'Injury incident description');
+    this.code = new CodeableConcept('http://loinc.org', '11374-6', 'Injury incident description');
     this.valueString = details.value;
     // TODO: need to sensibly handle null values
     this.effectiveDateTime = details.effectiveDateTime;
@@ -338,25 +347,25 @@ class DetailsOfInjury extends Observation {
 class MannerOfDeath extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '69449-7', 'Manner of Death');
+    this.code = new CodeableConcept('http://loinc.org', '69449-7', 'Manner of death');
     switch (value) {
     case 'Natural':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '38605008', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '38605008', value);
       break;
     case 'Accident':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '7878000', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '7878000', value);
       break;
     case 'Suicide':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '44301001', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '44301001', value);
       break;
     case 'Homicide':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '27935005', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '27935005', value);
       break;
     case 'Pending Investigation':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '185973002', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '185973002', value);
       break;
     case 'Could not be determined':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '65037004', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '65037004', value);
       break;
     default:
       throw `MannerOfDeath ${value} not in value set`;
@@ -369,7 +378,7 @@ class MannerOfDeath extends Observation {
 class MedicalExaminerOrCoronerContacted extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '74497-9', 'Medical examiner or coroner was contacted');
+    this.code = new CodeableConcept('http://loinc.org', '74497-9', 'Medical examiner or coroner was contacted');
     this.valueBoolean = value;
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MedicalExaminerContacted');
@@ -379,22 +388,22 @@ class MedicalExaminerOrCoronerContacted extends Observation {
 class TimingOfPregnancy extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '69442-2', 'Timing of recent pregnancy in relation to death');
+    this.code = new CodeableConcept('http://loinc.org', '69442-2', 'Timing of recent pregnancy in relation to death');
     switch (value) {
     case 'Not pregnant within past year':
-      this.valueCodableConcept = new CodableConcept(null, 'PHC1260', value);
+      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1260', value);
       break;
     case 'Pregnant at time of death':
-      this.valueCodableConcept = new CodableConcept(null, 'PHC1261', value);
+      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1261', value);
       break;
     case 'Not pregnant, but pregnant within 42 days of death':
-      this.valueCodableConcept = new CodableConcept(null, 'PHC1262', value);
+      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1262', value);
       break;
     case 'Not pregnant, but pregnant 43 days to 1 year before death':
-      this.valueCodableConcept = new CodableConcept(null, 'PHC1263', value);
+      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1263', value);
       break;
     case 'Unknown if pregnant within the past year':
-      this.valueCodableConcept = new CodableConcept(null, 'PHC1264', value);
+      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1264', value);
       break;
     default:
       throw `TimingOfPregnancy ${value} not in value set`;
@@ -407,19 +416,19 @@ class TimingOfPregnancy extends Observation {
 class TobaccoUseContributedToDeath extends Observation {
   constructor(value, subjectEntry) {
     super();
-    this.code = new CodableConcept('http://loinc.org', '69443-0', 'Did tobacco use contribute to death');
+    this.code = new CodeableConcept('http://loinc.org', '69443-0', 'Did tobacco use contribute to death');
     switch (value) {
     case 'Yes':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '373066001', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '373066001', value);
       break;
     case 'No':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '373067005', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '373067005', value);
       break;
     case 'Probably':
-      this.valueCodableConcept = new CodableConcept('http://snomed.info/sct', '2931005', value);
+      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '2931005', value);
       break;
     case 'Unknown':
-      this.valueCodableConcept = new CodableConcept('http://hl7.org/fhir/v3/NullFlavor', 'UNK', value);
+      this.valueCodeableConcept = new CodeableConcept('http://hl7.org/fhir/v3/NullFlavor', 'UNK', value);
       break;
     default:
       throw `TobaccoUseContributedToDeath ${value} not in value set`;
@@ -441,7 +450,7 @@ class DeathRecord extends Bundle {
     super(_.omit(options, local));
 
     // Indicate that this Bundle is a document
-    this.type = 'Document';
+    this.type = 'document';
 
     // Create the Composition that tracks all the entries
     const deathRecordContents = new DeathRecordContents();
@@ -501,13 +510,13 @@ class DeathRecord extends Bundle {
 
 // TODO: Just for local testing during development
 const x = new DeathRecord({
-  id: 1,
+  id: '1',
   actualOrPresumedDateOfDeath: moment().format(),
-  autopsyPerformed: true,
+  autopsyPerformed: false,
   autopsyResultsAvailable: false,
   datePronouncedDead: moment().format(),
   deathFromWorkInjury: false,
-  injuryAssociatedWithTransport: 'Passenger',
+  injuryAssociatedWithTransport: 'Other',
   detailsOfInjury: {
     value: 'Example details of injury',
     effectiveDateTime: moment().format(),
@@ -522,39 +531,41 @@ const x = new DeathRecord({
       country: "United States"
     },
   },
-  mannerOfDeath: 'Natural',
+  mannerOfDeath: 'Accident',
   medicalExaminerOrCoronerContacted: false,
-  timingOfPregnancy: 'Unknown if pregnant within the past year',
-  tobaccoUseContributedToDeath: 'Probably',
+  timingOfPregnancy: 'Not pregnant within past year',
+  tobaccoUseContributedToDeath: 'No',
   causeOfDeath: [
-    { literalText: 'Example COD 1', onsetString: 'Hours' },
-    { literalText: 'Example COD 2', onsetString: 'Days' }
+    { literalText: 'Example Immediate COD', onsetString: 'minutes' },
+    { literalText: 'Example Underlying COD 1', onsetString: '2 hours' },
+    { literalText: 'Example Underlying COD 2', onsetString: '6 months' },
+    { literalText: 'Example Underlying COD 3', onsetString: '15 years' }
   ],
   decedent: {
-    name: 'Example Decedent',
-    birthDate: moment().format('YYYY-MM-DD'),
-    deceasedDateTime: moment().format(),
+    name: 'Example Middle Person',
+    birthDate: '1970-04-24',
+    deceasedDateTime: '2018-04-24T00:00:00+00:00',
     address:  {
       line: [
-        "9 Example Street"
+        "1 Example Street"
       ],
-      city: "Bedford",
+      city: "Boston",
       state: "Massachusetts",
-      postalCode: "01730",
+      postalCode: "02101",
       country: "United States"
     },
-    gender: 'M',
-    ssn: '111-22-3333',
-    servedInArmedForces: true,
+    gender: 'male',
+    ssn: '111223333',
+    servedInArmedForces: false,
     birthSex: 'M'
   },
   certifier: {
-    name: 'Example Certifier',
+    name: 'Example Middle Doctor',
     certifierType: 'Physician (Pronouncer and Certifier)',
-    identifier: '123456',
+    identifier: '1',
     address:  {
       line: [
-        "8 Example Street"
+        "100 Example St."
       ],
       city: "Bedford",
       state: "Massachusetts",
