@@ -311,7 +311,7 @@ class InjuryAssociatedWithTransport extends Observation {
       this.valueCodeableConcept = new CodeableConcept('http://hl7.org/fhir/v3/NullFlavor', 'OTH', value);
       break;
     default:
-      throw `InjuryAssociatedWithTransport ${value} not in value set`;
+      throw new Error(`InjuryAssociatedWithTransport ${value} not in value set`);
     }
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromTransportInjury');
@@ -368,7 +368,7 @@ class MannerOfDeath extends Observation {
       this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '65037004', value);
       break;
     default:
-      throw `MannerOfDeath ${value} not in value set`;
+      throw new Error(`MannerOfDeath ${value} not in value set`);
     }
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MannerOfDeath');
@@ -406,7 +406,7 @@ class TimingOfPregnancy extends Observation {
       this.valueCodeableConcept = new CodeableConcept(null, 'PHC1264', value);
       break;
     default:
-      throw `TimingOfPregnancy ${value} not in value set`;
+      throw new Error(`TimingOfPregnancy ${value} not in value set`);
     }
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-TimingOfRecentPregnancyInRelationToDeath');
@@ -431,7 +431,7 @@ class TobaccoUseContributedToDeath extends Observation {
       this.valueCodeableConcept = new CodeableConcept('http://hl7.org/fhir/v3/NullFlavor', 'UNK', value);
       break;
     default:
-      throw `TobaccoUseContributedToDeath ${value} not in value set`;
+      throw new Error(`TobaccoUseContributedToDeath ${value} not in value set`);
     }
     this.subject = { reference: subjectEntry.fullUrl };
     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-TobaccoUseContributedToDeath');
@@ -508,74 +508,187 @@ class DeathRecord extends Bundle {
   }
 }
 
-// TODO: Just for local testing during development
-const x = new DeathRecord({
-  id: '1',
-  actualOrPresumedDateOfDeath: moment().format(),
-  autopsyPerformed: false,
-  autopsyResultsAvailable: false,
-  datePronouncedDead: moment().format(),
-  deathFromWorkInjury: false,
-  injuryAssociatedWithTransport: 'Other',
-  detailsOfInjury: {
-    value: 'Example details of injury',
-    effectiveDateTime: moment().format(),
-    placeOfInjury: 'Example place of injury',
-    address: {
-      line: [
-        "7 Example Street"
-      ],
-      city: "Bedford",
-      state: "Massachusetts",
-      postalCode: "01730",
-      country: "United States"
-    },
-  },
-  mannerOfDeath: 'Accident',
-  medicalExaminerOrCoronerContacted: false,
-  timingOfPregnancy: 'Not pregnant within past year',
-  tobaccoUseContributedToDeath: 'No',
-  causeOfDeath: [
-    { literalText: 'Example Immediate COD', onsetString: 'minutes' },
-    { literalText: 'Example Underlying COD 1', onsetString: '2 hours' },
-    { literalText: 'Example Underlying COD 2', onsetString: '6 months' },
-    { literalText: 'Example Underlying COD 3', onsetString: '15 years' }
-  ],
-  decedent: {
-    name: 'Example Middle Person',
-    birthDate: '1970-04-24',
-    deceasedDateTime: '2018-04-24T00:00:00+00:00',
-    address:  {
-      line: [
-        "1 Example Street"
-      ],
-      city: "Boston",
-      state: "Massachusetts",
-      postalCode: "02101",
-      country: "United States"
-    },
-    gender: 'male',
-    ssn: '111223333',
-    servedInArmedForces: false,
-    birthSex: 'M'
-  },
-  certifier: {
-    name: 'Example Middle Doctor',
-    certifierType: 'Physician (Pronouncer and Certifier)',
-    identifier: '1',
-    address:  {
-      line: [
-        "100 Example St."
-      ],
-      city: "Bedford",
-      state: "Massachusetts",
-      postalCode: "01730",
-      country: "United States"
-    },
+// An example, which can be used for testing if uncommented
+
+// const example = new DeathRecord({
+//   id: '1',
+//   actualOrPresumedDateOfDeath: moment().format(),
+//   autopsyPerformed: false,
+//   autopsyResultsAvailable: false,
+//   datePronouncedDead: moment().format(),
+//   deathFromWorkInjury: false,
+//   injuryAssociatedWithTransport: 'Other',
+//   detailsOfInjury: {
+//     value: 'Example details of injury',
+//     effectiveDateTime: moment().format(),
+//     placeOfInjury: 'Example place of injury',
+//     address: {
+//       line: [
+//         "7 Example Street"
+//       ],
+//       city: "Bedford",
+//       state: "Massachusetts",
+//       postalCode: "01730",
+//       country: "United States"
+//     },
+//   },
+//   mannerOfDeath: 'Accident',
+//   medicalExaminerOrCoronerContacted: false,
+//   timingOfPregnancy: 'Not pregnant within past year',
+//   tobaccoUseContributedToDeath: 'No',
+//   causeOfDeath: [
+//     { literalText: 'Example Immediate COD', onsetString: 'minutes' },
+//     { literalText: 'Example Underlying COD 1', onsetString: '2 hours' },
+//     { literalText: 'Example Underlying COD 2', onsetString: '6 months' },
+//     { literalText: 'Example Underlying COD 3', onsetString: '15 years' }
+//   ],
+//   decedent: {
+//     name: 'Example Middle Person',
+//     birthDate: '1970-04-24',
+//     deceasedDateTime: '2018-04-24T00:00:00+00:00',
+//     address:  {
+//       line: [
+//         "1 Example Street"
+//       ],
+//       city: "Boston",
+//       state: "Massachusetts",
+//       postalCode: "02101",
+//       country: "United States"
+//     },
+//     gender: 'male',
+//     ssn: '111223333',
+//     servedInArmedForces: false,
+//     birthSex: 'M'
+//   },
+//   certifier: {
+//     name: 'Example Middle Doctor',
+//     certifierType: 'Physician (Pronouncer and Certifier)',
+//     identifier: '1',
+//     address:  {
+//       line: [
+//         "100 Example St."
+//       ],
+//       city: "Bedford",
+//       state: "Massachusetts",
+//       postalCode: "01730",
+//       country: "United States"
+//     },
+//   }
+// });
+
+
+// In the code below we rely on "" evaluating to false
+
+const formatDateAndTime = (date, time) => {
+  if (date && time) {
+    return moment(`${date} ${time}`, 'YYYY-MM-DD HH:mm').format();
+  } else if (date) {
+    return moment(date, 'YYYY-MM-DD').format();
   }
-});
+}
 
+const formatAddress = (street, city, state, zip) => {
+  let address = null;
+  if (street || city || state || zip) {
+    address = {};
+    if (street) {
+      address.line = [street];
+    }
+    if (city) {
+      address.city = city;
+    }
+    if (state) {
+      address.state = state;
+    }
+    if (zip) {
+      address.postalCode = zip;
+    }
+  }
+  return address;
+}
 
-debugger
+const recordToFHIR = (record, decedent) => {
 
-export { DeathRecord };
+  // TODO Consider changing switches above to lookup table approach
+  // TODO Consider using lookup table approach for 'Yes' and 'No' answers so we can just pass through
+  // TODO Consider routing all the decedent information through the record
+
+  // Build the input for translation to FHIR
+  const fhirInput = {};
+
+  fhirInput.actualOrPresumedDateOfDeath = formatDateAndTime(record.actualDeathDate, record.actualDeathTime);
+
+  fhirInput.datePronouncedDead = formatDateAndTime(record.pronouncedDeathDate, record.pronouncedDeathTime);
+
+  if (!_.isNil(record.autopsyPerformed)) {
+    fhirInput.autopsyPerformed = record.autopsyPerformed === 'Yes';
+  }
+
+  if (!_.isNil(record.autopsyAvailable)) {
+    fhirInput.autopsyResultsAvailable = record.autopsyAvailable === 'Yes';
+  }
+
+  if (!_.isNil(record.injuryAtWork)) {
+    fhirInput.deathFromWorkInjury = record.injuryAtWork === 'Yes';
+  }
+
+  fhirInput.injuryAssociatedWithTransport = record.transportationInjury;
+
+  const locationOfInjury = formatAddress(record.locationOfInjuryStreet, record.locationOfInjuryCity,
+                                         record.locationOfInjuryState, record.locationOfInjuryZip);
+  if (record.howInjuryOccurred || locationOfInjury || record.placeOfInjury || record.dateOfInjury) {
+    fhirInput.detailsOfInjury = {};
+    // TODO: Need a field to collect field 43 "describe how injury occurred"
+    if (record.howInjuryOccurred) {
+      fhirInput.detailsOfInjury.value = record.howInjuryOccurred;
+    }
+    if (locationOfInjury) {
+      fhirInput.detailsOfInjury.address = locationOfInjury;
+    }
+    if (record.placeOfInjury) {
+      fhirInput.detailsOfInjury.placeOfInjury = record.placeOfInjury;
+    }
+    if (record.dateOfInjury) {
+      fhirInput.detailsOfInjury.effectiveDateTime = formatDateAndTime(record.dateOfInjury, record.timeOfInjury);
+    }
+  }
+
+  fhirInput.mannerOfDeath = record.mannerOfDeath;
+
+  if (!_.isNil(record.examinerContacted)) {
+    fhirInput.medicalExaminerOrCoronerContacted = record.examinerContacted === 'Yes';
+  }
+
+  fhirInput.timingOfPregnancy = record.pregnancy;
+
+  fhirInput.tobaccoUseContributedToDeath = record.tobacco;
+
+  for (let i = 1; i <= 4; i += 1) {
+    if (record[`cod${i}Text`]) {
+      fhirInput.causeOfDeath = fhirInput.causeOfDeath || [];
+      fhirInput.causeOfDeath.push({ literalText: record.cod1Text, onsetString: record.cod1Time });
+    }
+  }
+
+  fhirInput.decedent = {
+    name: decedent.name,
+    birthDate: decedent.birthDate,
+    deceasedDateTime: formatDateAndTime(record.actualDeathDate, record.actualDeathTime),
+    address: decedent.resource.address[0],
+    gender: decedent.gender
+    //ssn: '111223333'
+    //servedInArmedForces: false,
+    //birthSex: 'M'
+  };
+
+  fhirInput.certifier = {
+    name: record.certifierName,
+    certifierType: 'Physician (Pronouncer and Certifier)',
+    identifier: record.certifierNumber,
+    address: formatAddress(record.certifierStreet, record.certifierCity, record.certifierState, record.certifierZip)
+  }
+
+  return new DeathRecord(fhirInput);
+}
+
+export { recordToFHIR  };

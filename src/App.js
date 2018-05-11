@@ -11,7 +11,6 @@ import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import InjuryQuestionsForm from './InjuryQuestionsForm';
 import ReviewAndSubmit from './ReviewAndSubmit';
 import { SMARTWrap } from './FHIRClientWrapper';
-import FH from './FHIRExport';
 
 class App extends Component {
 
@@ -50,6 +49,7 @@ class App extends Component {
       timeOfInjury: '',
       placeOfInjury: '',
       injuryAtWork: null,
+      transportationInjury: null,
       locationOfInjuryState: '',
       locationOfInjuryCity: '',
       locationOfInjuryStreet: '',
@@ -193,6 +193,7 @@ class App extends Component {
       case 'ReviewAndSubmit':
         return <ReviewAndSubmit patient={this.state.patient}
                                 gotoStep={this.gotoStep}
+                                handleRecordChange={this.handleRecordChange}
                                 record={this.state.record} />;
       case 'Welcome':
       default:
