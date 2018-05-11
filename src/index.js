@@ -16,9 +16,10 @@ const FHIR = window.FHIR;
 switch (_.last(window.location.pathname.split('/'))) {
 case 'launch':
   const scope = 'patient/*.read user/Patient.read openid profile online_access';
+  const clientId = '17eff9ba-9445-426f-a457-b49ee385464e';
   const launchUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
   const redirectUri = launchUri.replace('launch', 'smart');
-  FHIR.oauth2.authorize({ client_id: 'fhir_death', scope: scope, redirect_uri: redirectUri });
+  FHIR.oauth2.authorize({ client_id: clientId, scope: scope, redirect_uri: redirectUri });
   ReactDOM.render(<Loading />, document.getElementById('root'));
   break;
 case 'smart':

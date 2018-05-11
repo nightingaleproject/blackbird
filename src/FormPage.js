@@ -31,7 +31,7 @@ class FormPage extends Component {
         {this.menuItem('CauseOfDeath', currentStep, true)}
         {this.menuItem('AdditionalQuestions', currentStep, true)}
         {this.menuItem('InjuryQuestions', currentStep, true)}
-        {this.menuItem('Validation', currentStep, false)}
+        {this.menuItem('ReviewAndSubmit', currentStep, false)}
       </Menu>
     );
   }
