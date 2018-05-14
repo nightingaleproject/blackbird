@@ -95,9 +95,16 @@ class HumanName {
   constructor(name, use) {
     // Start with a simple decomposition
     // TODO: This won't hold up to more complex examples with prefixes and suffixes
-    const match = name.match(/(.+)\s+(\S+)/);
-    this.given = match[1].split(/\s+/);
-    this.family = match[2];
+    let match = name.match(/(.+)\s+(\S+)/);
+    if (match) {
+      this.given = match[1].split(/\s+/);
+      this.family = match[2];
+    } else {
+      match = name.match(/\S+/);
+      if (match) {
+        this.given = [match[0]];
+      }
+    }
     this.use = 'official';
   }
 }
