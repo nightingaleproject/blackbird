@@ -44,6 +44,8 @@ class ReviewAndSubmit extends FormPage {
       );
     };
 
+    // TODO: Combine some of these lines, such as addresses
+
     return (
       <React.Fragment>
 
@@ -84,6 +86,7 @@ class ReviewAndSubmit extends FormPage {
               {reviewRow('Location of Injury (Street)', record.locationOfInjuryStreet)}
               {reviewRow('Location of Injury (Apt)', record.locationOfInjuryApt)}
               {reviewRow('Location of Injury (Zip)', record.locationOfInjuryZip)}
+              {reviewRow('Describe how injury occurred', record.howInjuryOccurred)}
             </Grid>
 
           </Grid.Column>
@@ -128,6 +131,8 @@ class ReviewAndSubmit extends FormPage {
               </Form.Group>
 
               <Button primary floated='right' onClick={this.handleSubmit}>Submit</Button>
+
+              <Button primary floated='right' onClick={() => console.log(JSON.stringify(recordToFHIR(this.props.record, this.props.patient), null, 2))}>Log FHIR to Console</Button>
 
             </Form>
           </Grid.Column>

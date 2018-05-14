@@ -609,9 +609,9 @@ const formatAddress = (street, city, state, zip) => {
 
 const recordToFHIR = (record, decedent) => {
 
-  // TODO Consider changing switches above to lookup table approach
-  // TODO Consider using lookup table approach for 'Yes' and 'No' answers so we can just pass through
-  // TODO Consider routing all the decedent information through the record
+  // TODO: Consider changing switches above to lookup table approach
+  // TODO: Consider using lookup table approach for 'Yes' and 'No' answers so we can just pass through
+  // TODO: Consider routing all the decedent information through the record
 
   // Build the input for translation to FHIR
   const fhirInput = {};
@@ -638,7 +638,6 @@ const recordToFHIR = (record, decedent) => {
                                          record.locationOfInjuryState, record.locationOfInjuryZip);
   if (record.howInjuryOccurred || locationOfInjury || record.placeOfInjury || record.dateOfInjury) {
     fhirInput.detailsOfInjury = {};
-    // TODO: Need a field to collect field 43 "describe how injury occurred"
     if (record.howInjuryOccurred) {
       fhirInput.detailsOfInjury.value = record.howInjuryOccurred;
     }
@@ -672,10 +671,10 @@ const recordToFHIR = (record, decedent) => {
 
   fhirInput.decedent = {
     name: decedent.name,
-    birthDate: decedent.birthDate,
+    birthDate: decedent.resource.birthDate,
     deceasedDateTime: formatDateAndTime(record.actualDeathDate, record.actualDeathTime),
     address: decedent.resource.address[0],
-    gender: decedent.gender
+    gender: decedent.resource.gender
     //ssn: '111223333'
     //servedInArmedForces: false,
     //birthSex: 'M'

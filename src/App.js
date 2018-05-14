@@ -50,6 +50,7 @@ class App extends Component {
       placeOfInjury: '',
       injuryAtWork: null,
       transportationInjury: null,
+      howInjuryOccurred: '',
       locationOfInjuryState: '',
       locationOfInjuryCity: '',
       locationOfInjuryStreet: '',
