@@ -696,7 +696,7 @@ const recordToFHIR = (record, decedent) => {
   for (let i = 1; i <= 4; i += 1) {
     if (record[`cod${i}Text`]) {
       fhirInput.causeOfDeath = fhirInput.causeOfDeath || [];
-      fhirInput.causeOfDeath.push({ literalText: record.cod1Text, onsetString: record.cod1Time });
+      fhirInput.causeOfDeath.push({ literalText: record[`cod${i}Text`], onsetString: record[`cod${i}Time`] });
     }
   }
 
