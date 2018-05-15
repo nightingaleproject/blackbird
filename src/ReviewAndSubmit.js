@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Message, Form, Button } from 'semantic-ui-react';
+import { Grid, Message, Form, Button, Input } from 'semantic-ui-react';
 import FormPage from './FormPage';
 import { recordToFHIR } from './FHIRExport';
 // jQuery for AJAX is overkill, but it's already a dependency
@@ -10,7 +10,12 @@ class ReviewAndSubmit extends FormPage {
   constructor(props) {
     super(props);
     this.state = { edrsEndpoint: 'http://localhost:4000/fhir/v1/death_records.json' };
+    this.handleEndpointChange = this.handleEndpointChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleEndpointChange(event, data) {
+    this.setState({ edrsEndpoint: data.value });
   }
 
   handleSubmit() {
@@ -22,7 +27,10 @@ class ReviewAndSubmit extends FormPage {
       contentType: 'application/json',
       dataType: 'json',
       success: (data) => {
-        alert("Successfully posted data to server:\n\n" + JSON.stringify(fhirData, null, 2));
+        alert("Successfully submitted data to server:\n\n" + JSON.stringify(fhirData, null, 2));
+      },
+      error: (response) => {
+        alert("Failed to submit data to server, error reported: " + response.statusText);
       }
     });
   }
@@ -129,6 +137,11 @@ class ReviewAndSubmit extends FormPage {
                   {this.input('text', 'certifierZip')}
                 </Form.Field>
               </Form.Group>
+
+              <Form.Field>
+                <label>EDRS FHIR Endpoint URL:</label>
+                <Input type='text' name='edrsEndpoint' value={this.state.edrsEndpoint} onChange={this.handleEndpointChange} />
+              </Form.Field>
 
               <Button primary floated='right' onClick={this.handleSubmit}>Submit</Button>
 
