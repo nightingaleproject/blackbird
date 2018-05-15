@@ -250,6 +250,19 @@ class CauseOfDeath extends Condition {
   }
 }
 
+class ContributedToDeath extends Condition {
+  constructor(text, subjectEntry) {
+    super();
+    this.clinicalStatus = 'active';
+    this.text = {
+      status: 'additional',
+      div: `<div xmlns='http://www.w3.org/1999/xhtml'>${text}</div>`
+    };
+    this.subject = { reference: subjectEntry.fullUrl };
+    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-ContributedToDeathCondition');
+  }
+}
+
 class ActualOrPresumedDateOfDeath extends Observation {
    constructor(value, subjectEntry) {
      super();
@@ -450,7 +463,7 @@ class TobaccoUseContributedToDeath extends Observation {
 class DeathRecord extends Bundle {
   constructor(options = {}) {
     // Figure out what options we'll handle locally and pass the rest up
-    const local = ['decedent', 'certifier', 'causeOfDeath', 'actualOrPresumedDateOfDeath', 'autopsyPerformed',
+    const local = ['decedent', 'certifier', 'causeOfDeath', 'contributedToDeath', 'actualOrPresumedDateOfDeath', 'autopsyPerformed',
                    'autopsyResultsAvailable', 'datePronouncedDead', 'deathFromWorkInjury', 'injuryAssociatedWithTransport',
                    'detailsOfInjury', 'mannerOfDeath', 'medicalExaminerOrCoronerContacted', 'timingOfPregnancy',
                    'tobaccoUseContributedToDeath'];
@@ -470,6 +483,9 @@ class DeathRecord extends Bundle {
     // Add the cause of death information
     options.causeOfDeath = options.causeOfDeath || [];
     options.causeOfDeath.forEach((cod) => this.addCauseOfDeath(cod.literalText, cod.onsetString, deathRecordContents, decedentEntry));
+
+    // Add other factors that contributed to death
+    this.addContributedToDeath(options.contributedToDeath, deathRecordContents, decedentEntry);
 
     // Add all the observations
     this.addObservation(options.actualOrPresumedDateOfDeath, ActualOrPresumedDateOfDeath, deathRecordContents, decedentEntry);
@@ -504,6 +520,13 @@ class DeathRecord extends Bundle {
       const causeOfDeathResource = new CauseOfDeath(literalText, onsetString, decedentEntry);
       const causeOfDeathEntry = this.addEntry(causeOfDeathResource);
       deathRecordContents.addReference(causeOfDeathEntry);
+    }
+  }
+  addContributedToDeath(text, deathRecordContents, decedentEntry) {
+    if (text) {
+      const contributedToDeathResource = new ContributedToDeath(text, decedentEntry);
+      const contributedToDeathEntry = this.addEntry(contributedToDeathResource);
+      deathRecordContents.addReference(contributedToDeathEntry);
     }
   }
   addObservation(observation, observationClass, deathRecordContents, decedentEntry) {
@@ -549,6 +572,7 @@ class DeathRecord extends Bundle {
 //     { literalText: 'Example Underlying COD 2', onsetString: '6 months' },
 //     { literalText: 'Example Underlying COD 3', onsetString: '15 years' }
 //   ],
+//   contributedToDeath: 'Contributed',
 //   decedent: {
 //     name: 'Example Middle Person',
 //     birthDate: '1970-04-24',
@@ -675,6 +699,8 @@ const recordToFHIR = (record, decedent) => {
       fhirInput.causeOfDeath.push({ literalText: record.cod1Text, onsetString: record.cod1Time });
     }
   }
+
+  fhirInput.contributedToDeath = record.contributing;
 
   fhirInput.decedent = {
     name: decedent.name,
