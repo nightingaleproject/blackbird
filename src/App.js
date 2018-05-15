@@ -87,8 +87,12 @@ class App extends Component {
     // Pull information on decedent from patient to populate fields
     this.setState((prevState) => {
       const newRecord = Object.assign({}, prevState.record);
-      newRecord.actualDeathDate = patient.deceasedDate;
-      newRecord.actualDeathTime = patient.deceasedTime;
+      if (patient.deceasedDate) {
+        newRecord.actualDeathDate = patient.deceasedDate;
+      }
+      if (patient.deceasedTime) {
+        newRecord.actualDeathTime = patient.deceasedTime;
+      }
       return ({ record: newRecord });
     });
   }
