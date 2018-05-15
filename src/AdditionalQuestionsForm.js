@@ -56,11 +56,11 @@ class AdditionalQuestionsForm extends FormPage {
               <Form.Field>
                 <label>If female:</label>
               </Form.Field>
-              {this.radio('Not pregnant within past year', 'pregnancy', 'Not pregnant within past year')}
-              {this.radio('Pregnant at time of death', 'pregnancy', 'Pregnant at time of death')}
-              {this.radio('Not pregnant, but pregnant within 42 days of death', 'pregnancy', 'Not pregnant, but pregnant within 42 days of death')}
-              {this.radio('Not pregnant, but pregnant 43 days to 1 year before death', 'pregnancy', 'Not pregnant, but pregnant 43 days to 1 year before death')}
-              {this.radio('Unknown if pregnant within the past year', 'pregnancy', 'Unknown if pregnant within the past year')}
+              {this.radio('Not pregnant within past year', 'pregnancy', 'Not pregnant within past year', { optional: true })}
+              {this.radio('Pregnant at time of death', 'pregnancy', 'Pregnant at time of death', { optional: true })}
+              {this.radio('Not pregnant, but pregnant within 42 days of death', 'pregnancy', 'Not pregnant, but pregnant within 42 days of death', { optional: true })}
+              {this.radio('Not pregnant, but pregnant 43 days to 1 year before death', 'pregnancy', 'Not pregnant, but pregnant 43 days to 1 year before death', { optional: true })}
+              {this.radio('Unknown if pregnant within the past year', 'pregnancy', 'Unknown if pregnant within the past year', { optional: true })}
 
               {this.nextStepButton('InjuryQuestions')}
             </Form>
