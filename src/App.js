@@ -49,6 +49,8 @@ class App extends Component {
       timeOfInjury: '',
       placeOfInjury: '',
       injuryAtWork: null,
+      transportationInjury: null,
+      howInjuryOccurred: '',
       locationOfInjuryState: '',
       locationOfInjuryCity: '',
       locationOfInjuryStreet: '',
@@ -85,8 +87,12 @@ class App extends Component {
     // Pull information on decedent from patient to populate fields
     this.setState((prevState) => {
       const newRecord = Object.assign({}, prevState.record);
-      newRecord.actualDeathDate = patient.deceasedDate;
-      newRecord.actualDeathTime = patient.deceasedTime;
+      if (patient.deceasedDate) {
+        newRecord.actualDeathDate = patient.deceasedDate;
+      }
+      if (patient.deceasedTime) {
+        newRecord.actualDeathTime = patient.deceasedTime;
+      }
       return ({ record: newRecord });
     });
   }
@@ -192,6 +198,7 @@ class App extends Component {
       case 'ReviewAndSubmit':
         return <ReviewAndSubmit patient={this.state.patient}
                                 gotoStep={this.gotoStep}
+                                handleRecordChange={this.handleRecordChange}
                                 record={this.state.record} />;
       case 'Welcome':
       default:

@@ -1,9 +1,43 @@
 import React from 'react';
-import { Grid, Message, Form, Button } from 'semantic-ui-react';
+import { Grid, Message, Form, Button, Input } from 'semantic-ui-react';
 import FormPage from './FormPage';
+import { recordToFHIR } from './FHIRExport';
+// jQuery for AJAX is overkill, but it's already a dependency
+import jQuery from 'jquery';
 
 class ReviewAndSubmit extends FormPage {
+
+  constructor(props) {
+    super(props);
+    this.state = { edrsEndpoint: 'http://localhost:4000/fhir/v1/death_records.json' };
+    this.handleEndpointChange = this.handleEndpointChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleEndpointChange(event, data) {
+    this.setState({ edrsEndpoint: data.value });
+  }
+
+  handleSubmit() {
+    const fhirData = recordToFHIR(this.props.record, this.props.patient);
+    jQuery.ajax({
+      url: this.state.edrsEndpoint,
+      type: 'POST',
+      data: JSON.stringify(fhirData),
+      contentType: 'application/json',
+      dataType: 'json',
+      success: (data) => {
+        alert("Successfully submitted data to server:\n\n" + JSON.stringify(fhirData, null, 2));
+      },
+      error: (response) => {
+        alert("Failed to submit data to server, error reported: " + response.statusText);
+      }
+    });
+  }
+
   render() {
+
+    const record = this.props.record;
 
     const reviewRow = (title, value) => {
       return (
@@ -18,6 +52,8 @@ class ReviewAndSubmit extends FormPage {
       );
     };
 
+    // TODO: Combine some of these lines, such as addresses
+
     return (
       <React.Fragment>
 
@@ -28,36 +64,37 @@ class ReviewAndSubmit extends FormPage {
         <Grid.Row>
           <Grid.Column>
             <Grid>
-              {reviewRow('Date Pronounced Dead', this.props.record.pronouncedDeathDate)}
-              {reviewRow('Time Pronounced Dead', this.props.record.pronouncedDeathTime)}
-              {reviewRow('Actual or Presumed Date of Death', this.props.record.actualDeathDate)}
-              {reviewRow('Actual or Presumed Time of Death', this.props.record.actualDeathTime)}
-              {reviewRow('Was Medical Examiner or Coroner Contacted?', this.props.record.examinerContacted)}
-              {reviewRow('Was an Autopsy Performed?', this.props.record.autopsyPerformed)}
-              {reviewRow('Were Autopsy Findings Available to Complete the Cause of Death?', this.props.record.autopsyAvailable)}
-              {reviewRow('Person Pronouncing Death', this.props.record.pronouncerName)}
-              {reviewRow('License Number of Person Pronouncing Death', this.props.record.pronouncerNumber)}
-              {reviewRow('Immediate Cause of Death', this.props.record.cod1Text)}
-              {reviewRow('Approximate Interval', this.props.record.cod1Time)}
-              {reviewRow('Underlying Cause of Death', this.props.record.cod2Text)}
-              {reviewRow('Approximate Interval', this.props.record.cod2Time)}
-              {reviewRow('Underlying Cause of Death', this.props.record.cod3Text)}
-              {reviewRow('Approximate Interval', this.props.record.cod3Time)}
-              {reviewRow('Underlying Cause of Death', this.props.record.cod4Text)}
-              {reviewRow('Approximate Interval', this.props.record.cod4Time)}
-              {reviewRow('Other Significant Conditions Contributing to Death', this.props.record.contributing)}
-              {reviewRow('Did Tobacco Use Contribute to Death?', this.props.record.tobacco)}
-              {reviewRow('Pregnancy Status', this.props.record.pregnancy)}
-              {reviewRow('Manner of Death', this.props.record.mannerOfDeath)}
-              {reviewRow('Date of Injury', this.props.record.dateOfInjury)}
-              {reviewRow('Time of Injury', this.props.record.timeOfInjury)}
-              {reviewRow('Place of Injury', this.props.record.placeOfInjury)}
-              {reviewRow('Injury at Work?', this.props.record.injuryAtWork)}
-              {reviewRow('Location of Injury (State)', this.props.record.locationOfInjuryState)}
-              {reviewRow('Location of Injury (City)', this.props.record.locationOfInjuryCity)}
-              {reviewRow('Location of Injury (Street)', this.props.record.locationOfInjuryStreet)}
-              {reviewRow('Location of Injury (Apt)', this.props.record.locationOfInjuryApt)}
-              {reviewRow('Location of Injury (Zip)', this.props.record.locationOfInjuryZip)}
+              {reviewRow('Date Pronounced Dead', record.pronouncedDeathDate)}
+              {reviewRow('Time Pronounced Dead', record.pronouncedDeathTime)}
+              {reviewRow('Actual or Presumed Date of Death', record.actualDeathDate)}
+              {reviewRow('Actual or Presumed Time of Death', record.actualDeathTime)}
+              {reviewRow('Was Medical Examiner or Coroner Contacted?', record.examinerContacted)}
+              {reviewRow('Was an Autopsy Performed?', record.autopsyPerformed)}
+              {reviewRow('Were Autopsy Findings Available to Complete the Cause of Death?', record.autopsyAvailable)}
+              {reviewRow('Person Pronouncing Death', record.pronouncerName)}
+              {reviewRow('License Number of Person Pronouncing Death', record.pronouncerNumber)}
+              {reviewRow('Immediate Cause of Death', record.cod1Text)}
+              {reviewRow('Approximate Interval', record.cod1Time)}
+              {reviewRow('Underlying Cause of Death', record.cod2Text)}
+              {reviewRow('Approximate Interval', record.cod2Time)}
+              {reviewRow('Underlying Cause of Death', record.cod3Text)}
+              {reviewRow('Approximate Interval', record.cod3Time)}
+              {reviewRow('Underlying Cause of Death', record.cod4Text)}
+              {reviewRow('Approximate Interval', record.cod4Time)}
+              {reviewRow('Other Significant Conditions Contributing to Death', record.contributing)}
+              {reviewRow('Did Tobacco Use Contribute to Death?', record.tobacco)}
+              {reviewRow('Pregnancy Status', record.pregnancy)}
+              {reviewRow('Manner of Death', record.mannerOfDeath)}
+              {reviewRow('Date of Injury', record.dateOfInjury)}
+              {reviewRow('Time of Injury', record.timeOfInjury)}
+              {reviewRow('Place of Injury', record.placeOfInjury)}
+              {reviewRow('Injury at Work?', record.injuryAtWork)}
+              {reviewRow('Location of Injury (State)', record.locationOfInjuryState)}
+              {reviewRow('Location of Injury (City)', record.locationOfInjuryCity)}
+              {reviewRow('Location of Injury (Street)', record.locationOfInjuryStreet)}
+              {reviewRow('Location of Injury (Apt)', record.locationOfInjuryApt)}
+              {reviewRow('Location of Injury (Zip)', record.locationOfInjuryZip)}
+              {reviewRow('Describe how injury occurred', record.howInjuryOccurred)}
             </Grid>
 
           </Grid.Column>
@@ -101,7 +138,14 @@ class ReviewAndSubmit extends FormPage {
                 </Form.Field>
               </Form.Group>
 
-              <Button primary floated='right' onClick={() => alert('No EDRS Configured')}>Submit</Button>
+              <Form.Field>
+                <label>EDRS FHIR Endpoint URL:</label>
+                <Input type='text' name='edrsEndpoint' value={this.state.edrsEndpoint} onChange={this.handleEndpointChange} />
+              </Form.Field>
+
+              <Button primary floated='right' onClick={this.handleSubmit}>Submit</Button>
+
+              <Button primary floated='right' onClick={() => console.log(JSON.stringify(recordToFHIR(this.props.record, this.props.patient), null, 2))}>Log FHIR to Console</Button>
 
             </Form>
           </Grid.Column>

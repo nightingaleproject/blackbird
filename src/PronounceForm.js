@@ -44,8 +44,8 @@ class PronounceForm extends FormPage {
               <Form.Field>
                 <label>Was Medical Examiner or Coroner Contacted?</label>
               </Form.Field>
-              {this.radio('Yes', 'examinerContacted', 'yes')}
-              {this.radio('No', 'examinerContacted', 'no')}
+              {this.radio('Yes', 'examinerContacted', 'Yes')}
+              {this.radio('No', 'examinerContacted', 'No')}
 
               <h2>Person Pronouncing Death</h2>
 

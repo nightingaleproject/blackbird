@@ -34,11 +34,26 @@ class InjuryQuestionsForm extends FormPage {
                 {this.input('text', 'placeOfInjury', { optional: true })}
               </Form.Field>
 
-              <Form.Field>
-                <label>Injury at work?</label>
-              </Form.Field>
-              {this.radio('Yes', 'injuryAtWork', 'yes', { optional: true })}
-              {this.radio('No', 'injuryAtWork', 'no', { optional: true })}
+              <Grid>
+                <Grid.Row>
+                  <Grid.Column width={8}>
+                    <Form.Field>
+                      <label>Injury at work?</label>
+                    </Form.Field>
+                    {this.radio('Yes', 'injuryAtWork', 'Yes', { optional: true })}
+                    {this.radio('No', 'injuryAtWork', 'No', { optional: true })}
+                  </Grid.Column>
+                  <Grid.Column width={8}>
+                    <Form.Field>
+                      <label>If transportation injury, specify</label>
+                    </Form.Field>
+                    {this.radio('Driver/Operator', 'transportationInjury', 'Vehicle driver', { optional: true })}
+                    {this.radio('Passenger', 'transportationInjury', 'Passenger', { optional: true })}
+                    {this.radio('Pedestrian', 'transportationInjury', 'Pedestrian', { optional: true })}
+                    {this.radio('Other', 'transportationInjury', 'Other', { optional: true })}
+                  </Grid.Column>
+                </Grid.Row>
+              </Grid>
 
               <Form.Field>
                 <label>Address of Injury</label>
@@ -67,6 +82,11 @@ class InjuryQuestionsForm extends FormPage {
                   {this.input('text', 'locationOfInjuryZip', { optional: true })}
                 </Form.Field>
               </Form.Group>
+
+              <Form.Field>
+                <label>Describe how injury occurred</label>
+              </Form.Field>
+              {this.textarea('howInjuryOccurred', { optional: true })}
 
               {this.nextStepButton('ReviewAndSubmit')}
 
