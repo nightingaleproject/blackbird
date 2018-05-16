@@ -17,8 +17,7 @@ class Patient {
     // Calculate either to date of death or to today
     const startDate = this.resource.birthDate;
     const endDate = this.resource.deceasedDateTime || (new Date()).toISOString();
-    const ageInSeconds = (Date.parse(endDate) - Date.parse(startDate)) / 1000;
-    return `${Math.round(ageInSeconds / (60*60*24*365))} years`;
+    return moment(endDate).diff(moment(startDate), 'years') + ' years';
   }
   get deceasedDate() {
     if (this.resource.deceasedDateTime) {
