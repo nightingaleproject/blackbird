@@ -20,3 +20,7 @@ Object.assign = require('object-assign');
 if (process.env.NODE_ENV === 'test') {
   require('raf').polyfill(global);
 }
+
+require('es5-shim');
+require('es5-shim/es5-sham');
+require('console-polyfill');
