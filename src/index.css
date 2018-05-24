@@ -14,15 +14,13 @@
 
 .ui.card.patient {
   margin-top: 1em;
-  margin-bottom: -1em;
-}
-
-.patient .icon {
-  margin: 0.1em;
+  padding-left: 1.2em;
+  padding-right: 1.2em;
+  padding-top: 0.4em;
+  padding-bottom: 0.2em;
 }
 
 .patient .patient-icon {
-  width: 80px;
   float: left;
 }
 
@@ -30,9 +28,17 @@
   float: left;
 }
 
-.patient .patient-info h4 {
-  margin-top: 0.4em;
-  margin-bottom: 0.1em;
+.patient-info-table {
+  border: 0px !important;
+}
+
+.patient-info-header {
+  padding-bottom: 0.2em;
+}
+
+.patient-info-header-text {
+  text-decoration: underline;
+  font-weight: bold;
 }
 
 .completion-icon {

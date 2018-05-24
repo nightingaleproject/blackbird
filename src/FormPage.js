@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Input, Menu, Form, Icon, Button } from 'semantic-ui-react';
+import { Input, Step, Form, Icon, Button } from 'semantic-ui-react';
 import Completion from './Completion';
 
 class FormPage extends Component {
@@ -13,12 +13,14 @@ class FormPage extends Component {
   menuItem(stepName, currentStep, showCompletion) {
     const isComplete = Completion.isComplete(stepName, this.props.record);
     const iconName = isComplete ? 'check' : 'exclamation triangle';
-    const icon = <Icon className='completion-icon' color='blue' size='large' name={iconName} />;
+    const icon = <Icon className='completion-icon' color='blue' name={iconName} />;
     return (
-        <Menu.Item name={stepName} active={currentStep === stepName} onClick={() => this.props.gotoStep(stepName)}>
-          {stepName}
+        <Step active={currentStep === stepName} onClick={() => this.props.gotoStep(stepName)}>
           {showCompletion ? icon : null}
-        </Menu.Item>
+          <Step.Content>
+            <Step.Title>{stepName.replace(/([A-Z])/g, ' $1').trim()}</Step.Title>
+          </Step.Content>
+        </Step>
     );
   }
 
@@ -26,13 +28,13 @@ class FormPage extends Component {
     // Track what step this form page is for tracking fields for completion
     this.currentStep = currentStep;
     return (
-      <Menu pointing fluid>
+      <Step.Group size='tiny' fluid>
         {this.menuItem('Pronouncing', currentStep, true)}
         {this.menuItem('CauseOfDeath', currentStep, true)}
         {this.menuItem('AdditionalQuestions', currentStep, true)}
         {this.menuItem('InjuryQuestions', currentStep, true)}
         {this.menuItem('ReviewAndSubmit', currentStep, false)}
-      </Menu>
+      </Step.Group>
     );
   }
 
