@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "http://nightingaleproject.github.io/fhir-death-refactor",
   "dependencies": {
+    "core-js": "^2.5.6",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "fhirclient": "^0.1.12",
