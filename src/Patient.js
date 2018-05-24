@@ -58,7 +58,11 @@ class Patient {
   get ssn() {
     if (this.resource && this.resource.identifier && this.resource.identifier.length > 0) {
       const ssn = this.resource.identifier.find(iden => iden.system === 'http://hl7.org/fhir/sid/us-ssn');
-      return ssn.value;
+      if (ssn) {
+        return ssn.value;
+      } else {
+        return null;
+      }
     } else {
       return null;
     }
@@ -69,6 +73,7 @@ class Patient {
         ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/us-core-race'
       );
       if (
+        race &&
         race.valueCodeableConcept &&
         race.valueCodeableConcept.coding['0'] &&
         race.valueCodeableConcept.coding['0'].display
@@ -87,6 +92,7 @@ class Patient {
         ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/us-core-ethnicity'
       );
       if (
+        ethnicity &&
         ethnicity.valueCodeableConcept &&
         ethnicity.valueCodeableConcept.coding['0'] &&
         ethnicity.valueCodeableConcept.coding['0'].display
@@ -104,7 +110,7 @@ class Patient {
       const birthPlace = this.resource.extension.find(
         ext => ext.url === 'http://standardhealthrecord.org/fhir/extensions/placeOfBirth'
       );
-      if (birthPlace.valueAddress) {
+      if (birthPlace && birthPlace.valueAddress) {
         let birthPlaceCombined = `${birthPlace.valueAddress.city || ''} ${birthPlace.valueAddress.state || ''}`;
         birthPlaceCombined = birthPlaceCombined.replace(/\s/g, '');
         if (birthPlaceCombined.length > 0) {
@@ -124,7 +130,11 @@ class Patient {
       const mothersMaidenName = this.resource.extension.find(
         ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName'
       );
-      return mothersMaidenName.valueString;
+      if (mothersMaidenName) {
+        return mothersMaidenName.valueString;
+      } else {
+        return null;
+      }
     } else {
       return null;
     }
