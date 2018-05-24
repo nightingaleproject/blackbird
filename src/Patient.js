@@ -57,7 +57,9 @@ class Patient {
   }
   get ssn() {
     if (this.resource && this.resource.identifier && this.resource.identifier.length > 0) {
-      const ssn = this.resource.identifier.find(iden => iden.system === 'http://hl7.org/fhir/sid/us-ssn');
+      const ssn = this.resource.identifier.find(
+        iden => iden.system === 'http://hl7.org/fhir/sid/us-ssn'
+      );
       if (ssn) {
         return ssn.value;
       } else {
@@ -70,7 +72,7 @@ class Patient {
   get race() {
     if (this.resource && this.resource.extension && this.resource.extension.length > 0) {
       const race = this.resource.extension.find(
-        ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/us-core-race'
+        ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/us-core-race' || ext.url === 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race'
       );
       if (
         race &&
@@ -89,7 +91,7 @@ class Patient {
   get ethnicity() {
     if (this.resource && this.resource.extension && this.resource.extension.length > 0) {
       const ethnicity = this.resource.extension.find(
-        ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/us-core-ethnicity'
+        ext => ext.url === 'http://hl7.org/fhir/StructureDefinition/us-core-ethnicity' || ext.url === 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity'
       );
       if (
         ethnicity &&
@@ -108,7 +110,7 @@ class Patient {
   get birthPlace() {
     if (this.resource && this.resource.extension && this.resource.extension.length > 0) {
       const birthPlace = this.resource.extension.find(
-        ext => ext.url === 'http://standardhealthrecord.org/fhir/extensions/placeOfBirth'
+        ext => ext.url === 'http://standardhealthrecord.org/fhir/extensions/placeOfBirth' || ext.url === 'http://hl7.org/fhir/StructureDefinition/birthPlace'
       );
       if (birthPlace && birthPlace.valueAddress) {
         let birthPlaceCombined = `${birthPlace.valueAddress.city || ''} ${birthPlace.valueAddress.state || ''}`;

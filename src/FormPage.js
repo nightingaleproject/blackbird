@@ -12,13 +12,13 @@ class FormPage extends Component {
 
   menuItem(stepName, currentStep, showCompletion) {
     const isComplete = Completion.isComplete(stepName, this.props.record);
-    const iconName = isComplete ? 'check' : 'exclamation triangle';
-    const icon = <Icon className='completion-icon' color='blue' name={iconName} />;
     return (
         <Step active={currentStep === stepName} onClick={() => this.props.gotoStep(stepName)}>
-          {showCompletion ? icon : null}
           <Step.Content>
-            <Step.Title>{stepName.replace(/([A-Z])/g, ' $1').trim()}</Step.Title>
+            <Step.Title>
+              {showCompletion && (<Icon className='completion-icon' color='blue' name={isComplete ? 'check' : 'exclamation triangle'} />)}
+              {stepName.replace(/([A-Z])/g, ' $1').trim()}
+            </Step.Title>
           </Step.Content>
         </Step>
     );
@@ -28,7 +28,7 @@ class FormPage extends Component {
     // Track what step this form page is for tracking fields for completion
     this.currentStep = currentStep;
     return (
-      <Step.Group size='tiny' fluid>
+      <Step.Group size='small' fluid >
         {this.menuItem('Pronouncing', currentStep, true)}
         {this.menuItem('CauseOfDeath', currentStep, true)}
         {this.menuItem('AdditionalQuestions', currentStep, true)}
