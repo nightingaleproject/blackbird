@@ -27,10 +27,15 @@ class ReviewAndSubmit extends FormPage {
       contentType: 'application/json',
       dataType: 'json',
       success: (data) => {
-        alert("Successfully submitted data to server:\n\n" + JSON.stringify(fhirData, null, 2));
+        alert('Successfully submitted data to server');
       },
       error: (response) => {
-        alert("Failed to submit data to server, error reported: " + response.statusText);
+        if (response.status === 201) {
+          // jQuery handles a 201 code as an error if the response body is blank (it's expecting JSON)
+          alert('Successfully submitted data to server');
+        } else {
+          alert("Failed to submit data to server, error reported: " + response.statusText);
+        }
       }
     });
   }
