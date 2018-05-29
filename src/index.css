@@ -32,13 +32,21 @@
   border: 0px !important;
 }
 
+.patient-info-table td {
+  vertical-align: top !important;
+}
+
+.patient-info-table i {
+  width: 22px;
+}
+
 .patient-info-header {
   padding-bottom: 0.2em;
 }
 
 .patient-info-header-text {
-  text-decoration: underline;
   font-weight: bold;
+  padding-right: 0.3em;
 }
 
 .completion-icon {

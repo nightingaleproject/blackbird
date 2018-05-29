@@ -8,87 +8,80 @@ function PatientCard(props) {
       <Card fluid color="blue" className="patient">
         <Table className="patient-info-table">
           <Table.Body>
-            <Table.Row textAlign="center">
+            <Table.Row>
               {patient.name && (
                 <Table.Cell>
-                  <List.Item>
-                    <List.Content>
-                      <List.Header className="patient-info-header">
-                        <Icon color="blue" name="user" />
-                        <span className="patient-info-header-text">Name</span>
-                      </List.Header>
-                      {patient.name}
-                    </List.Content>
-                  </List.Item>
+                  <List>
+                    <List.Item>
+                      <Icon color="blue" name="user" />
+                      <List.Content><span className="patient-info-header-text">{patient.name}</span></List.Content>
+                    </List.Item>
+                  </List>
                 </Table.Cell>
               )}
-              {patient.birthDate && (
+              {(patient.birthDate || patient.age) && (
                 <Table.Cell>
-                  <List.Item>
-                    <List.Content>
-                      <List.Header className="patient-info-header">
-                        <Icon color="blue" name="birthday" />
-                        <span className="patient-info-header-text">Birthdate</span>
-                      </List.Header>
-                      {patient.birthDate}
-                    </List.Content>
-                  </List.Item>
+                  <List>
+                    <List.Item>
+                      <Icon color="blue" name="birthday" />
+                      <List.Content>
+                        <span className="patient-info-header-text">Birthdate: </span>
+                        {patient.birthDate}
+                      </List.Content>
+                    </List.Item>
+                    <List.Item>
+                      <Icon color="blue" name="calendar" />
+                      <List.Content>
+                        <span className="patient-info-header-text">Age at Death: </span>
+                        {patient.age} old
+                      </List.Content>
+                    </List.Item>
+                  </List>
                 </Table.Cell>
               )}
-              {patient.age && (
+              {(patient.race || patient.gender) && (
                 <Table.Cell>
-                  <List.Item>
-                    <List.Content>
-                      <List.Header className="patient-info-header">
-                        <Icon color="blue" name="calendar" />
-                        <span className="patient-info-header-text">Age at Death</span>
-                      </List.Header>
-                      {patient.age} old
-                    </List.Content>
-                  </List.Item>
+                  <List>
+                    <List.Item>
+                      <Icon color="blue" name="users" className="fw" />
+                      <List.Content>
+                        <span className="patient-info-header-text">Race and Ethnicity: </span>
+                        {patient.race}
+                        {patient.ethnicity && ', ' + patient.ethnicity}
+                      </List.Content>
+                    </List.Item>
+                    <List.Item>
+                      <Icon
+                        color="blue"
+                        name={(patient.gender === 'female' && 'woman') || (patient.gender === 'male' && 'man')}
+                        className="fw"
+                      />
+                      <List.Content>
+                        <span className="patient-info-header-text">Gender: </span>
+                        {patient.gender}
+                      </List.Content>
+                    </List.Item>
+                  </List>
                 </Table.Cell>
               )}
-              {patient.race && (
+              {(patient.address || patient.maritalStatus) && (
                 <Table.Cell>
-                  <List.Item>
-                    <List.Content>
-                      <List.Header className="patient-info-header">
-                        <Icon color="blue" name="users" />
-                        <span className="patient-info-header-text">Race and Ethnicity</span>
-                      </List.Header>
-                      {patient.race}
-                      {patient.ethnicity && ', ' + patient.ethnicity}
-                    </List.Content>
-                  </List.Item>
-                </Table.Cell>
-              )}
-              {patient.gender && (
-                <Table.Cell>
-                  <List.Item>
-                    <List.Content>
-                      <List.Header className="patient-info-header">
-                        <Icon
-                          color="blue"
-                          name={(patient.gender === 'female' && 'woman') || (patient.gender === 'male' && 'man')}
-                        />
-                        <span className="patient-info-header-text">Gender</span>
-                      </List.Header>
-                      {patient.gender}
-                    </List.Content>
-                  </List.Item>
-                </Table.Cell>
-              )}
-              {patient.address && (
-                <Table.Cell>
-                  <List.Item>
-                    <List.Content>
-                      <List.Header className="patient-info-header">
+                  <List>
+                    <List.Item>
+                      <List.Content>
                         <Icon color="blue" name="point" />
-                        <span className="patient-info-header-text">Address</span>
-                      </List.Header>
-                      {patient.address}
-                    </List.Content>
-                  </List.Item>
+                        <span className="patient-info-header-text">Address: </span>
+                        {patient.address}
+                      </List.Content>
+                    </List.Item>
+                    <List.Item>
+                      <List.Content>
+                        <Icon color="blue" name="user circle" />
+                        <span className="patient-info-header-text">Marital Status: </span>
+                        {patient.maritalStatus}
+                      </List.Content>
+                    </List.Item>
+                  </List>
                 </Table.Cell>
               )}
             </Table.Row>

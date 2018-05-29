@@ -167,7 +167,7 @@ class Patient {
     if (this.resource && this.resource.address) {
       const addr = this.resource.address['0'];
       if (addr) {
-        return `${addr.line} ${addr.city} ${addr.state} ${addr.postalCode}`;
+        return `${addr.line[0]} ${addr.city} ${addr.state} ${addr.postalCode}`;
       } else {
         return null;
       }
