@@ -1,4 +1,5 @@
 import moment from 'moment';
+import DemoDateShim from './DemoDateShim';
 
 // Helper function for formatting a date
 function formatDate(date) {
@@ -51,20 +52,26 @@ class Resource {
 
 class Condition extends Resource {
   get startDate() {
-    return this.resource.onsetDateTime;
+    if (this.resource.onsetDateTime) {
+      return DemoDateShim.adjust(moment(this.resource.onsetDateTime)).format();
+    }
   }
   get endDate() {
-    return this.resource.abatementDateTime;
+    if (this.resource.abatementDateTime) {
+      return DemoDateShim.adjust(moment(this.resource.abatementDateTime)).format();
+    }
   }
 }
 
 class Procedure extends Resource {
   get startDate() {
-    return this.resource.performedDateTime || this.resource.performedPeriod.start;
+    if (this.resource.performedDateTime || (this.resource.performedPeriod && this.resource.performedPeriod.start)) {
+      return DemoDateShim.adjust(moment(this.resource.performedDateTime || this.resource.performedPeriod.start)).format();
+    }
   }
   get endDate() {
     if (this.resource.performedPeriod) {
-      return this.resource.performedPeriod.end;
+      return DemoDateShim.adjust(moment(this.resource.performedPeriod.end)).format();
     }
   }
   get additionalText() {
@@ -76,10 +83,14 @@ class Procedure extends Resource {
 
 class Observation extends Resource {
   get startDate() {
-    return this.resource.effectiveDateTime;
+    if (this.resource.effectiveDateTime) {
+      return DemoDateShim.adjust(moment(this.resource.effectiveDateTime)).format();
+    }
   }
   get endDate() {
-    return this.resource.effectiveDateTime;
+    if (this.resource.effectiveDateTime) {
+      return DemoDateShim.adjust(moment(this.resource.effectiveDateTime)).format();
+    }
   }
   get additionalText() {
     if (this.resource.valueQuantity && this.resource.valueQuantity.value) {
@@ -101,10 +112,14 @@ class MedicationRequest extends Resource {
     }
   }
   get startDate() {
-    return this.resource.dateWritten || this.resource.authoredOn;
+    if (this.resource.dateWritten || this.resource.authoredOn) {
+      return DemoDateShim.adjust(moment(this.resource.dateWritten || this.resource.authoredOn)).format();
+    }
   }
   get endDate() {
-    return this.resource.dateWritten || this.resource.authoredOn;
+    if (this.resource.dateWritten || this.resource.authoredOn) {
+      return DemoDateShim.adjust(moment(this.resource.dateWritten || this.resource.authoredOn)).format();
+    }
   }
   // Some FHIR implementations don't include details on the medication in the MedicationRequest;
   // in those cases we may need to request the associated Medication resource; this returns a

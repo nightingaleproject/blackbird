@@ -1,4 +1,5 @@
 import moment from 'moment';
+import DemoDateShim from './DemoDateShim';
 
 // Simple wrapper for FHIR Patient resource
 class Patient {
@@ -33,7 +34,7 @@ class Patient {
       const startDate = this.resource.birthDate;
       const endDate = this.resource.deceasedDateTime || new Date().toISOString();
       if (startDate) {
-        return moment(endDate).diff(moment(startDate), 'years') + ' years';
+        return DemoDateShim.adjust(moment(endDate)).diff(DemoDateShim.adjust(moment(startDate)), 'years') + ' years';
       } else {
         return null;
       }
@@ -43,14 +44,14 @@ class Patient {
   }
   get deceasedDate() {
     if (this.resource && this.resource.deceasedDateTime) {
-      return moment(this.resource.deceasedDateTime).format('YYYY-MM-DD');
+      return DemoDateShim.adjust(moment(this.resource.deceasedDateTime)).format('YYYY-MM-DD');
     } else {
       return null;
     }
   }
   get deceasedTime() {
     if (this.resource && this.resource.deceasedDateTime) {
-      return moment(this.resource.deceasedDateTime).format('HH:mm');
+      return DemoDateShim.adjust(moment(this.resource.deceasedDateTime)).format('HH:mm');
     } else {
       return null;
     }
@@ -149,8 +150,8 @@ class Patient {
     }
   }
   get birthDate() {
-    if (this.resource) {
-      return this.resource.birthDate || null;
+    if (this.resource && this.resource.birthDate) {
+      return DemoDateShim.adjust(moment(this.resource.birthDate)).format('YYYY-MM-DD');
     } else {
       return null;
     }
@@ -158,7 +159,7 @@ class Patient {
   get deathDateTime() {
     if (this.resource) {
       const deathDateTime = this.resource.deceasedDateTime || new Date().toISOString();
-      return moment(deathDateTime).format('YYYY-MM-DD hh:mm');
+      return DemoDateShim.adjust(moment(deathDateTime)).format('YYYY-MM-DD hh:mm');
     } else {
       return null;
     }

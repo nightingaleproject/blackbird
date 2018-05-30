@@ -11,6 +11,7 @@ import AdditionalQuestionsForm from './AdditionalQuestionsForm';
 import InjuryQuestionsForm from './InjuryQuestionsForm';
 import ReviewAndSubmit from './ReviewAndSubmit';
 import { SMARTWrap } from './FHIRClientWrapper';
+import DemoDateShim from './DemoDateShim';
 
 class App extends Component {
 
@@ -83,15 +84,20 @@ class App extends Component {
   }
 
   setPatient(patient) {
+    DemoDateShim.setup(patient); // Adjust dates for demo purposes
     this.setState({ patient });
     // Pull information on decedent from patient to populate fields
     this.setState((prevState) => {
       const newRecord = Object.assign({}, prevState.record);
       if (patient.deceasedDate) {
+        // TODO: Which of these, if any, should be prepopulated? Should user have option to copy over?
         newRecord.actualDeathDate = patient.deceasedDate;
+        newRecord.pronouncedDeathDate = patient.deceasedDate;
       }
       if (patient.deceasedTime) {
+        // TODO: Which of these, if any, should be prepopulated? Should user have option to copy over?
         newRecord.actualDeathTime = patient.deceasedTime;
+        newRecord.pronouncedDeathTime = patient.deceasedTime;
       }
       return ({ record: newRecord });
     });
