@@ -69,10 +69,8 @@ class ReviewAndSubmit extends FormPage {
         <Grid.Row>
           <Grid.Column>
             <Grid>
-              {reviewRow('Date Pronounced Dead', record.pronouncedDeathDate)}
-              {reviewRow('Time Pronounced Dead', record.pronouncedDeathTime)}
-              {reviewRow('Actual or Presumed Date of Death', record.actualDeathDate)}
-              {reviewRow('Actual or Presumed Time of Death', record.actualDeathTime)}
+              {reviewRow('Date and Time Pronounced Dead', `${record.pronouncedDeathDate} ${record.pronouncedDeathTime}`)}
+              {reviewRow('Actual or Presumed Date and Time of Death', `${record.actualDeathDate} ${record.actualDeathTime}`)}
               {reviewRow('Was Medical Examiner or Coroner Contacted?', record.examinerContacted)}
               {reviewRow('Was an Autopsy Performed?', record.autopsyPerformed)}
               {reviewRow('Were Autopsy Findings Available to Complete the Cause of Death?', record.autopsyAvailable)}
@@ -80,25 +78,20 @@ class ReviewAndSubmit extends FormPage {
               {reviewRow('License Number of Person Pronouncing Death', record.pronouncerNumber)}
               {reviewRow('Immediate Cause of Death', record.cod1Text)}
               {reviewRow('Approximate Interval', record.cod1Time)}
-              {reviewRow('Underlying Cause of Death', record.cod2Text)}
-              {reviewRow('Approximate Interval', record.cod2Time)}
-              {reviewRow('Underlying Cause of Death', record.cod3Text)}
-              {reviewRow('Approximate Interval', record.cod3Time)}
-              {reviewRow('Underlying Cause of Death', record.cod4Text)}
-              {reviewRow('Approximate Interval', record.cod4Time)}
+              {record.cod2Text && reviewRow('Underlying Cause of Death', record.cod2Text)}
+              {record.cod2Text && reviewRow('Approximate Interval', record.cod2Time)}
+              {record.cod3Text && reviewRow('Underlying Cause of Death', record.cod3Text)}
+              {record.cod3Text && reviewRow('Approximate Interval', record.cod3Time)}
+              {record.cod4Text && reviewRow('Underlying Cause of Death', record.cod4Text)}
+              {record.cod4Text && reviewRow('Approximate Interval', record.cod4Time)}
               {reviewRow('Other Significant Conditions Contributing to Death', record.contributing)}
               {reviewRow('Did Tobacco Use Contribute to Death?', record.tobacco)}
               {reviewRow('Pregnancy Status', record.pregnancy)}
               {reviewRow('Manner of Death', record.mannerOfDeath)}
-              {reviewRow('Date of Injury', record.dateOfInjury)}
-              {reviewRow('Time of Injury', record.timeOfInjury)}
+              {reviewRow('Date and Time of Injury', `${record.dateOfInjury} ${record.timeOfInjury}`)}
               {reviewRow('Place of Injury', record.placeOfInjury)}
               {reviewRow('Injury at Work?', record.injuryAtWork)}
-              {reviewRow('Location of Injury (State)', record.locationOfInjuryState)}
-              {reviewRow('Location of Injury (City)', record.locationOfInjuryCity)}
-              {reviewRow('Location of Injury (Street)', record.locationOfInjuryStreet)}
-              {reviewRow('Location of Injury (Apt)', record.locationOfInjuryApt)}
-              {reviewRow('Location of Injury (Zip)', record.locationOfInjuryZip)}
+              {reviewRow('Location of Injury', `${record.locationOfInjuryStreet} ${record.locationOfInjuryCity} ${record.locationOfInjuryState} ${record.locationOfInjuryApt} ${record.locationOfInjuryZip}`)}
               {reviewRow('Describe how injury occurred', record.howInjuryOccurred)}
             </Grid>
 
