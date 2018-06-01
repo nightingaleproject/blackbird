@@ -1,7 +1,7 @@
 import moment from 'moment';
 
 // For demo purposes: if we get a deceased patient from the EHR, adjust dates to make today the date of death
-// and all other dates adjusted relatively
+// and all other dates adjusted relatively, with a time of death of 2 hours previous to the demo
 
 const DemoDateShim = {
   // Given a patient, get the death date and calculate the needed adjustment
@@ -10,6 +10,7 @@ const DemoDateShim = {
       const deathDate = moment(patient.resource.deceasedDateTime);
       if (deathDate < moment()) {
         this.adjustment = moment.duration(moment().diff(deathDate));
+        this.adjustment.subtract(2, 'h');
       }
     }
   },

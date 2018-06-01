@@ -704,11 +704,11 @@ const recordToFHIR = (record, decedent) => {
 
   fhirInput.decedent = {
     name: decedent.name,
-    birthDate: decedent.resource.birthDate,
+    birthDate: decedent.birthDate,
     deceasedDateTime: formatDateAndTime(record.actualDeathDate, record.actualDeathTime),
     address: decedent.resource.address[0],
-    gender: decedent.resource.gender
-    //ssn: '111223333'
+    gender: decedent.gender,
+    ssn: decedent.ssn
     //servedInArmedForces: false,
     //birthSex: 'M'
   };
