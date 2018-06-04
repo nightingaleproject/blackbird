@@ -13,35 +13,46 @@ const FHIR = window.FHIR;
 
 const FHIRWrap = {
 
-  // Given a FHIR server URL and a search string (which can be blank), returns a promise
+  // Given a serviceUrl, return the SMART client context
+  client(fhirServer) {
+    return FHIR.client({ serviceUrl: fhirServer });
+  },
+
+  // Given a SMART context and a search string (which can be blank), returns a promise
   // that provides a list of patients loaded from the server
-  loadPatients(fhirServer, searchString) {
-    const smart = FHIR.client({ serviceUrl: fhirServer });
+  loadPatients(smart, searchString) {
     const searchParams = { type: 'Patient' };
     if (searchString.length > 0) {
       searchParams.name = searchString;
     }
     return smart.api.search(searchParams).then((result) => {
-      return result.data.entry.map((entry) => new Patient(entry.resource));
+      const entriesWithNames = result.data.entry.filter((entry) => entry.resource && entry.resource.name)
+      return entriesWithNames.map((entry) => new Patient(entry.resource));
     });
   },
 
-  // Given a FHIR server URL and a patient, returns a promise that provides the patient's
+  // Given a SMART context and a patient, returns a promise that provides the patient's
   // conditions, medications, procedures, and observations loaded from the server
-  loadResources(fhirServer, patientId) {
-    const smart = FHIR.client({ serviceUrl: fhirServer });
-
+  loadResources(smart, patientId) {
     const getResources = (type) => {
       // We need to wrap the results of smart.api.search with a real promise, using the jQuery
       // promise directly results in unexpected behavior
       return new Promise((resolve) => {
         return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
-          if (response.data.entry) {
+          // Handle several possible cases:
+          //   1) FHIR server returns an entry array but a total of 0 (it's reporting an error)
+          //   2) FHIR server returns an entry array and no total (this is probably valid)
+          //   3) FHIR server returns an entry array and a total (this is probably valid)
+          if (response.data.entry && (!response.data.hasOwnProperty('total') || response.data.total > 0)) {
             const resources = response.data.entry.map((entry) => Resource.wrap(entry.resource));
             resolve(_.sortBy(resources, (resource) => moment(resource.startDate)).reverse());
           } else {
             resolve([]);
           }
+        }, () => {
+          // TODO: Determine appropriate behavior for failed resource load
+          console.log(`Request for resource ${type} failed`);
+          resolve([]);
         });
       });
     };
@@ -64,9 +75,13 @@ const SMARTWrap = {
   load() {
     return new Promise((resolve, reject) => {
       FHIR.oauth2.ready((smart) => {
-        const user = smart.user.read();
+        // fhirclient does not gracefully handle failure in reading a user if none provided by smart context
+        let user = {};
+        if (smart.userId) {
+          user = smart.user.read();
+        }
         const patient = smart.patient.read();
-        const resources = FHIRWrap.loadResources(smart.server.serviceUrl, smart.patient.id);
+        const resources = FHIRWrap.loadResources(smart, smart.patient.id);
         Promise.all([user, patient, resources]).then(([user, patient, resources]) => {
           patient = new Patient(patient);
           user = new Practitioner(user);

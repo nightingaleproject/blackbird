@@ -158,6 +158,8 @@ class Patient {
   }
   get deathDateTime() {
     if (this.resource) {
+      // TODO: probably don't want to specify the default as today at this level, should probably just pull
+      // the actual data from the record
       const deathDateTime = this.resource.deceasedDateTime || new Date().toISOString();
       return DemoDateShim.adjust(moment(deathDateTime)).format('YYYY-MM-DD hh:mm');
     } else {

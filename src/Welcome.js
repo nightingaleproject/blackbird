@@ -22,15 +22,17 @@ class Welcome extends Component {
   handleSubmit(event) {
     event.preventDefault();
     this.setState({ patients: [] });
-    FHIRWrap.loadPatients(this.state.fhirServer, this.state.decedentName).then((patients) => {
+    const smart = FHIRWrap.client(this.state.fhirServer);
+    FHIRWrap.loadPatients(smart, this.state.decedentName).then((patients) => {
       this.setState({ patients });
     });
   }
 
   handlePatientClick(event, data) {
     event.preventDefault();
+    const smart = FHIRWrap.client(this.state.fhirServer);
     const patient = this.state.patients.find((patient) => patient.id === data.id);
-    FHIRWrap.loadResources(this.state.fhirServer, patient.id).then(([conditions, medications, procedures, observations]) => {
+    FHIRWrap.loadResources(smart, patient.id).then(([conditions, medications, procedures, observations]) => {
       this.props.setResources(conditions, medications, procedures, observations);
     });
     this.props.setPatient(patient);
