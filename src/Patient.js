@@ -78,6 +78,7 @@ class Patient {
       if (
         race &&
         race.valueCodeableConcept &&
+        race.valueCodeableConcept.coding &&
         race.valueCodeableConcept.coding['0'] &&
         race.valueCodeableConcept.coding['0'].display
       ) {
@@ -97,6 +98,7 @@ class Patient {
       if (
         ethnicity &&
         ethnicity.valueCodeableConcept &&
+        ethnicity.valueCodeableConcept.coding &&
         ethnicity.valueCodeableConcept.coding['0'] &&
         ethnicity.valueCodeableConcept.coding['0'].display
       ) {
@@ -181,7 +183,7 @@ class Patient {
   get maritalStatus() {
     if (this.resource) {
       const status = this.resource.maritalStatus;
-      if (status && status.coding['0'] && status.coding['0'].code) {
+      if (status && status.coding && status.coding['0'] && status.coding['0'].code) {
         switch (status.coding['0'].code) {
           case 'A':
             return 'Annulled';
