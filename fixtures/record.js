@@ -14,11 +14,11 @@ const record = {
   cod4Text: "",
   cod4Time: "",
   examinerContacted: "no",
-  mannerOfDeath: "38605008",
+  mannerOfDeath: "Natural",
   pregnancy: null,
   pronouncedDeathDate: "2018-04-19",
   pronouncedDeathTime: "3:00 PM",
-  tobacco: "373067005"
+  tobacco: "Yes"
 }
 
 export default record;
