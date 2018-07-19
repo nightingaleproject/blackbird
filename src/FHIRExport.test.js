@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import Patient from './Patient';
 import { recordToFHIR } from './FHIRExport';
 import { mount } from 'enzyme';
@@ -42,7 +43,7 @@ it('generates valid FHIR bundle', () => {
 
   expect(decedent.birthDate).toBe('1971-07-25');
 
-  expect(decedent.deceasedDateTime).toBe('2018-04-19T01:30:00-04:00');
+  expect(moment(decedent.deceasedDateTime).format()).toBe(moment('2018-04-19T01:30:00-04:00').format());
 
   expect(decedent.address[0].type).toBe('postal');
   expect(decedent.address[0].line[0]).toBe('37700 Nannie Island');
@@ -80,7 +81,7 @@ it('generates valid FHIR bundle', () => {
   expect(causeOfDeath.clinicalStatus).toBe('active');
   expect(causeOfDeath.text.status).toBe('additional');
   expect(causeOfDeath.text.div).toBe('<div xmlns=\'http://www.w3.org/1999/xhtml\'>Diabetes</div>');
-  expect(causeOfDeath.onsetString).toBe('2006-03-05T05:08:45-05:00');
+  expect(moment(causeOfDeath.onsetString).format()).toBe(moment('2006-03-05T05:08:45-05:00').format());
 
   //actual or presumed date of death
   const actualOrPresumedDateOfDeath = deathRecord.entry[4].resource
@@ -90,7 +91,7 @@ it('generates valid FHIR bundle', () => {
   expect(actualOrPresumedDateOfDeath.code.coding[0].code).toBe('81956-5');
   expect(actualOrPresumedDateOfDeath.code.coding[0].display).toBe('Date and time of death');
   expect(actualOrPresumedDateOfDeath.code.text).toBe('Date and time of death');
-  expect(actualOrPresumedDateOfDeath.valueDateTime).toBe('2018-04-19T01:30:00-04:00');
+  expect(moment(actualOrPresumedDateOfDeath.valueDateTime).format()).toBe(moment('2018-04-19T01:30:00-04:00').format());
   expect(actualOrPresumedDateOfDeath.subject.reference.substring(0, 9)).toBe('urn:uuid:');
 
   //autopsy performed
@@ -123,7 +124,7 @@ it('generates valid FHIR bundle', () => {
   expect(datePronouncedDead.code.coding[0].code).toBe('80616-6');
   expect(datePronouncedDead.code.coding[0].display).toBe('Date and time pronounced dead');
   expect(datePronouncedDead.code.text).toBe('Date and time pronounced dead');
-  expect(datePronouncedDead.valueDateTime).toBe('2018-04-19T03:00:00-04:00');
+  expect(moment(datePronouncedDead.valueDateTime).format()).toBe(moment('2018-04-19T03:00:00-04:00').format());
   expect(datePronouncedDead.subject.reference.substring(0, 9)).toBe('urn:uuid:');
 
   //manner of death
