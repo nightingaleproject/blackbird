@@ -6,7 +6,7 @@ const record = {
   certifierName: "Example Pronouncer",
   certifierNumber: "12345",
   cod1Text: "Diabetes",
-  cod1Time: "2006-03-05T05:08:45-05:00",
+  cod1Time: "2006-03-05 05:08:45",
   cod2Text: "",
   cod2Time: "",
   cod3Text: "",

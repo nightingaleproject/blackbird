@@ -7,7 +7,7 @@ it('instantiates with valid data', () => {
   const patient = new Patient(patientFixture);
   expect(patient.id).toBe('58b3663e3425def0f0f6960a');
   expect(patient.name).toBe('Nils374 Doyle303');
-  expect(patient.age).toBe('46 years');
+  expect(patient.age).toBe('47 years');
   expect(patient.ssn).toBe('999571381');
   expect(patient.race).toBe('White');
   expect(patient.ethnicity).toBe('Nonhispanic');
