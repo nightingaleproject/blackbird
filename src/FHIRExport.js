@@ -612,9 +612,9 @@ class DeathRecord extends Bundle {
 
 const formatDateAndTime = (date, time) => {
   if (date && time) {
-    return moment(`${date} ${time}`, 'YYYY-MM-DD HH:mm').format();
+    return moment.utc(`${date} ${time}`, 'YYYY-MM-DD HH:mm').format();
   } else if (date) {
-    return moment(date, 'YYYY-MM-DD').format();
+    return moment.utc(date, 'YYYY-MM-DD').format();
   }
 }
 
