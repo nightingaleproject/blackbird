@@ -22,7 +22,8 @@ class Welcome extends Component {
   handleSubmit(event) {
     event.preventDefault();
     this.setState({ patients: [] });
-    FHIRWrap.loadPatients(this.state.fhirServer, this.state.decedentName).then((patients) => {
+    console.log(this.state.decedentSearchField);
+    FHIRWrap.loadPatients(this.state.fhirServer, this.state.decedentName, this.state.decedentSearchField).then((patients) => {
       this.setState({ patients });
     });
   }
@@ -66,8 +67,16 @@ class Welcome extends Component {
             <input type="text" name="fhirServer" value={this.state.fhirServer} onChange={this.handleChange} />
           </Form.Field>
           <Form.Field>
-            <label>Decedent name:</label>
+            <label>Decedent search string:</label>
             <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange} />
+          </Form.Field>
+          <Form.Field>
+            <label>Decedent search field:</label>
+            <select name="decedentSearchField" defaultValue='Full name' value={this.state.decedentSearchField} onChange={this.handleChange}>
+              <option value="name">Full name</option>
+              <option value="given">First name</option>
+              <option value="family">Last name</option>
+            </select>
           </Form.Field>
           <Button primary type="submit">Search</Button>
         </Form>
