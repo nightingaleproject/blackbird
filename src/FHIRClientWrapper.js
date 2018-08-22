@@ -18,23 +18,7 @@ const FHIRWrap = {
   loadPatients(fhirServer, searchString, searchField) {
     console.log(searchField);
     const smart = FHIR.client({ serviceUrl: fhirServer });
-    const searchParams = { type: 'Patient' };
-    if (searchString.length > 0) {
-      switch(searchField) {
-        case "name":
-          searchParams.name = searchString;
-          break;
-        case "given":
-          searchParams.given = searchString;
-          break;
-        case "family":
-          searchParams.family = searchString;
-          break;
-        default:
-          searchParams.name = searchString;
-          break;
-      }
-    }
+    const searchParams = { type: 'Patient', [searchField]: searchString};
     console.log(searchParams);
     return smart.api.search(searchParams).then((result) => {
       return result.data.entry.map((entry) => new Patient(entry.resource));

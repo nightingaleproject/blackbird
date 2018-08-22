@@ -6,7 +6,7 @@ class Welcome extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { fhirServer: 'https://syntheticmass.mitre.org/fhir', decedentName: '' };
+    this.state = { fhirServer: 'https://syntheticmass.mitre.org/fhir', decedentName: '', decedentSearchField: 'name' };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handlePatientClick = this.handlePatientClick.bind(this);
@@ -72,7 +72,7 @@ class Welcome extends Component {
           </Form.Field>
           <Form.Field>
             <label>Decedent search field:</label>
-            <select name="decedentSearchField" defaultValue='Full name' value={this.state.decedentSearchField} onChange={this.handleChange}>
+            <select name="decedentSearchField" value={this.state.decedentSearchField} onChange={this.handleChange}>
               <option value="name">Full name</option>
               <option value="given">First name</option>
               <option value="family">Last name</option>
