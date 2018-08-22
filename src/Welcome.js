@@ -22,7 +22,6 @@ class Welcome extends Component {
   handleSubmit(event) {
     event.preventDefault();
     this.setState({ patients: [] });
-    console.log(this.state.decedentSearchField);
     FHIRWrap.loadPatients(this.state.fhirServer, this.state.decedentName, this.state.decedentSearchField).then((patients) => {
       this.setState({ patients });
     });
