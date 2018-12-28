@@ -2599,6 +2599,7 @@ fbjs@^0.8.16:
 fhirclient@^0.1.12:
   version "0.1.12"
   resolved "https://registry.yarnpkg.com/fhirclient/-/fhirclient-0.1.12.tgz#d9529de1f5c63b76120038a6898382bfc500d916"
+  integrity sha1-2VKd4fXGO3YSADimiYOCv8UA2RY=
 
 figures@^2.0.0:
   version "2.0.0"
