@@ -26,6 +26,9 @@ case 'launch':
 case 'smart':
   ReactDOM.render(<App smart/>, document.getElementById('root'));
   break;
+case 'standalone':
+  ReactDOM.render(<App standalone/>, document.getElementById('root'));
+  break;
 default:
   ReactDOM.render(<App />, document.getElementById('root'));
   break;

@@ -8,7 +8,7 @@ import Loading from './Loading';
 import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
 const FHIR = window.FHIR;
 
-const redirectURI = window.location.href + 'smart'
+const redirectURI = window.location.href + 'standalone'
 
 class WelcomeSmart extends Component {
 
