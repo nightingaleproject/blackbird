@@ -6,7 +6,7 @@ class PatientSearch extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { decedentName: '' };
+    this.state = { decedentName: '', searching: false };
     this.handleChange = this.handleChange.bind(this);
     this.handleFhirServerChange = this.handleFhirServerChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -26,15 +26,15 @@ class PatientSearch extends Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    this.setState({ patients: [] });
+    this.setState({ patients: [], searching: true });
     // The search we use depends on whether we're in a SMART on FHIR context
     if (this.props.smart) {
       SMARTWrap.loadPatients(this.state.decedentName).then((patients) => {
-        this.setState({ patients });
+        this.setState({ patients, searching: false });
       });
     } else {
       FHIRWrap.loadPatients(this.props.fhirServer, this.state.decedentName).then((patients) => {
-        this.setState({ patients });
+        this.setState({ patients, searching: false });
       });
     }
   }
@@ -52,12 +52,16 @@ class PatientSearch extends Component {
     };
 
     const patientLinks = (patients) => {
-      if (!patients) {
-        return null;
-      } else if (patients.length === 0) {
+      if (this.state.searching) {
         return <Loader active inline='centered' content='Loading' />;
       } else {
-        return <Card.Group className='patients'>{patients.map(patientLink)}</Card.Group>;
+        if (!patients) {
+          return null;
+        } else if (patients.length === 0) {
+          return "No Results Found";
+        } else {
+          return <Card.Group className='patients'>{patients.map(patientLink)}</Card.Group>;
+        }
       }
     };
 

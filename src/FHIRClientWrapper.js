@@ -20,8 +20,12 @@ const loadPatients = (smart, searchString) => {
   if (searchString.length > 0) {
     searchParams.query = { name: searchString };
   }
-  return smart.api.search(searchParams).then((result) => {
-    return result.data.entry.map((entry) => new Patient(entry.resource));
+  return smart.api.search(searchParams).then((response) => {
+    if (response.data && response.data.entry) {
+      return response.data.entry.map((entry) => new Patient(entry.resource));
+    } else {
+      return [];
+    }
   });
 }
 
