@@ -1,12 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Form, Button } from 'semantic-ui-react';
+import { SMARTWrap } from './FHIRClientWrapper';
 import Loading from './Loading';
-
-// fhirclient seems pretty broken from this perspective, it doesn't
-// export anything and it puts FHIR in window; work around for now
-import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
-const FHIR = window.FHIR;
 
 const redirectURI = window.location.href + 'standalone'
 
@@ -40,7 +36,7 @@ class WelcomeSmart extends Component {
     if (this.state.secret) {
       client['secret'] = this.state.secret;
     }
-    FHIR.oauth2.authorize({ server: server, client: client });
+    SMARTWrap.authorize({ server: server, client: client });
     ReactDOM.render(<Loading />, document.getElementById('root'));
   }
 

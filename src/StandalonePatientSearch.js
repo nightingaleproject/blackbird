@@ -2,11 +2,6 @@ import React, { Component } from 'react';
 import { SMARTWrap } from './FHIRClientWrapper';
 import PatientSearch from './PatientSearch';
 
-// fhirclient seems pretty broken from this perspective, it doesn't
-// export anything and it puts FHIR in window; work around for now
-import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
-const FHIR = window.FHIR;
-
 class StandalonePatientSearch extends Component {
 
   constructor(props) {
@@ -16,7 +11,7 @@ class StandalonePatientSearch extends Component {
   }
 
   componentWillMount() {
-    FHIR.oauth2.ready((smart) => {
+    SMARTWrap.ready().then((smart) => {
       this.setState({ fhirServer: smart.server.serviceUrl });
     });
   }

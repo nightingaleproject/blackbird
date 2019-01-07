@@ -11,6 +11,16 @@ import moment from 'moment';
 import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
 const FHIR = window.FHIR;
 
+// Wrap the oauth ready functionality, providing the SMART context, both so that we don't need
+// the fhirclient load hack in more than one place and so we can wrap it in a promise
+const smartReady = () => {
+  return new Promise((resolve) => {
+    FHIR.oauth2.ready((smart) => {
+      resolve(smart)
+    });
+  });
+}
+
 // Some common functions for both basic FHIR and within a SMART context
 
 // Given a SMART context and a search string (which can be blank), returns a promise
@@ -78,39 +88,43 @@ const FHIRWrap = {
 
 const SMARTWrap = {
 
+  // Wrap the oauth ready functionality so that we don't need the fhirclient load hack in more than one place
+  ready() {
+    return smartReady();
+  },
+
+  // Wrap the oauth authorize functionality too
+  authorize(settings) {
+    FHIR.oauth2.authorize(settings);
+  },
+
   // Given a search string (which can be blank), returns a promise
   // that provides a list of patients loaded from the server
   loadPatients(searchString) {
-    return new Promise((resolve) => {
-      FHIR.oauth2.ready((smart) => {
-        loadPatients(smart, searchString).then((result) => resolve(result));
-      });
+    return smartReady().then((smart) => {
+      return loadPatients(smart, searchString)
     });
   },
 
   // Given a patient, returns a promise that provides the patient's conditions,
   // medications, procedures, and observations loaded from the server
   loadResources(patientId) {
-    return new Promise((resolve) => {
-      FHIR.oauth2.ready((smart) => {
-        loadResources(smart, patientId).then((result) => resolve(result));
-      });
+    return smartReady().then((smart) => {
+      return loadResources(smart, patientId)
     });
   },
 
   // Return a promise that, if the app is loaded in a SMART context, provides the loaded
   // user, patient, conditions, medications, procedures, and observations
   load() {
-    return new Promise((resolve, reject) => {
-      FHIR.oauth2.ready((smart) => {
-        const user = smart.user.read();
-        const patient = smart.patient.read();
-        const resources = FHIRWrap.loadResources(smart.server.serviceUrl, smart.patient.id);
-        Promise.all([user, patient, resources]).then(([user, patient, resources]) => {
-          patient = new Patient(patient);
-          user = new Practitioner(user);
-          resolve([user, patient].concat(resources));
-        }).catch((e) => reject(e));
+    return smartReady().then((smart) => {
+      const user = smart.user.read();
+      const patient = smart.patient.read();
+      const resources = FHIRWrap.loadResources(smart.server.serviceUrl, smart.patient.id);
+      return Promise.all([user, patient, resources]).then(([user, patient, resources]) => {
+        patient = new Patient(patient);
+        user = new Practitioner(user);
+        return [user, patient].concat(resources);
       });
     });
   }
