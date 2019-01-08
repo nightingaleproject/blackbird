@@ -6,9 +6,9 @@ import moment from 'moment';
 
 // Wrap our usage of fhirclient with some simple utilities
 
-// fhirclient seems pretty broken from this perspective, it doesn't
+// fhirclient doesn't seem to play nice with create-react-app: it doesn't
 // export anything and it puts FHIR in window; work around for now
-import nothing from 'fhirclient'; // eslint-disable-line no-unused-vars
+import nothing from 'fhirclient/dist'; // eslint-disable-line no-unused-vars
 const FHIR = window.FHIR;
 
 // Wrap the oauth ready functionality, providing the SMART context, both so that we don't need
