@@ -20,6 +20,7 @@ class Resource {
       case 'Procedure': return new Procedure(resource);
       case 'Observation': return new Observation(resource);
       case 'MedicationRequest': return new MedicationRequest(resource);
+      case 'MedicationOrder': return new MedicationOrder(resource);
       default: return new Resource(resource);
     }
   }
@@ -118,6 +119,18 @@ class MedicationRequest extends Resource {
     } else {
       return Promise.resolve(new MedicationRequest(this.resource));
     }
+  }
+}
+
+class MedicationOrder extends Resource {
+  get description() {
+    return this.resource.medicationCodeableConcept.coding[0].display;
+  }
+  get startDate() {
+    return this.resource.dateWritten || this.resource.authoredOn;
+  }
+  get endDate() {
+    return this.resource.dateWritten || this.resource.authoredOn;
   }
 }
 

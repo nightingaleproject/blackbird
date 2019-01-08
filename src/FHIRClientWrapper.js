@@ -62,8 +62,23 @@ const loadResources = (smart, patientId) => {
     return Promise.all(medicationRequests.map((medicationRequest) => medicationRequest.withMedication(smart)));
   }
 
+  // Utility function: resolve an array of promises with the first promise that resolves with a non-empty
+  // result; we use this to support either MedicationRequest or MedicationOrder
+  const any = (promises) => {
+    return new Promise((resolve) => {
+      Promise.all(promises).then((results) => {
+        for (const result of results) {
+          if (result.length > 0) {
+            resolve(result)
+          }
+        }
+        resolve([]);
+      });
+    });
+  }
+
   return Promise.all([getResources('Condition'),
-                      getResources('MedicationRequest').then(withMedications),
+                      any([getResources('MedicationRequest').then(withMedications), getResources('MedicationOrder')]),
                       getResources('Procedure'),
                       getResources('Observation')]);
 }
