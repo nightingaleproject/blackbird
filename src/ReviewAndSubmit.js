@@ -149,9 +149,8 @@ class ReviewAndSubmit extends FormPage {
               </Form.Field>
 
               <Button primary floated='right' onClick={this.handleSubmit}>Submit</Button>
-
               <Button primary floated='right' onClick={() => console.log(JSON.stringify(recordToFHIR(this.props.record, this.props.patient), null, 2))}>Log FHIR to Console</Button>
-
+              <Button primary floated='right' as='a' href={"data: text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(recordToFHIR(this.props.record, this.props.patient), null, 2))} download="fhir-bundle.json">Download FHIR Bundle</Button>
             </Form>
           </Grid.Column>
         </Grid.Row>
