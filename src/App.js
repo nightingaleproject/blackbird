@@ -5,6 +5,7 @@ import moment from 'moment';
 import Header from './Header';
 import PatientCard from './PatientCard';
 import Welcome from './Welcome';
+import StandalonePatientSearch from './StandalonePatientSearch';
 import PronounceForm from './PronounceForm';
 import CauseOfDeathForm from './CauseOfDeathForm';
 import AdditionalQuestionsForm from './AdditionalQuestionsForm';
@@ -60,6 +61,8 @@ class App extends Component {
     // First page depends on whether we're running in a SMART on FHIR context or not
     if (props.smart) {
       this.state = { step: 'Pronouncing', record: record, selectedConditions: [] };
+    } else if (props.standalone) {
+      this.state = { step: 'StandalonePatientSearch', record: record, selectedConditions: [] };
     } else {
       this.state = { step: 'Welcome', record: record, selectedConditions: [] };
     }
@@ -200,6 +203,8 @@ class App extends Component {
                                 gotoStep={this.gotoStep}
                                 handleRecordChange={this.handleRecordChange}
                                 record={this.state.record} />;
+      case 'StandalonePatientSearch':
+        return <StandalonePatientSearch setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;
       case 'Welcome':
       default:
         return <Welcome setPatient={this.setPatient} setResources={this.setResources} gotoStep={this.gotoStep} />;
