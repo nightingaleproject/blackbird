@@ -11,8 +11,13 @@ class WelcomeSmart extends Component {
   constructor(props) {
     super(props);
     // See if we have state from previous use stored in local browser storage
+    const defaultState = { fhirServer: '', clientId: '', secret: '' };
     const localState = localStorage['stateWelcomeSmart'];
-    this.state = localState ? JSON.parse(localState) : { fhirServer: '', clientId: '', secret: '' };
+    if (localState) {
+      this.state = Object.assign({}, defaultState, JSON.parse(localState));
+    } else {
+      this.state = defaultState;
+    }
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }

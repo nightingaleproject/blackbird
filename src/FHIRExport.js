@@ -706,7 +706,7 @@ const recordToFHIR = (record, decedent) => {
     name: decedent.name,
     birthDate: decedent.resource.birthDate,
     deceasedDateTime: formatDateAndTime(record.actualDeathDate, record.actualDeathTime),
-    address: decedent.resource.address[0],
+    address: decedent.resource.address && decedent.resource.address[0], // handle missing address
     gender: decedent.resource.gender
     //ssn: '111223333'
     //servedInArmedForces: false,
