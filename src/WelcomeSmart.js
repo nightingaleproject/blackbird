@@ -14,7 +14,7 @@ class WelcomeSmart extends Component {
     const defaultState = { fhirServer: '', clientId: '', secret: '' };
     const localState = localStorage['stateWelcomeSmart'];
     if (localState) {
-      this.state = Object.assign({}, defaultState, localState);
+      this.state = Object.assign({}, defaultState, JSON.parse(localState));
     } else {
       this.state = defaultState;
     }
