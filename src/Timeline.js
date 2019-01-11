@@ -5,12 +5,14 @@ class Timeline extends Component {
 
   constructor(props) {
     super(props);
+    // TODO: We copy the resources (via slice) to support later filtering; this causes a problem if this page
+    // is shown before resources finish loading because they're then not on the page when the load finishes
     this.state = {
       tab: "Conditions",
-      displayedConditions: props.conditions.slice(),
-      displayedProcedures: props.procedures.slice(),
-      displayedObservations: props.observations.slice(),
-      displayedMedications: props.medications.slice()
+      displayedConditions: (props.conditions || []).slice(),
+      displayedProcedures: (props.procedures || []).slice(),
+      displayedObservations: (props.observations || []).slice(),
+      displayedMedications: (props.medications || []).slice()
     };
     this.gotoTab = this.gotoTab.bind(this);
     this.handleSearchChange = this.handleSearchChange.bind(this);
@@ -56,10 +58,12 @@ class Timeline extends Component {
         return <p>No {name} found</p>;
       } else {
         return resources.map((resource) => {
+          const prescriber = resource.prescriberName;
           return (
             <Card fluid key={resource.id}>
               <Card.Content>
                 <Card.Header>{resource.description}</Card.Header>
+                {prescriber ? <Card.Meta>Prescribed by {prescriber}</Card.Meta> : null }
                 <Card.Meta>{resource.formattedDateRange}</Card.Meta>
                 <Card.Description>{resource.additionalText}</Card.Description>
               </Card.Content>

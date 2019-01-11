@@ -48,6 +48,22 @@ class Resource {
       return this.formattedStartDate;
     }
   }
+
+  // Sometimes we want to look at a referred resource, e.g. give a MedicationOrder we may want to look at the
+  // prescriber; this returns a promise that supplies the resource with the additional information within it
+  // TODO: Many resources may refer to the same other resource, caching might make sense
+  withEmbeddedResource(referencedResource, smart) {
+    if (this.resource[referencedResource] && this.resource[referencedResource]) {
+      const type = this.resource[referencedResource].reference.split('/')[0];
+      const id = this.resource[referencedResource].reference.split('/')[1];
+      return smart.api.read({ type: type, id: id }).then((response) => {
+        this[referencedResource] = response.data;
+        return this;
+      });
+    } else {
+      return Promise.resolve(this);
+    }
+  }
 }
 
 class Condition extends Resource {
@@ -131,6 +147,15 @@ class MedicationOrder extends Resource {
   }
   get endDate() {
     return this.resource.dateWritten || this.resource.authoredOn;
+  }
+  get prescriberName() {
+    if (this.prescriber) {
+      // TODO: share code with Patient.js to get name
+      let names = [];
+      names = names.concat(this.prescriber.name.given);
+      names = names.concat(this.prescriber.name.family);
+      return names.join(' ');
+    }
   }
 }
 
