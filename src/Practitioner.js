@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 // Simple wrapper for FHIR Practitioner resource
 class Practitioner {
   constructor(resource) {
@@ -7,28 +9,38 @@ class Practitioner {
     return this.resource.id;
   }
   get name() {
-    const first = this.resource.name[0].given.join(' ');
-    const last = this.resource.name[0].family;
-    const suffix = this.resource.name[0].suffix.join(' ');
-    return `${first} ${last} ${suffix}`;
+    // TODO: Common code with Patient.js
+    if (this.resource && this.resource.name) {
+      // Handle name as an array (take the first) or a singleton
+      let resourceName = _.isArray(this.resource.name) ? this.resource.name[0] : this.resource.name;
+      let names = [];
+      names = names.concat(resourceName.given);
+      names = names.concat(resourceName.family);
+      names = names.concat(resourceName.suffix);
+      let name = names.join(' ').trim();
+      if (name.length > 0) {
+        return name;
+      }
+    }
+    return null;
   }
   get street() {
-    if (this.resource.address[0] && this.resource.address[0].line[0]) {
+    if (this.resource.address && this.resource.address[0] && this.resource.address[0].line[0]) {
       return this.resource.address[0].line[0];
     }
   }
   get city() {
-    if (this.resource.address[0]) {
+    if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].city;
     }
   }
   get state() {
-    if (this.resource.address[0]) {
+    if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].state;
     }
   }
   get zip() {
-    if (this.resource.address[0]) {
+    if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].postalCode;
     }
   }
