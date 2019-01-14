@@ -34,6 +34,11 @@ class Practitioner {
       return this.resource.address[0].city;
     }
   }
+  get county() {
+    if (this.resource.address && this.resource.address[0]) {
+      return this.resource.address[0].district;
+    }
+  }
   get state() {
     if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].state;

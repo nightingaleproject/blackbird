@@ -76,6 +76,14 @@ class ReviewAndSubmit extends FormPage {
               {reviewRow('Was Medical Examiner or Coroner Contacted?', record.examinerContacted)}
               {reviewRow('Was an Autopsy Performed?', record.autopsyPerformed)}
               {reviewRow('Were Autopsy Findings Available to Complete the Cause of Death?', record.autopsyAvailable)}
+              {reviewRow('Name of Place of Death', record.placeOfDeathName)}
+              {reviewRow('Type of Place of Death', record.placeOfDeathType)}
+              {reviewRow('Place of Death (State)', record.placeOfDeathState)}
+              {reviewRow('Place of Death (County)', record.placeOfDeathCounty)}
+              {reviewRow('Place of Death (City)', record.placeOfDeathCity)}
+              {reviewRow('Place of Death (Street)', record.placeOfDeathStreet)}
+              {reviewRow('Place of Death (Apt)', record.placeOfDeathApt)}
+              {reviewRow('Place of Death (Zip)', record.placeOfDeathZip)}
               {reviewRow('Person Pronouncing Death', record.pronouncerName)}
               {reviewRow('License Number of Person Pronouncing Death', record.pronouncerNumber)}
               {reviewRow('Immediate Cause of Death', record.cod1Text)}
@@ -95,6 +103,7 @@ class ReviewAndSubmit extends FormPage {
               {reviewRow('Place of Injury', record.placeOfInjury)}
               {reviewRow('Injury at Work?', record.injuryAtWork)}
               {reviewRow('Location of Injury (State)', record.locationOfInjuryState)}
+              {reviewRow('Location of Injury (County)', record.locationOfInjuryCounty)}
               {reviewRow('Location of Injury (City)', record.locationOfInjuryCity)}
               {reviewRow('Location of Injury (Street)', record.locationOfInjuryStreet)}
               {reviewRow('Location of Injury (Apt)', record.locationOfInjuryApt)}
@@ -132,6 +141,10 @@ class ReviewAndSubmit extends FormPage {
                 <Form.Field>
                   <label>City:</label>
                   {this.input('text', 'certifierCity')}
+                </Form.Field>
+                <Form.Field>
+                  <label>County:</label>
+                  {this.input('text', 'certifierCounty')}
                 </Form.Field>
                 <Form.Field>
                   <label>State:</label>

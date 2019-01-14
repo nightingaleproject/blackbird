@@ -5,6 +5,7 @@ import { recordToFHIR } from './FHIRExport';
 import { mount } from 'enzyme';
 import recordFixture from '../fixtures/record';
 import patientFixture from '../fixtures/patient';
+import _ from 'lodash';
 
 it('generates valid FHIR bundle', () => {
   const decedentRecord = new Patient(patientFixture);
@@ -52,6 +53,17 @@ it('generates valid FHIR bundle', () => {
   expect(decedent.address[0].postalCode).toBe('02571');
 
   expect(decedent.gender).toBe('female');
+
+  const placeOfDeath = _.find(decedent.extension, function (extension) {
+    return extension.url === 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeath-extension';
+  });
+  expect(placeOfDeath.extension[0].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeathType-extension')
+  expect(placeOfDeath.extension[0].valueCodeableConcept.coding[0].display).toBe('Death in hospital-based emergency department or outpatient department')
+  expect(placeOfDeath.extension[1].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-FacilityName-extension')
+  expect(placeOfDeath.extension[1].valueString).toBe('Example Hospital')
+  expect(placeOfDeath.extension[2].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension')
+  expect(placeOfDeath.extension[2].valueAddress.city).toBe('Bedford')
+  expect(placeOfDeath.extension[2].valueAddress.district).toBe('Middlesex')
 
   //certifier
   const certifier = deathRecord.entry[2].resource

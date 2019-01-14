@@ -144,7 +144,8 @@ class DeathRecordContents extends Composition {
 
 class Decedent extends Patient {
   constructor(options = {}) {
-    const local = ['name', 'birthDate', 'deceasedDateTime', 'address', 'gender', 'ssn', 'servedInArmedForces', 'birthSex'];
+    const local = ['name', 'birthDate', 'deceasedDateTime', 'address', 'gender', 'ssn', 'servedInArmedForces', 'birthSex',
+                   'placeOfDeathType', 'placeOfDeathName', 'placeOfDeathAddress'];
 
     // TODO: Missing fields (we only need to implement the ones where we have data from our test patients):
     // race, ethnicity, ageAtDeath (derive), placeOfBirth, maritalStatus, placeOfDeath, disposition,
@@ -187,6 +188,42 @@ class Decedent extends Patient {
       this.addExtension({
         url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
         valueCode: options.birthSex
+      });
+    }
+    if (options.placeOfDeathType || options.placeOfDeathName || options.placeOfDeathAddress) {
+      const extensions = [];
+      if (options.placeOfDeathType) {
+        const placeOfDeathTypeCodeLookup = {
+          'Dead on arrival at hospital': '63238001',
+          'Death in home': '440081000124100',
+          'Death in hospice': '440071000124103',
+          'Death in hospital': '16983000',
+          'Death in hospital-based emergency department or outpatient department': '450391000124102',
+          'Death in nursing home or long term care facility': '450381000124100'
+        };
+        const placeOfDeathTypeCode = placeOfDeathTypeCodeLookup[options.placeOfDeathType];
+        if (placeOfDeathTypeCode) {
+          extensions.push({
+            url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeathType-extension',
+            valueCodeableConcept: new CodeableConcept('http://snomed.info/sct', placeOfDeathTypeCode, options.placeOfDeathType)
+          });
+        }
+      }
+      if (options.placeOfDeathName) {
+        extensions.push({
+          url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-FacilityName-extension',
+          valueString: options.placeOfDeathName
+        })
+      }
+      if (options.placeOfDeathAddress) {
+        extensions.push({
+          url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension',
+          valueAddress: new Address(options.placeOfDeathAddress)
+        })
+      }
+      this.addExtension({
+        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeath-extension',
+        extension: extensions
       });
     }
     this.setProfile([
@@ -618,15 +655,18 @@ const formatDateAndTime = (date, time) => {
   }
 }
 
-const formatAddress = (street, city, state, zip) => {
+const formatAddress = (street, city, county, state, zip) => {
   let address = null;
-  if (street || city || state || zip) {
+  if (street || city || state || zip || county) {
     address = {};
     if (street) {
       address.line = [street];
     }
     if (city) {
       address.city = city;
+    }
+    if (county) {
+      address.district = county;
     }
     if (state) {
       address.state = state;
@@ -666,7 +706,8 @@ const recordToFHIR = (record, decedent) => {
   fhirInput.injuryAssociatedWithTransport = record.transportationInjury;
 
   const locationOfInjury = formatAddress(record.locationOfInjuryStreet, record.locationOfInjuryCity,
-                                         record.locationOfInjuryState, record.locationOfInjuryZip);
+                                         record.locationOfInjuryCounty, record.locationOfInjuryState,
+                                         record.locationOfInjuryZip);
   if (record.howInjuryOccurred || locationOfInjury || record.placeOfInjury || record.dateOfInjury) {
     fhirInput.detailsOfInjury = {};
     if (record.howInjuryOccurred) {
@@ -702,12 +743,18 @@ const recordToFHIR = (record, decedent) => {
 
   fhirInput.contributedToDeath = record.contributing;
 
+  const placeOfDeathAddress = formatAddress(record.placeOfDeathStreet, record.placeOfDeathCity,
+                                            record.placeOfDeathCounty, record.placeOfDeathState,
+                                            record.placeOfDeathZip);
   fhirInput.decedent = {
     name: decedent.name,
     birthDate: decedent.resource.birthDate,
     deceasedDateTime: formatDateAndTime(record.actualDeathDate, record.actualDeathTime),
     address: decedent.resource.address && decedent.resource.address[0], // handle missing address
-    gender: decedent.resource.gender
+    gender: decedent.resource.gender,
+    placeOfDeathName: record.placeOfDeathName,
+    placeOfDeathType: record.placeOfDeathType,
+    placeOfDeathAddress: placeOfDeathAddress
     //ssn: '111223333'
     //servedInArmedForces: false,
     //birthSex: 'M'
@@ -717,7 +764,7 @@ const recordToFHIR = (record, decedent) => {
     name: record.certifierName,
     certifierType: 'Physician (Pronouncer and Certifier)',
     identifier: record.certifierNumber,
-    address: formatAddress(record.certifierStreet, record.certifierCity, record.certifierState, record.certifierZip)
+    address: formatAddress(record.certifierStreet, record.certifierCity, record.certifierCounty, record.certifierState, record.certifierZip)
   }
 
   return new DeathRecord(fhirInput);
