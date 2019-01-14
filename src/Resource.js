@@ -55,7 +55,7 @@ class Resource {
   // prescriber; this returns a promise that supplies the resource with the additional information within it
   // TODO: Many resources may refer to the same other resource, caching might make sense
   withEmbeddedResource(referencedResource, smart) {
-    if (this.resource[referencedResource] && this.resource[referencedResource]) {
+    if (this.resource[referencedResource] && this.resource[referencedResource].reference) {
       const type = this.resource[referencedResource].reference.split('/')[0];
       const id = this.resource[referencedResource].reference.split('/')[1];
       return smart.api.read({ type: type, id: id }).then((response) => {
@@ -114,7 +114,7 @@ class MedicationRequest extends Resource {
   }
   get description() {
     if (this.medicationResource) {
-      return this.medicationResource.code.coding[0].display;
+      return this.medicationResource.description;
     } else {
       return this.resource.medicationCodeableConcept.coding[0].display;
     }
@@ -124,19 +124,6 @@ class MedicationRequest extends Resource {
   }
   get endDate() {
     return this.resource.dateWritten || this.resource.authoredOn;
-  }
-  // Some FHIR implementations don't include details on the medication in the MedicationRequest;
-  // in those cases we may need to request the associated Medication resource; this returns a
-  // promise wrapping a new MedicationRequest with the desired information (if available)
-  withMedication(smart) {
-    if (this.resource.medicationReference) {
-      const medicationId = this.resource.medicationReference.reference.split('/')[1];
-      return smart.api.read({ type: 'Medication', id: medicationId }).then((response) => {
-        return new MedicationRequest(this.resource, response.data);
-      });
-    } else {
-      return Promise.resolve(new MedicationRequest(this.resource));
-    }
   }
 }
 
