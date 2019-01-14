@@ -74,6 +74,10 @@ class InjuryQuestionsForm extends FormPage {
                   {this.input('text', 'locationOfInjuryCity', { optional: true })}
                 </Form.Field>
                 <Form.Field>
+                  <label>County:</label>
+                  {this.input('text', 'locationOfInjuryCounty', { optional: true })}
+                </Form.Field>
+                <Form.Field>
                   <label>State:</label>
                   {this.input('text', 'locationOfInjuryState', { optional: true })}
                 </Form.Field>

@@ -169,7 +169,8 @@ class Patient {
     if (this.resource && this.resource.address) {
       const addr = this.resource.address['0'];
       if (addr) {
-        return `${addr.line} ${addr.city} ${addr.state} ${addr.postalCode}`;
+        const line = `${addr.line ? addr.line : ''} ${addr.city ? addr.city : ''} ${addr.district ? addr.district : ''} ${addr.state ? addr.state : ''} ${addr.postalCode ? addr.postalCode : ''}`;
+        return line.replace(/\s+/g, ' ');
       } else {
         return null;
       }
