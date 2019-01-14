@@ -1,4 +1,5 @@
 import moment from 'moment';
+import Practitioner from './Practitioner';
 
 // Helper function for formatting a date
 function formatDate(date) {
@@ -21,6 +22,7 @@ class Resource {
       case 'Observation': return new Observation(resource);
       case 'MedicationRequest': return new MedicationRequest(resource);
       case 'MedicationOrder': return new MedicationOrder(resource);
+      case 'Practitioner': return new Practitioner(resource);
       default: return new Resource(resource);
     }
   }
@@ -57,7 +59,7 @@ class Resource {
       const type = this.resource[referencedResource].reference.split('/')[0];
       const id = this.resource[referencedResource].reference.split('/')[1];
       return smart.api.read({ type: type, id: id }).then((response) => {
-        this[referencedResource] = response.data;
+        this[referencedResource] = Resource.wrap(response.data);
         return this;
       });
     } else {
@@ -147,15 +149,6 @@ class MedicationOrder extends Resource {
   }
   get endDate() {
     return this.resource.dateWritten || this.resource.authoredOn;
-  }
-  get prescriberName() {
-    if (this.prescriber) {
-      // TODO: share code with Patient.js to get name
-      let names = [];
-      names = names.concat(this.prescriber.name.given);
-      names = names.concat(this.prescriber.name.family);
-      return names.join(' ');
-    }
   }
 }
 

@@ -43,12 +43,12 @@ class Timeline extends Component {
         return <p>No {name} found</p>;
       } else {
         return resources.map((resource) => {
-          const prescriber = resource.prescriberName;
+          const prescriber = resource.prescriber;
           return (
             <Card fluid key={resource.id}>
               <Card.Content>
                 <Card.Header>{resource.description}</Card.Header>
-                {prescriber ? <Card.Meta>Prescribed by {prescriber}</Card.Meta> : null }
+                {prescriber ? <Card.Meta>Prescribed by {prescriber.name}</Card.Meta> : null }
                 <Card.Meta>{resource.formattedDateRange}</Card.Meta>
                 <Card.Description>{resource.additionalText}</Card.Description>
               </Card.Content>
