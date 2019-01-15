@@ -59,7 +59,16 @@ const loadResources = (smart, patientId) => {
 
   // MedicationRequests might have information on which medication in a separate resource
   const withMedications = (medicationRequests) => {
-    return Promise.all(medicationRequests.map((medicationRequest) => medicationRequest.withMedication(smart)));
+    return Promise.all(medicationRequests.map((medicationRequest) => {
+      return medicationRequest.withEmbeddedResource('medicationReference', smart);
+    }));
+  };
+
+  // For medication orders we'd like to refer to the prescriber
+  const withPrescribers = (medicationOrders) => {
+    return Promise.all(medicationOrders.map((medicationOrder) => {
+      return medicationOrder.withEmbeddedResource('prescriber', smart);
+    }));
   }
 
   // Utility function: resolve an array of promises with the first promise that resolves with a non-empty
@@ -78,7 +87,8 @@ const loadResources = (smart, patientId) => {
   }
 
   return Promise.all([getResources('Condition'),
-                      any([getResources('MedicationRequest').then(withMedications), getResources('MedicationOrder')]),
+                      any([getResources('MedicationRequest').then(withMedications),
+                           getResources('MedicationOrder').then(withPrescribers)]),
                       getResources('Procedure'),
                       getResources('Observation')]);
 }

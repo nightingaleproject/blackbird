@@ -1,4 +1,5 @@
 import moment from 'moment';
+import _ from 'lodash';
 
 // Simple wrapper for FHIR Patient resource
 class Patient {
@@ -13,19 +14,20 @@ class Patient {
     }
   }
   get name() {
-    if (this.resource && this.resource.name && this.resource.name[0]) {
-      const first = this.resource.name[0].given.join(' ') || '';
-      const last = this.resource.name[0].family || '';
-      let name = `${first} ${last}`;
-      name = name.trim();
+    // TODO: Common code with Practitioner.js
+    if (this.resource && this.resource.name) {
+      // Handle name as an array (take the first) or a singleton
+      let resourceName = _.isArray(this.resource.name) ? this.resource.name[0] : this.resource.name;
+      let names = [];
+      names = names.concat(resourceName.given);
+      names = names.concat(resourceName.family);
+      names = names.concat(resourceName.suffix);
+      let name = names.join(' ').trim();
       if (name.length > 0) {
         return name;
-      } else {
-        return null;
       }
-    } else {
-      return null;
     }
+    return null;
   }
   get age() {
     if (this.resource) {

@@ -5,13 +5,7 @@ class Timeline extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {
-      tab: "Conditions",
-      displayedConditions: props.conditions.slice(),
-      displayedProcedures: props.procedures.slice(),
-      displayedObservations: props.observations.slice(),
-      displayedMedications: props.medications.slice()
-    };
+    this.state = { tab: "Conditions", searchString: "" };
     this.gotoTab = this.gotoTab.bind(this);
     this.handleSearchChange = this.handleSearchChange.bind(this);
   }
@@ -21,14 +15,7 @@ class Timeline extends Component {
   }
 
   handleSearchChange(event, input) {
-    const regex = new RegExp(input.value, 'gi');
-    const filter = (element) => element.description.match(regex);
-    this.setState({
-      displayedConditions: this.props.conditions.filter(filter),
-      displayedProcedures: this.props.procedures.filter(filter),
-      displayedObservations: this.props.observations.filter(filter),
-      displayedMedications: this.props.medications.filter(filter)
-    });
+    this.setState({ searchString: input.value });
   }
 
   render() {
@@ -56,10 +43,12 @@ class Timeline extends Component {
         return <p>No {name} found</p>;
       } else {
         return resources.map((resource) => {
+          const prescriber = resource.prescriber;
           return (
             <Card fluid key={resource.id}>
               <Card.Content>
                 <Card.Header>{resource.description}</Card.Header>
+                {prescriber ? <Card.Meta>Prescribed by {prescriber.name}</Card.Meta> : null }
                 <Card.Meta>{resource.formattedDateRange}</Card.Meta>
                 <Card.Description>{resource.additionalText}</Card.Description>
               </Card.Content>
@@ -69,17 +58,25 @@ class Timeline extends Component {
       }
     };
 
+    const searchRegex = new RegExp(this.state.searchString, 'gi');
+    const resourceFilter = (element) => element.description.match(searchRegex);
+
+    const displayedConditions = (this.props.conditions || []).filter(resourceFilter);
+    const displayedProcedures = (this.props.procedures || []).filter(resourceFilter);
+    const displayedObservations = (this.props.observations || []).filter(resourceFilter);
+    const displayedMedications = (this.props.medications || []).filter(resourceFilter);
+
     const renderTab = (tab) => {
       switch (tab) {
       case 'Conditions':
       default:
-        return conditionLinks(this.state.displayedConditions);
+        return conditionLinks(displayedConditions);
       case 'Procedures':
-        return resourceCards('procedures', this.state.displayedProcedures);
+        return resourceCards('procedures', displayedProcedures);
       case 'Tests':
-        return resourceCards('tests', this.state.displayedObservations);
+        return resourceCards('tests', displayedObservations);
       case 'Medications':
-        return resourceCards('medications', this.state.displayedMedications);
+        return resourceCards('medications', displayedMedications);
       }
     };
 
@@ -95,10 +92,10 @@ class Timeline extends Component {
     return (
       <div className="timeline">
         <Menu tabular>
-          {menuItem('Conditions', this.state.displayedConditions)}
-          {menuItem('Procedures', this.state.displayedProcedures)}
-          {menuItem('Tests', this.state.displayedObservations)}
-          {menuItem('Medications', this.state.displayedMedications)}
+          {menuItem('Conditions', displayedConditions)}
+          {menuItem('Procedures', displayedProcedures)}
+          {menuItem('Tests', displayedObservations)}
+          {menuItem('Medications', displayedMedications)}
         </Menu>
         <Input fluid icon='search' placeholder='Search...' onChange={this.handleSearchChange} />
         {renderTab(this.state.tab)}
