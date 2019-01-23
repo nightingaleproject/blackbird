@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { FHIRWrap } from './FHIRClientWrapper';
 import PatientSearch from './PatientSearch';
+import StateStorage from './StateStorage';
 
 const defaultFhirServer = 'https://syntheticmass.mitre.org/fhir';
 
@@ -8,7 +9,8 @@ class Welcome extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { fhirServer: defaultFhirServer, decedentName: '' };
+    // See if we have state from previous use stored in local browser storage
+    this.state = StateStorage.retrieveState('stateWelcomePlain', { fhirServer: defaultFhirServer });
     this.handlePatientSelect = this.handlePatientSelect.bind(this);
     this.updateFhirServer = this.updateFhirServer.bind(this);
   }
@@ -22,7 +24,8 @@ class Welcome extends Component {
   }
 
   updateFhirServer(fhirServer) {
-    this.setState({ fhirServer });
+    // Store state in local browser storage to preserve between uses
+    this.setState({ fhirServer }, () => StateStorage.storeState('stateWelcomePlain', this.state));
   }
 
   render() {

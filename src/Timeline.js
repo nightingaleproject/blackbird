@@ -59,7 +59,7 @@ class Timeline extends Component {
     };
 
     const searchRegex = new RegExp(this.state.searchString, 'gi');
-    const resourceFilter = (element) => element.description.match(searchRegex);
+    const resourceFilter = (element) => element.description && element.description.match(searchRegex);
 
     const displayedConditions = (this.props.conditions || []).filter(resourceFilter);
     const displayedProcedures = (this.props.procedures || []).filter(resourceFilter);

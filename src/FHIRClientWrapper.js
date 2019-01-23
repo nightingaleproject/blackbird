@@ -25,10 +25,10 @@ const smartReady = () => {
 
 // Given a SMART context and a search string (which can be blank), returns a promise
 // that provides a list of patients loaded from the server
-const loadPatients = (smart, searchString) => {
+const loadPatients = (smart, searchQuery) => {
   const searchParams = { type: 'Patient' };
-  if (searchString.length > 0) {
-    searchParams.query = { name: searchString };
+  if (searchQuery) {
+    searchParams.query = searchQuery;
   }
   return smart.api.search(searchParams).then((response) => {
     if (response.data && response.data.entry) {
@@ -45,7 +45,9 @@ const loadResources = (smart, patientId) => {
     // promise directly results in unexpected behavior
     return new Promise((resolve) => {
       return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
-        if (response.data.entry) {
+        // Different FHIR servers indicate the presence of results differently, try to be robust
+        if ((_.isUndefined(response.data.total) && response.data.entry) ||
+            (_.isNumber(response.data.total) && response.data.total > 0 && response.data.entry)) {
           const resources = response.data.entry.map((entry) => Resource.wrap(entry.resource));
           resolve(_.sortBy(resources, (resource) => moment(resource.startDate)).reverse());
         } else {
@@ -98,9 +100,9 @@ const FHIRWrap = {
 
   // Given a FHIR server URL and a search string (which can be blank), returns a promise
   // that provides a list of patients loaded from the server
-  loadPatients(fhirServer, searchString) {
+  loadPatients(fhirServer, searchQuery) {
     const smart = FHIR.client({ serviceUrl: fhirServer });
-    return loadPatients(smart, searchString);
+    return loadPatients(smart, searchQuery);
   },
 
   // Given a FHIR server URL and a patient, returns a promise that provides the patient's
@@ -125,9 +127,9 @@ const SMARTWrap = {
 
   // Given a search string (which can be blank), returns a promise
   // that provides a list of patients loaded from the server
-  loadPatients(searchString) {
+  loadPatients(searchQuery) {
     return smartReady().then((smart) => {
-      return loadPatients(smart, searchString)
+      return loadPatients(smart, searchQuery)
     });
   },
 

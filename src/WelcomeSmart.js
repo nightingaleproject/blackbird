@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Form, Button } from 'semantic-ui-react';
 import { SMARTWrap } from './FHIRClientWrapper';
+import StateStorage from './StateStorage';
 import Loading from './Loading';
 
 const redirectURI = window.location.href + 'standalone'
@@ -11,23 +12,15 @@ class WelcomeSmart extends Component {
   constructor(props) {
     super(props);
     // See if we have state from previous use stored in local browser storage
-    const defaultState = { fhirServer: '', clientId: '', secret: '' };
-    const localState = localStorage['stateWelcomeSmart'];
-    if (localState) {
-      this.state = Object.assign({}, defaultState, JSON.parse(localState));
-    } else {
-      this.state = defaultState;
-    }
+    this.state = StateStorage.retrieveState('stateWelcomeSmart', { fhirServer: '', clientId: '', secret: '' });
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleChange(event) {
     const target = event.target;
-    this.setState({ [target.name]: target.value }, () => {
-      // Store all state in local browser storage too to preserve between uses
-      localStorage['stateWelcomeSmart'] = JSON.stringify(this.state);
-    });
+    // Store state in local browser storage to preserve between uses
+    this.setState({ [target.name]: target.value }, () => StateStorage.storeState('stateWelcomeSmart', this.state));
   }
 
   handleSubmit(event) {

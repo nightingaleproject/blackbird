@@ -1,12 +1,16 @@
 import React, { Component } from 'react';
+import _ from 'lodash';
 import { Form, Button, Loader, Card } from 'semantic-ui-react';
 import { FHIRWrap, SMARTWrap } from './FHIRClientWrapper';
+import StateStorage from './StateStorage';
 
 class PatientSearch extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { decedentName: '', searching: false };
+    // See if we have state from previous use stored in local browser storage
+    const searchState = StateStorage.retrieveState('statePatientSearch', { name: '', given: '', family: '' });
+    this.state = Object.assign({}, searchState, { searching: false });
     this.handleChange = this.handleChange.bind(this);
     this.handleFhirServerChange = this.handleFhirServerChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -15,8 +19,9 @@ class PatientSearch extends Component {
 
   handleChange(event) {
     const target = event.target;
-    this.setState({
-      [target.name]: target.value
+    this.setState({ [target.name]: target.value }, () => {
+      // Store search state in local browser storage to preserve between uses
+      StateStorage.storeState('statePatientSearch', _.pick(this.state, ['name', 'given', 'family']));
     });
   }
 
@@ -27,13 +32,23 @@ class PatientSearch extends Component {
   handleSubmit(event) {
     event.preventDefault();
     this.setState({ patients: [], searching: true });
+    const searchQuery = {};
+    if (this.state.name.length > 0) {
+      searchQuery.name = this.state.name;
+    }
+    if (this.state.given.length > 0) {
+      searchQuery.given = this.state.given;
+    }
+    if (this.state.family.length > 0) {
+      searchQuery.family = this.state.family;
+    }
     // The search we use depends on whether we're in a SMART on FHIR context
     if (this.props.smart) {
-      SMARTWrap.loadPatients(this.state.decedentName).then((patients) => {
+      SMARTWrap.loadPatients(searchQuery).then((patients) => {
         this.setState({ patients, searching: false });
       });
     } else {
-      FHIRWrap.loadPatients(this.props.fhirServer, this.state.decedentName).then((patients) => {
+      FHIRWrap.loadPatients(this.props.fhirServer, searchQuery).then((patients) => {
         this.setState({ patients, searching: false });
       });
     }
@@ -80,7 +95,15 @@ class PatientSearch extends Component {
           { this.props.smart ? null : fhirServerFormField }
           <Form.Field>
             <label>Decedent name:</label>
-            <input type="text" name="decedentName" value={this.state.decedentName} onChange={this.handleChange} />
+            <input type="text" name="name" value={this.state.name} onChange={this.handleChange} />
+          </Form.Field>
+          <Form.Field>
+            <label>Decedent given name:</label>
+            <input type="text" name="given" value={this.state.given} onChange={this.handleChange} />
+          </Form.Field>
+          <Form.Field>
+            <label>Decedent family name:</label>
+            <input type="text" name="family" value={this.state.family} onChange={this.handleChange} />
           </Form.Field>
           <Button primary disabled={this.props.fhirServer === ''} type="submit">Search</Button>
         </Form>
