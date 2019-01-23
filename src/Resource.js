@@ -134,7 +134,11 @@ class MedicationRequest extends Resource {
 
 class MedicationOrder extends Resource {
   get description() {
-    return this.resource.medicationCodeableConcept.coding[0].display;
+    if (this.medicationReference) {
+      return this.medicationReference.description;
+    } else if (this.resource.medicationCodeableConcept && this.resource.medicationCodeableConcept.coding) {
+      return this.resource.medicationCodeableConcept.coding[0].display;
+    }
   }
   get startDate() {
     return this.resource.dateWritten || this.resource.authoredOn;

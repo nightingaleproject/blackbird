@@ -90,7 +90,7 @@ const loadResources = (smart, patientId) => {
 
   return Promise.all([getResources('Condition'),
                       any([getResources('MedicationRequest').then(withMedications),
-                           getResources('MedicationOrder').then(withPrescribers)]),
+                           getResources('MedicationOrder').then(withPrescribers).then(withMedications)]),
                       getResources('Procedure'),
                       getResources('Observation')]);
 }
