@@ -61,8 +61,8 @@ class Resource {
   // TODO: Many resources may refer to the same other resource, caching might make sense
   withEmbeddedResource(referencedResource, smart) {
     if (this.resource[referencedResource] && this.resource[referencedResource].reference) {
-      const type = this.resource[referencedResource].reference.split('/')[0];
-      const id = this.resource[referencedResource].reference.split('/')[1];
+      const type = this.resource[referencedResource].reference.split('/').reverse()[1]; // Second to last element
+      const id = this.resource[referencedResource].reference.split('/').reverse()[0]; // Last element
       return smart.api.read({ type: type, id: id }).then((response) => {
         this[referencedResource] = Resource.wrap(response.data);
         return this;
@@ -118,8 +118,8 @@ class MedicationRequest extends Resource {
     this.medicationResource = medicationResource;
   }
   get description() {
-    if (this.medicationResource) {
-      return this.medicationResource.description;
+    if (this.medicationReference) {
+      return this.medicationReference.description;
     } else if (this.resource.medicationCodeableConcept && this.resource.medicationCodeableConcept.coding) {
       return this.resource.medicationCodeableConcept.coding[0].display;
     }
