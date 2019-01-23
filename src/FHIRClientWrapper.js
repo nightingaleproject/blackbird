@@ -45,7 +45,9 @@ const loadResources = (smart, patientId) => {
     // promise directly results in unexpected behavior
     return new Promise((resolve) => {
       return smart.api.search({ type: type, query: { patient: patientId } }).then((response) => {
-        if (response.data.entry) {
+        // Different FHIR servers indicate the presence of results differently, try to be robust
+        if ((_.isUndefined(response.data.total) && response.data.entry) ||
+            (_.isNumber(response.data.total) && response.data.total > 0 && response.data.entry)) {
           const resources = response.data.entry.map((entry) => Resource.wrap(entry.resource));
           resolve(_.sortBy(resources, (resource) => moment(resource.startDate)).reverse());
         } else {
