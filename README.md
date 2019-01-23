@@ -40,6 +40,8 @@ experience of a certifier running the app from within an EHR.
 3. Select a synthetic patient record from the options provided; the app itself will then launch
 4. Fill out the death certificate form on each tab of the app; you can select conditions from the patient record to provide cause of death information
 
+You can also try the app against a FHIR server or via standalone SMART on FHIR launch by using [this version](https://nightingaleproject.github.io/fhir-death-refactor/).
+
 ## Installation and Setup for Development or Testing
 
 This is a React app bootstrapped with
