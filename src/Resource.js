@@ -32,7 +32,12 @@ class Resource {
   }
 
   get description() {
-    return this.resource.code.coding[0].display;
+    // Try to be robust against different FHIR representations
+    if (this.resource.code && this.resource.code.text) {
+      return this.resource.code.text;
+    } else if (this.resource.code && this.resource.code.coding && this.resource.code.coding[0].display) {
+      return this.resource.code.coding[0].display;
+    }
   }
 
   get formattedStartDate() {
@@ -115,7 +120,7 @@ class MedicationRequest extends Resource {
   get description() {
     if (this.medicationResource) {
       return this.medicationResource.description;
-    } else {
+    } else if (this.resource.medicationCodeableConcept && this.resource.medicationCodeableConcept.coding) {
       return this.resource.medicationCodeableConcept.coding[0].display;
     }
   }
