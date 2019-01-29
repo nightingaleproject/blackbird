@@ -53,7 +53,7 @@ class WelcomeSmart extends Component {
           </Form.Field>
           <Form.Field>
             <label>Secret (if needed):</label>
-            <input type="text" name="secret" value={this.state.secret} onChange={this.handleChange} />
+            <input type="password" name="secret" value={this.state.secret} onChange={this.handleChange} />
           </Form.Field>
           <p>Note: Specify <tt>{redirectURI}</tt> as the redirect URL on the SMART on FHIR server.</p>
           <p>Note: The information you enter above is stored in your local browser state to make it available across uses.</p>
