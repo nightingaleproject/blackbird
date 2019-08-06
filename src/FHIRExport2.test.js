@@ -4,15 +4,20 @@ it('generates valid FHIR bundle', () => {
 
   const options = {
     deathCertificate: {
-      identifier: 'example-death-certificate'
+      identifier: '1'
     },
     deathCertification: {
     },
     certifier: {
-      name: 'Bob Certifier'
+      name: 'Bob Certifier',
+      address: {
+      }
     },
     decedent: {
       name: 'Joe Decedent'
+    },
+    mortician: {
+      name: 'Jim Mortician'
     }
   };
 

@@ -8,6 +8,9 @@ import uuid from 'uuid/v4';
 // Begin with classes to represent the core FHIR resources and types that are used to build a death record
 
 class Base {
+  constructor() {
+    this.id = uuid();
+  }
   addExtension(extension) {
     this.extension = this.extension || [];
     this.extension.push(extension);
@@ -47,25 +50,47 @@ class Procedure extends Base {
   }
 }
 
-class Practitioner extends Base {
-  constructor() {
+class Person extends Base {
+  constructor(options = {}) {
     super();
-    this.resourceType = 'Practitioner';
-  }
-  addName(name) {
-    this.name = this.name || [];
-    this.name.push(new HumanName(name));
+    if (options.name) {
+      this.name = this.name || [];
+      this.name.push(new HumanName(options.name));
+    }
+    if (options.address) {
+      this.address = [new Address(options.address)];
+    }
   }
 }
 
-class Patient extends Base {
-  constructor() {
-    super();
+class Practitioner extends Person {
+  constructor(options = {}) {
+    super(options);
+    this.resourceType = 'Practitioner';
+  }
+}
+
+class Patient extends Person {
+  constructor(options = {}) {
+    super(options);
     this.resourceType = 'Patient';
   }
-  addName(name) {
-    this.name = this.name || [];
-    this.name.push(new HumanName(name));
+}
+
+class CodeableConcept {
+  constructor(code, system, display) {
+    if (system && display) {
+      this.coding = [{ system, code, display }];
+    } else if (system) {
+      this.coding = [{ system, code }];
+    } else if (display) {
+      this.coding = [{ code, display }];
+    } else {
+      this.coding = [{ code }];
+    }
+    if (display) {
+      this.text = display;
+    }
   }
 }
 
@@ -87,6 +112,13 @@ class HumanName {
   }
 }
 
+class Address {
+  constructor(address) {
+    this.type = 'postal';
+    Object.assign(this, address);
+  }
+}
+
 // Classes to represent specific components of the death record
 
 class DeathCertificateDocument extends Bundle {
@@ -94,7 +126,7 @@ class DeathCertificateDocument extends Bundle {
 
     super();
 
-    this.type = 'Document';
+    this.type = 'document';
 
     const certificate = new DeathCertificate(options.deathCertificate)
     this.addEntry(certificate);
@@ -110,6 +142,10 @@ class DeathCertificateDocument extends Bundle {
     const certification = new DeathCertification(options.deathCertification);
     const certificationEntry = this.addEntry(certification);
     certificate.addCertificationReference(certificationEntry);
+
+    // TODO: This may belong at a lower level, wherever it eventually gets pointed to
+    const mortician = new Mortician(options.mortician);
+    this.addEntry(mortician);
   }
 }
 
@@ -117,10 +153,8 @@ class DeathCertificate extends Composition {
 
   constructor(options = {}) {
     super();
-    // PWK: adam's implementation has a 'value' subfield in here, doesn't seem correct
-    this.identifier = options.identifier;
+    this.identifier = { value: options.identifier };
     const certification = new DeathCertification();
-    this.event = { code: '103693007', detail: certification };
   }
 
   addDecedentReference(decedentEntry) {
@@ -128,11 +162,12 @@ class DeathCertificate extends Composition {
   }
 
   addCertifierReference(certifierEntry) {
-    this.attester = { mode: 'legal', party: { reference: certifierEntry.fullUrl } };
+    this.attester = [{ mode: ['legal'], party: { reference: certifierEntry.fullUrl } }];
   }
 
   addCertificationReference(certificationReference) {
-    this.event = { code: { coding: { code: '103693007' } }, detail: { reference: certificationReference.fullUrl } };
+    const code = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
+    this.event = [{ code: [code], detail: [{ reference: certificationReference.fullUrl }] }];
   }
 
 }
@@ -142,19 +177,19 @@ class DeathCertification extends Procedure {
 
 class Certifier extends Practitioner {
   constructor(options = {}) {
-    super();
-    if (options.name) {
-      this.addName(options.name);
-    }
+    super(options);
+  }
+}
+
+class Mortician extends Practitioner {
+  constructor(options = {}) {
+    super(options);
   }
 }
 
 class Decedent extends Patient {
   constructor(options = {}) {
-    super();
-    if (options.name) {
-      this.addName(options.name);
-    }
+    super(options);
   }
 }
 
