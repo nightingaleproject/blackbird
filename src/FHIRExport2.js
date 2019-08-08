@@ -61,6 +61,13 @@ class Procedure extends Base {
   }
 }
 
+class Condition extends Base {
+  constructor() {
+    super();
+    this.resourceType = 'Condition';
+  }
+}
+
 class Person extends Base {
   constructor(options = {}) {
     super();
@@ -101,16 +108,25 @@ class Organization extends Base {
   }
 }
 
+class List extends Base {
+  constructor(options = {}) {
+    super();
+    this.resourceType = 'List';
+  }
+}
+
 class CodeableConcept {
   constructor(code, system, display) {
-    if (system && display) {
-      this.coding = [{ system, code, display }];
-    } else if (system) {
-      this.coding = [{ system, code }];
-    } else if (display) {
-      this.coding = [{ code, display }];
-    } else {
-      this.coding = [{ code }];
+    if (code) {
+      if (system && display) {
+        this.coding = [{ system, code, display }];
+      } else if (system) {
+        this.coding = [{ system, code }];
+      } else if (display) {
+        this.coding = [{ code, display }];
+      } else {
+        this.coding = [{ code }];
+      }
     }
     if (display) {
       this.text = display;
@@ -173,6 +189,19 @@ class DeathCertificateDocument extends Bundle {
 
     const interestedParty = new InterestedParty(options.interestedParty);
     const interestedPartyEntry = this.addEntry(interestedParty);
+
+    const causeOfDeathPathway = new CauseOfDeathPathway();
+    causeOfDeathPathway.addCertifierReference(certifierEntry);
+    if (options.causeOfDeathConditions) {
+      for (let causeOptions of options.causeOfDeathConditions) {
+        const causeOfDeathCondition = new CauseOfDeathCondition(causeOptions);
+        causeOfDeathCondition.addDecedentReference(decedentEntry);
+        causeOfDeathCondition.addCertifierReference(certifierEntry);
+        const causeOfDeathConditionEntry = this.addEntry(causeOfDeathCondition)
+        causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
+      }
+    }
+    const causeOfDeathPathwayEntry = this.addEntry(causeOfDeathPathway);
 
     // TODO: This may belong at a lower level, wherever it eventually gets pointed to
     const mortician = new Mortician(options.mortician);
@@ -274,5 +303,40 @@ class InterestedParty extends Organization {
   }
 }
 
+class CauseOfDeathPathway extends List {
+  constructor() {
+    super();
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
+    this.status = 'current';
+    this.mode = 'snapshot';
+    this.orderedBy = new CodeableConcept('priority');
+  }
+  addCertifierReference(certifierEntry) {
+    this.source = { reference: certifierEntry.fullUrl };
+  }
+  addCauseOfDeathReference(causeOfDeathEntry) {
+    this.entry = this.entry || [];
+    this.entry.push({ item: { reference: causeOfDeathEntry.fullUrl } });
+  }
+}
+
+class CauseOfDeathCondition extends Condition {
+  constructor(options) {
+    super();
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
+    if (options.text) {
+      this.code = new CodeableConcept(null, null, options.text);
+    }
+    if (options.interval) {
+      this.onsetString = options.interval;
+    }
+  }
+  addDecedentReference(decedentEntry) {
+    this.subject = { reference: decedentEntry.fullUrl };
+  }
+  addCertifierReference(certifierEntry) {
+    this.asserter = { reference: certifierEntry.fullUrl };
+  }
+}
 
 export { DeathCertificateDocument };
