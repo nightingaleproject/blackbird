@@ -5,6 +5,17 @@ import uuid from 'uuid/v4';
 // Infrastructure for creating FHIR death records based on the profile at
 // http://hl7.org/fhir/us/vrdr/2019May/
 
+// Utility functions
+// In the code below we rely on "" evaluating to false
+
+const formatDateAndTime = (date, time) => {
+  if (date && time) {
+    return moment.utc(`${date} ${time}`, 'YYYY-MM-DD HH:mm').format();
+  } else if (date) {
+    return moment.utc(date, 'YYYY-MM-DD').format();
+  }
+}
+
 // Begin with classes to represent the core FHIR resources and types that are used to build a death record
 
 class Base {
@@ -16,7 +27,7 @@ class Base {
     this.extension.push(extension);
   }
   setProfile(profile) {
-    this.meta = { profile };
+    this.meta = { profile: [profile] };
   }
 }
 
@@ -37,8 +48,8 @@ class Bundle extends Base {
 }
 
 class Composition extends Base {
-  constructor(options = {}) {
-    super(options);
+  constructor() {
+    super();
     this.resourceType = 'Composition';
   }
 }
@@ -74,6 +85,19 @@ class Patient extends Person {
   constructor(options = {}) {
     super(options);
     this.resourceType = 'Patient';
+  }
+}
+
+class Organization extends Base {
+  constructor(options = {}) {
+    super();
+    this.resourceType = 'Organization';
+    if (options.name) {
+      this.name = options.name
+    }
+    if (options.address) {
+      this.address = [new Address(options.address)];
+    }
   }
 }
 
@@ -140,57 +164,115 @@ class DeathCertificateDocument extends Bundle {
     certificate.addCertifierReference(certifierEntry);
 
     const certification = new DeathCertification(options.deathCertification);
+    certification.addCertifierReference(certifierEntry);
     const certificationEntry = this.addEntry(certification);
     certificate.addCertificationReference(certificationEntry);
+
+    const funeralHome = new FuneralHome(options.funeralHome);
+    const funeralHomeEntry = this.addEntry(funeralHome);
+
+    const interestedParty = new InterestedParty(options.interestedParty);
+    const interestedPartyEntry = this.addEntry(interestedParty);
 
     // TODO: This may belong at a lower level, wherever it eventually gets pointed to
     const mortician = new Mortician(options.mortician);
     this.addEntry(mortician);
+
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
 }
 
 class DeathCertificate extends Composition {
-
   constructor(options = {}) {
     super();
-    this.identifier = { value: options.identifier };
-    const certification = new DeathCertification();
+    // TODO: do we want to check for missing required options?
+    if (options.identifier) {
+      this.identifier = { value: options.identifier };
+    }
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate');
   }
-
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
   }
-
   addCertifierReference(certifierEntry) {
     this.attester = [{ mode: ['legal'], party: { reference: certifierEntry.fullUrl } }];
   }
-
   addCertificationReference(certificationReference) {
     const code = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
     this.event = [{ code: [code], detail: [{ reference: certificationReference.fullUrl }] }];
   }
-
 }
 
 class DeathCertification extends Procedure {
+  constructor(options = {}) {
+    super();
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certification');
+    this.status = 'completed';
+    this.category = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
+    this.code = new CodeableConcept('308646001', 'http://snomed.info/sct', 'Death certification');
+    this.performedDateTime = formatDateAndTime(options.performedDate, options.performedTime);
+  }
+  addCertifierReference(certifierEntry) {
+    this.performer = [{
+      role: new CodeableConcept('309343006', 'http://snomed.info/sct', 'Physician'),
+      actor: { reference: certifierEntry.fullUrl }
+    }];
+  }
 }
 
 class Certifier extends Practitioner {
   constructor(options = {}) {
     super(options);
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Certifier');
   }
 }
 
 class Mortician extends Practitioner {
   constructor(options = {}) {
     super(options);
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Mortician');
   }
 }
 
 class Decedent extends Patient {
   constructor(options = {}) {
     super(options);
+    if (options.birthsex) {
+      this.addExtension({
+        url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
+        valueCodeableConcept: new CodeableConcept(options.birthsex, 'http://hl7.org/fhir/us/core/ValueSet/us-core-birthsex')
+      });
+    }
+    if (options.birthplace) {
+      this.addExtension({
+        url: 'http://www.hl7.org/fhir/StructureDefinition/birthPlace',
+        valueAddress: options.birthplace
+      });
+    }
   }
 }
+
+class FuneralHome extends Organization {
+  constructor(options = {}) {
+    super();
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home');
+    this.type = [new CodeableConcept('bus', null, 'Non-Healthcare Business or Corporation')];
+  }
+}
+
+class InterestedParty extends Organization {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Interested-Party');
+    if (options.identifier) {
+      this.identifier = [{ value: options.identifier }];
+    }
+    this.active = 'true'; // TODO: should this be settable?
+    if (options.typeCode) {
+      this.type = [new CodeableConcept(options.typeCode, 'http://hl7.org/fhir/ValueSet/organization-type', options.typeDisplay)];
+    }
+  }
+}
+
 
 export { DeathCertificateDocument };
