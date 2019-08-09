@@ -19,10 +19,18 @@ it('generates valid FHIR bundle', () => {
     },
     decedent: {
       name: 'Joe Decedent',
-      birthsex: 'M',
-      birthplace: {
+      birthSex: 'M',
+      birthPlace: {
         city: 'Bedford'
-      }
+      },
+      gender: 'male',
+      birthDate: '1920-01-01',
+      maritalStatus: 'M',
+      ethnicity: { text: 'Not Hispanic or Latino', code: '2186-5' },
+      race: [
+        { type: 'ombCategory', text: 'White', code: '2106-3' },
+        { type: 'detailed', text: 'French', code: '2111-3' }
+      ]
     },
     mortician: {
       name: 'Jim Mortician'

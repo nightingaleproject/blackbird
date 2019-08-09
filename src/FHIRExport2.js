@@ -266,17 +266,62 @@ class Mortician extends Practitioner {
 class Decedent extends Patient {
   constructor(options = {}) {
     super(options);
-    if (options.birthsex) {
+    // Race
+    if (options.race) {
+      const extension = [];
+      // Race can handle either a single value or an array
+      const raceEntries = _.castArray(options.race);
+      // Only a single text extension is allowed, so concatenate the text from all the entries
+      const raceText = raceEntries.filter((e) => e.text).map((e) => e.text).join(' ')
+      if (raceText.length > 0) {
+        extension.push({ url: 'text', valueString: raceText });
+      }
+      for (let raceEntry of raceEntries.filter((e) => e.code)) {
+        const valueCoding = { system: 'urn:oid:2.16.840.1.113883.6.238', code: raceEntry.code, display: raceEntry.text };
+        extension.push({ url: raceEntry.type, valueCoding });
+      }
+      this.addExtension({ url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race', extension });
+    }
+    // Ethnicity
+    if (options.ethnicity) {
+      const extension = [];
+      if (options.ethnicity.text) {
+        extension.push({ url: 'text', valueString: options.ethnicity.text });
+      }
+      if (options.ethnicity.code) {
+        const valueCoding = { system: 'urn:oid:2.16.840.1.113883.6.238', code: options.ethnicity.code };
+        if (options.ethnicity.text) {
+          valueCoding['display'] = options.ethnicity.text;
+        }
+        extension.push({ url: 'ombCategory', valueCoding });
+      }
+      this.addExtension({ url: 'http://www.hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity', extension });
+    }
+    // BirthSex
+    if (options.birthSex) {
       this.addExtension({
         url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
-        valueCodeableConcept: new CodeableConcept(options.birthsex, 'http://hl7.org/fhir/us/core/ValueSet/us-core-birthsex')
+        valueCodeableConcept: new CodeableConcept(options.birthSex, 'http://hl7.org/fhir/us/core/ValueSet/us-core-birthsex')
       });
     }
-    if (options.birthplace) {
+    // BirthPlace
+    if (options.birthPlace) {
       this.addExtension({
         url: 'http://www.hl7.org/fhir/StructureDefinition/birthPlace',
-        valueAddress: options.birthplace
+        valueAddress: options.birthPlace
       });
+    }
+    // Gender
+    if (options.gender) {
+      this.gender = options.gender;
+    }
+    // BirthDate
+    if (options.birthDate) {
+      this.birthDate = formatDateAndTime(options.birthDate, null);
+    }
+    // MaritalStatus
+    if (options.maritalStatus) {
+      this.maritalStatus = new CodeableConcept(options.maritalStatus, 'http://www.hl7.org/fhir/vs/marital-status');
     }
   }
 }
