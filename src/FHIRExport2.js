@@ -211,7 +211,7 @@ class DeathCertificateDocument extends Bundle {
     const mortician = new Mortician(options.mortician);
     this.addEntry(mortician);
 
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
 }
 
@@ -222,7 +222,7 @@ class DeathCertificate extends Composition {
     if (options.identifier) {
       this.identifier = { value: options.identifier };
     }
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate');
   }
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
@@ -239,7 +239,7 @@ class DeathCertificate extends Composition {
 class DeathCertification extends Procedure {
   constructor(options = {}) {
     super();
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certification');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certification');
     this.status = 'completed';
     this.category = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
     this.code = new CodeableConcept('308646001', 'http://snomed.info/sct', 'Death certification');
@@ -256,14 +256,14 @@ class DeathCertification extends Procedure {
 class Certifier extends Practitioner {
   constructor(options = {}) {
     super(options);
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Certifier');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Certifier');
   }
 }
 
 class Mortician extends Practitioner {
   constructor(options = {}) {
     super(options);
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Mortician');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Mortician');
   }
 }
 
@@ -299,7 +299,7 @@ class Decedent extends Patient {
         }
         extension.push({ url: 'ombCategory', valueCoding });
       }
-      this.addExtension({ url: 'http://www.hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity', extension });
+      this.addExtension({ url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity', extension });
     }
     // BirthSex
     if (options.birthSex) {
@@ -311,7 +311,7 @@ class Decedent extends Patient {
     // BirthPlace
     if (options.birthPlace) {
       this.addExtension({
-        url: 'http://www.hl7.org/fhir/StructureDefinition/birthPlace',
+        url: 'http://hl7.org/fhir/StructureDefinition/birthPlace',
         valueAddress: options.birthPlace
       });
     }
@@ -333,7 +333,7 @@ class Decedent extends Patient {
     }
     // MaritalStatus
     if (options.maritalStatus) {
-      this.maritalStatus = new CodeableConcept(options.maritalStatus, 'http://www.hl7.org/fhir/vs/marital-status');
+      this.maritalStatus = new CodeableConcept(options.maritalStatus, 'http://hl7.org/fhir/vs/marital-status');
     }
   }
 }
@@ -341,7 +341,7 @@ class Decedent extends Patient {
 class FuneralHome extends Organization {
   constructor(options = {}) {
     super();
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home');
     this.type = [new CodeableConcept('bus', null, 'Non-Healthcare Business or Corporation')];
   }
 }
@@ -349,7 +349,7 @@ class FuneralHome extends Organization {
 class InterestedParty extends Organization {
   constructor(options = {}) {
     super(options);
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Interested-Party');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Interested-Party');
     if (options.identifier) {
       this.identifier = [{ value: options.identifier }];
     }
@@ -363,7 +363,7 @@ class InterestedParty extends Organization {
 class CauseOfDeathPathway extends List {
   constructor() {
     super();
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
     this.status = 'current';
     this.mode = 'snapshot';
     this.orderedBy = new CodeableConcept('priority');
@@ -380,7 +380,7 @@ class CauseOfDeathPathway extends List {
 class CauseOfDeathCondition extends Condition {
   constructor(options) {
     super();
-    this.setProfile('http://www.hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
     if (options.text) {
       this.code = new CodeableConcept(null, null, options.text);
     }
