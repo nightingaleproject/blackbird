@@ -168,6 +168,10 @@ class DeathCertificateDocument extends Bundle {
 
     this.type = 'document';
 
+    if (options.identifier) {
+      this.identifier = { value: options.identifier };
+    }
+
     const certificate = new DeathCertificate(options.deathCertificate)
     this.addEntry(certificate);
 
@@ -310,6 +314,14 @@ class Decedent extends Patient {
         url: 'http://www.hl7.org/fhir/StructureDefinition/birthPlace',
         valueAddress: options.birthPlace
       });
+    }
+    // SSN
+    if (options.ssn) {
+      this.identifier = [{
+        type: new CodeableConcept('BR', null, 'Social Beneficiary Identifier'),
+        system: 'http://hl7.org/fhir/sid/us-ssn',
+        value: options.ssn
+      }];
     }
     // Gender
     if (options.gender) {

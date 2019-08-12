@@ -4,8 +4,9 @@ import { DeathCertificateDocument } from './FHIRExport2';
 it('generates valid FHIR bundle', () => {
 
   const options = {
+    identifier: '123',
     deathCertificate: {
-      identifier: '1'
+      identifier: '321'
     },
     deathCertification: {
       performedDate: '2019-01-01',
@@ -19,6 +20,7 @@ it('generates valid FHIR bundle', () => {
     },
     decedent: {
       name: 'Joe Decedent',
+      ssn: '123456789',
       birthSex: 'M',
       birthPlace: {
         city: 'Bedford'
