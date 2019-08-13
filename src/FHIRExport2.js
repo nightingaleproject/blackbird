@@ -115,6 +115,18 @@ class List extends Base {
   }
 }
 
+class RelatedPerson extends Person {
+  constructor(options = {}) {
+    super(options);
+    this.resourceType = 'RelatedPerson';
+  }
+  addDecedentReference(decedentEntry) {
+    this.patient = { reference: decedentEntry.fullUrl };
+  }
+}
+
+// Helper classes for other FHIR concepts
+
 class CodeableConcept {
   constructor(code, system, display) {
     if (code) {
@@ -178,6 +190,18 @@ class DeathCertificateDocument extends Bundle {
     const decedent = new Decedent(options.decedent);
     const decedentEntry = this.addEntry(decedent);
     certificate.addDecedentReference(decedentEntry);
+
+    const decedentFather = new DecedentFather(options.decedentFather);
+    decedentFather.addDecedentReference(decedentEntry);
+    this.addEntry(decedentFather);
+
+    const decedentMother = new DecedentMother(options.decedentMother);
+    decedentMother.addDecedentReference(decedentEntry);
+    this.addEntry(decedentMother);
+
+    const decedentSpouse = new DecedentSpouse(options.decedentSpouse);
+    decedentSpouse.addDecedentReference(decedentEntry);
+    this.addEntry(decedentSpouse);
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
@@ -338,9 +362,33 @@ class Decedent extends Patient {
   }
 }
 
+class DecedentFather extends RelatedPerson {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Father');
+    this.relationship = new CodeableConcept('FTH');
+  }
+}
+
+class DecedentMother extends RelatedPerson {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Mother');
+    this.relationship = new CodeableConcept('MTH');
+  }
+}
+
+class DecedentSpouse extends RelatedPerson {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Spouse');
+    this.relationship = new CodeableConcept('SPS');
+  }
+}
+
 class FuneralHome extends Organization {
   constructor(options = {}) {
-    super();
+    super(options);
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home');
     this.type = [new CodeableConcept('bus', null, 'Non-Healthcare Business or Corporation')];
   }

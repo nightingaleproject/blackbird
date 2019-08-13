@@ -34,6 +34,15 @@ it('generates valid FHIR bundle', () => {
         { type: 'detailed', text: 'French', code: '2111-3' }
       ]
     },
+    decedentFather: {
+      name: 'Dad Decedent'
+    },
+    decedentMother: {
+      name: 'Mom Decedent'
+    },
+    decedentSpouse: {
+      name: 'Spouse Decedent'
+    },
     mortician: {
       name: 'Jim Mortician'
     },
