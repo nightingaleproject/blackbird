@@ -18,7 +18,7 @@ const formatDateAndTime = (date, time) => {
 
 // Begin with classes to represent the core FHIR resources and types that are used to build a death record
 
-class Base {
+class Resource {
   constructor() {
     this.id = uuid();
   }
@@ -31,7 +31,7 @@ class Base {
   }
 }
 
-class Bundle extends Base {
+class Bundle extends Resource {
   constructor() {
     super();
     this.resourceType = 'Bundle';
@@ -47,28 +47,28 @@ class Bundle extends Base {
   }
 }
 
-class Composition extends Base {
+class Composition extends Resource {
   constructor() {
     super();
     this.resourceType = 'Composition';
   }
 }
 
-class Procedure extends Base {
+class Procedure extends Resource {
   constructor() {
     super();
     this.resourceType = 'Procedure';
   }
 }
 
-class Condition extends Base {
+class Condition extends Resource {
   constructor() {
     super();
     this.resourceType = 'Condition';
   }
 }
 
-class Person extends Base {
+class Person extends Resource {
   constructor(options = {}) {
     super();
     if (options.name) {
@@ -95,7 +95,7 @@ class Patient extends Person {
   }
 }
 
-class Organization extends Base {
+class Organization extends Resource {
   constructor(options = {}) {
     super();
     this.resourceType = 'Organization';
@@ -108,7 +108,7 @@ class Organization extends Base {
   }
 }
 
-class List extends Base {
+class List extends Resource {
   constructor(options = {}) {
     super();
     this.resourceType = 'List';
@@ -122,6 +122,17 @@ class RelatedPerson extends Person {
   }
   addDecedentReference(decedentEntry) {
     this.patient = { reference: decedentEntry.fullUrl };
+  }
+}
+
+class Observation extends Resource {
+  constructor() {
+    super();
+    this.resourceType = 'Observation';
+    this.status = 'final';
+  }
+  addDecedentReference(decedentEntry) {
+    this.subject = { reference: decedentEntry.fullUrl };
   }
 }
 
@@ -202,6 +213,10 @@ class DeathCertificateDocument extends Bundle {
     const decedentSpouse = new DecedentSpouse(options.decedentSpouse);
     decedentSpouse.addDecedentReference(decedentEntry);
     this.addEntry(decedentSpouse);
+
+    const tobaccoUseContributedToDeath = new TobaccoUseContributedToDeath(options.tobaccoUseContributedToDeath);
+    tobaccoUseContributedToDeath.addDecedentReference(decedentEntry);
+    this.addEntry(tobaccoUseContributedToDeath);
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
@@ -441,6 +456,15 @@ class CauseOfDeathCondition extends Condition {
   }
   addCertifierReference(certifierEntry) {
     this.asserter = { reference: certifierEntry.fullUrl };
+  }
+}
+
+class TobaccoUseContributedToDeath extends Observation {
+  constructor(options = {}) {
+    super();
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Tobacco-Use-Contributed-To-Death');
+    this.code = new CodeableConcept('69443-0', 'http://loinc.org', 'Did tobacco use contribute to death');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/v2-0532', options.text);
   }
 }
 

@@ -43,6 +43,10 @@ it('generates valid FHIR bundle', () => {
     decedentSpouse: {
       name: 'Spouse Decedent'
     },
+    tobaccoUseContributedToDeath: {
+      code: 'Y',
+      text: 'Yes'
+    },
     mortician: {
       name: 'Jim Mortician'
     },
