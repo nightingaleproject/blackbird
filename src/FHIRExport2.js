@@ -209,6 +209,7 @@ class DeathCertificateDocument extends Bundle {
     this.addBasicEntry(decedentEntry, DecedentSpouse, options.decedentSpouse);
     this.addBasicEntry(decedentEntry, TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath);
     this.addBasicEntry(decedentEntry, DecedentEducationLevel, options.decedentEducationLevel);
+    this.addBasicEntry(decedentEntry, DecedentEmploymentHistory, options.decedentEmploymentHistory);
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
@@ -472,6 +473,40 @@ class DecedentEducationLevel extends Observation {
     super({ code: '80913-7', system: 'http://loinc.org', display: 'Highest level of education' });
     this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Education-Level');
     this.valueCodeableConcept = new CodeableConcept(options.code, 'http://www.hl7.org/fhir/ValueSet/v3-EducationLevel', options.text);
+  }
+}
+
+class DecedentEmploymentHistory extends Observation {
+  constructor(options = {}) {
+    super({ code: '74165-2', system: 'http://loinc.org', display: 'History of employment status' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Employment-History');
+    if (options.militaryServiceCode || options.usualIndustryCode || options.usualOccupationCode) {
+      this.component = [];
+      if (options.militaryServiceCode) {
+        this.component.push({
+          code: new CodeableConcept('55280-2', 'http://loinc.org', 'Military service Narrative'),
+          valueCodeableConcept: new CodeableConcept(options.militaryServiceCode,
+                                                    'http://www.hl7.org/fhir/ValueSet/v2-0532',
+                                                    options.militaryServiceText)
+        });
+      }
+      if (options.usualIndustryCode) {
+        this.component.push({
+          code: new CodeableConcept('21844-6', 'http://loinc.org', 'History of Usual industry'),
+          valueCodeableConcept: new CodeableConcept(options.usualIndustryCode,
+                                                    'http://www.hl7.org/fhir/ValueSet/industry-cdc-census-2010',
+                                                    options.usualIndustryText)
+        });
+      }
+      if (options.usualOccupationCode) {
+        this.component.push({
+          code: new CodeableConcept('21847-9', 'http://loinc.org', 'Usual occupation Narrative'),
+          valueCodeableConcept: new CodeableConcept(options.usualOccupationCode,
+                                                    'http://www.hl7.org/fhir/ValueSet/Usual-occupation',
+                                                    options.usualOccupationText)
+        });
+      }
+    }
   }
 }
 

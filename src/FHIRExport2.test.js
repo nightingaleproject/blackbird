@@ -51,6 +51,14 @@ it('generates valid FHIR bundle', () => {
       code: 'GD',
       text: 'Graduate or professional Degree complete'
     },
+    decedentEmploymentHistory: {
+      militaryServiceCode: 'Y',
+      militaryServiceText: 'Yes',
+      usualIndustryCode: '1320',
+      usualIndustryText: 'Aerospace engineers',
+      usualOccupationCode: '7280',
+      usualOccupationText: 'Accounting, tax preparation, bookkeeping, and payroll services'
+    },
     mortician: {
       name: 'Jim Mortician'
     },
