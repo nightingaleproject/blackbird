@@ -47,6 +47,10 @@ it('generates valid FHIR bundle', () => {
       code: 'Y',
       text: 'Yes'
     },
+    decedentEducationLevel: {
+      code: 'GD',
+      text: 'Graduate or professional Degree complete'
+    },
     mortician: {
       name: 'Jim Mortician'
     },

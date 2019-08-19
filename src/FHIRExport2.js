@@ -125,11 +125,13 @@ class RelatedPerson extends Person {
   }
 }
 
+
 class Observation extends Resource {
-  constructor() {
+  constructor(options = {}) {
     super();
     this.resourceType = 'Observation';
     this.status = 'final';
+    this.code = new CodeableConcept(options.code, options.system, options.display);
   }
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
@@ -202,21 +204,11 @@ class DeathCertificateDocument extends Bundle {
     const decedentEntry = this.addEntry(decedent);
     certificate.addDecedentReference(decedentEntry);
 
-    const decedentFather = new DecedentFather(options.decedentFather);
-    decedentFather.addDecedentReference(decedentEntry);
-    this.addEntry(decedentFather);
-
-    const decedentMother = new DecedentMother(options.decedentMother);
-    decedentMother.addDecedentReference(decedentEntry);
-    this.addEntry(decedentMother);
-
-    const decedentSpouse = new DecedentSpouse(options.decedentSpouse);
-    decedentSpouse.addDecedentReference(decedentEntry);
-    this.addEntry(decedentSpouse);
-
-    const tobaccoUseContributedToDeath = new TobaccoUseContributedToDeath(options.tobaccoUseContributedToDeath);
-    tobaccoUseContributedToDeath.addDecedentReference(decedentEntry);
-    this.addEntry(tobaccoUseContributedToDeath);
+    this.addBasicEntry(decedentEntry, DecedentFather, options.decedentFather);
+    this.addBasicEntry(decedentEntry, DecedentMother, options.decedentMother);
+    this.addBasicEntry(decedentEntry, DecedentSpouse, options.decedentSpouse);
+    this.addBasicEntry(decedentEntry, TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath);
+    this.addBasicEntry(decedentEntry, DecedentEducationLevel, options.decedentEducationLevel);
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
@@ -251,6 +243,14 @@ class DeathCertificateDocument extends Bundle {
     this.addEntry(mortician);
 
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
+  }
+
+  // Many entries follow the same structure: the instantiate a class with passed-in options, point the
+  // instance to the decedent, and add an entry for that instance
+  addBasicEntry(decedentEntry, klass, options) {
+    const instance = new klass(options);
+    instance.addDecedentReference(decedentEntry);
+    this.addEntry(instance);
   }
 }
 
@@ -461,10 +461,17 @@ class CauseOfDeathCondition extends Condition {
 
 class TobaccoUseContributedToDeath extends Observation {
   constructor(options = {}) {
-    super();
+    super({ code: '69443-0', system: 'http://loinc.org', display: 'Did tobacco use contribute to death' });
     this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Tobacco-Use-Contributed-To-Death');
-    this.code = new CodeableConcept('69443-0', 'http://loinc.org', 'Did tobacco use contribute to death');
     this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/v2-0532', options.text);
+  }
+}
+
+class DecedentEducationLevel extends Observation {
+  constructor(options = {}) {
+    super({ code: '80913-7', system: 'http://loinc.org', display: 'Highest level of education' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Education-Level');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://www.hl7.org/fhir/ValueSet/v3-EducationLevel', options.text);
   }
 }
 
