@@ -61,12 +61,18 @@ it('generates valid FHIR bundle', () => {
       text: 'Graduate or professional Degree complete'
     },
     decedentEmploymentHistory: {
-      militaryServiceCode: 'Y',
-      militaryServiceText: 'Yes',
-      usualIndustryCode: '1320',
-      usualIndustryText: 'Aerospace engineers',
-      usualOccupationCode: '7280',
-      usualOccupationText: 'Accounting, tax preparation, bookkeeping, and payroll services'
+      militaryService: {
+        code: 'Y',
+        text: 'Yes'
+      },
+      usualIndustry: {
+        code: '1320',
+        text: 'Aerospace engineers'
+      },
+      usualOccupation: {
+        code: '7280',
+        text: 'Accounting, tax preparation, bookkeeping, and payroll services'
+      }
     },
     birthRecordIdentifier: {
       certificateNumber: '54321',
@@ -76,6 +82,46 @@ it('generates valid FHIR bundle', () => {
     mannerOfDeath: {
       code: '7878000',
       text: 'Accident'
+    },
+    autopsyPerformed: {
+      code: 'Y',
+      text: 'Yes',
+      autopsyAvailable: {
+        code: 'Y',
+        text: 'Yes'
+      }
+    },
+    deathLocation: {
+      name: 'Example Hospital',
+      description: 'Example Hospital Wing B',
+      address: {
+        line: [
+          '241 Jordy Neck'
+        ],
+        city: 'Oak Grove',
+        district: 'Middlesex',
+        state: 'Massachusetts',
+        country: 'United States'
+      },
+      type: {
+        code: 'HOSP',
+        text: 'Hospital'
+      },
+      physicalType: {
+        code: 'wa',
+        text: 'Ward'
+      }
+    },
+    deathDate: {
+      effectiveDate: '2019-01-01',
+      effectiveTime: '11:15',
+      comment: 'Example comment text',
+      method: {
+        code: '414135002',
+        text: 'Estimated'
+      },
+      pronouncedDate: '2019-01-01',
+      pronouncedTime: '9:00'
     },
     mortician: {
       name: 'Jim Mortician',
