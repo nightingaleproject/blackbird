@@ -78,6 +78,13 @@ class Person extends Resource {
     if (options.address) {
       this.address = [new Address(options.address)];
     }
+    if (options.identifier) {
+      this.qualification = [{
+        identifier: [{
+          value: options.identifier
+        }]
+      }];
+    }
   }
 }
 
@@ -135,6 +142,19 @@ class Observation extends Resource {
   }
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
+  }
+  addCertifierReference(certifierEntry) {
+    this.performer = { reference: certifierEntry.fullUrl };
+  }
+  addComponent(typeOptions, valueOptions) {
+    this.component = this.component || [];
+    const content = { code: new CodeableConcept(typeOptions.code, typeOptions.system, typeOptions.display) };
+    if (valueOptions.code) {
+      content['valueCodeableConcept'] = new CodeableConcept(valueOptions.code, valueOptions.system, valueOptions.display);
+    } else if (valueOptions.date) {
+      content['valueDateTime'] = formatDateAndTime(valueOptions.date);
+    }
+    this.component.push(content);
   }
 }
 
@@ -197,19 +217,19 @@ class DeathCertificateDocument extends Bundle {
       this.identifier = { value: options.identifier };
     }
 
-    const certificate = new DeathCertificate(options.deathCertificate)
-    this.addEntry(certificate);
+    const certificate = this.createAndAddEntry(DeathCertificate, options.deathCertificate);
 
     const decedent = new Decedent(options.decedent);
     const decedentEntry = this.addEntry(decedent);
     certificate.addDecedentReference(decedentEntry);
 
-    this.addBasicEntry(decedentEntry, DecedentFather, options.decedentFather);
-    this.addBasicEntry(decedentEntry, DecedentMother, options.decedentMother);
-    this.addBasicEntry(decedentEntry, DecedentSpouse, options.decedentSpouse);
-    this.addBasicEntry(decedentEntry, TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath);
-    this.addBasicEntry(decedentEntry, DecedentEducationLevel, options.decedentEducationLevel);
-    this.addBasicEntry(decedentEntry, DecedentEmploymentHistory, options.decedentEmploymentHistory);
+    this.createAndAddEntry(DecedentFather, options.decedentFather, decedentEntry);
+    this.createAndAddEntry(DecedentMother, options.decedentMother, decedentEntry);
+    this.createAndAddEntry(DecedentSpouse, options.decedentSpouse, decedentEntry);
+    this.createAndAddEntry(TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath, decedentEntry);
+    this.createAndAddEntry(DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
+    this.createAndAddEntry(DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
+    this.createAndAddEntry(BirthRecordIdentifier, options.birthRecordIdentifier, decedentEntry);
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
@@ -220,11 +240,11 @@ class DeathCertificateDocument extends Bundle {
     const certificationEntry = this.addEntry(certification);
     certificate.addCertificationReference(certificationEntry);
 
-    const funeralHome = new FuneralHome(options.funeralHome);
-    const funeralHomeEntry = this.addEntry(funeralHome);
+    this.createAndAddEntry(MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
 
-    const interestedParty = new InterestedParty(options.interestedParty);
-    const interestedPartyEntry = this.addEntry(interestedParty);
+    this.createAndAddEntry(FuneralHome, options.funeralHome);
+    this.createAndAddEntry(Mortician, options.mortician);
+    this.createAndAddEntry(InterestedParty, options.interestedParty);
 
     const causeOfDeathPathway = new CauseOfDeathPathway();
     causeOfDeathPathway.addCertifierReference(certifierEntry);
@@ -237,21 +257,23 @@ class DeathCertificateDocument extends Bundle {
         causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
       }
     }
-    const causeOfDeathPathwayEntry = this.addEntry(causeOfDeathPathway);
-
-    // TODO: This may belong at a lower level, wherever it eventually gets pointed to
-    const mortician = new Mortician(options.mortician);
-    this.addEntry(mortician);
+    this.addEntry(causeOfDeathPathway);
 
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
 
-  // Many entries follow the same structure: the instantiate a class with passed-in options, point the
-  // instance to the decedent, and add an entry for that instance
-  addBasicEntry(decedentEntry, klass, options) {
+  // Many entries follow the same structure: instantiate a class with passed-in options, point the
+  // instance to the decedent and/or certifier, and add an entry for that instance
+  createAndAddEntry(klass, options, decedentEntry, certifierEntry) {
     const instance = new klass(options);
-    instance.addDecedentReference(decedentEntry);
+    if (decedentEntry) {
+      instance.addDecedentReference(decedentEntry);
+    }
+    if (certifierEntry) {
+      instance.addCertifierReference(certifierEntry);
+    }
     this.addEntry(instance);
+    return(instance);
   }
 }
 
@@ -480,33 +502,42 @@ class DecedentEmploymentHistory extends Observation {
   constructor(options = {}) {
     super({ code: '74165-2', system: 'http://loinc.org', display: 'History of employment status' });
     this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Employment-History');
-    if (options.militaryServiceCode || options.usualIndustryCode || options.usualOccupationCode) {
-      this.component = [];
-      if (options.militaryServiceCode) {
-        this.component.push({
-          code: new CodeableConcept('55280-2', 'http://loinc.org', 'Military service Narrative'),
-          valueCodeableConcept: new CodeableConcept(options.militaryServiceCode,
-                                                    'http://www.hl7.org/fhir/ValueSet/v2-0532',
-                                                    options.militaryServiceText)
-        });
-      }
-      if (options.usualIndustryCode) {
-        this.component.push({
-          code: new CodeableConcept('21844-6', 'http://loinc.org', 'History of Usual industry'),
-          valueCodeableConcept: new CodeableConcept(options.usualIndustryCode,
-                                                    'http://www.hl7.org/fhir/ValueSet/industry-cdc-census-2010',
-                                                    options.usualIndustryText)
-        });
-      }
-      if (options.usualOccupationCode) {
-        this.component.push({
-          code: new CodeableConcept('21847-9', 'http://loinc.org', 'Usual occupation Narrative'),
-          valueCodeableConcept: new CodeableConcept(options.usualOccupationCode,
-                                                    'http://www.hl7.org/fhir/ValueSet/Usual-occupation',
-                                                    options.usualOccupationText)
-        });
-      }
+    if (options.militaryServiceCode) {
+      this.addComponent({ code: '55280-2', system: 'http://loinc.org', display: 'Military service Narrative' },
+                        { code: options.militaryServiceCode, system: 'http://hl7.org/fhir/ValueSet/v2-0532', display: options.militaryServiceText });
     }
+    if (options.usualIndustryCode) {
+      this.addComponent({ code: '21844-6', system: 'http://loinc.org', display: 'History of Usual industry' },
+                        { code: options.usualIndustryCode, system: 'http://hl7.org/fhir/ValueSet/industry-cdc-census-2010', display: options.usualIndustryText });
+    }
+    if (options.usualOccupationCode) {
+      this.addComponent({ code: '21847-9', system: 'http://loinc.org', display: 'Usual occupation Narrative' },
+                        { code: options.usualOccupationCode, system: 'http://hl7.org/fhir/ValueSet/Usual-occupation', display: options.usualOccupationText });
+    }
+  }
+}
+
+class BirthRecordIdentifier extends Observation {
+  constructor(options = {}) {
+    super({ code: 'BR', system: 'urn:oid:2.16.840.1.113883.6.290', display: 'Birth Record' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Birth-Record-Identifier');
+    this.valueString = options.certificateNumber;
+    if (options.birthYear) {
+      this.addComponent({ code: '21112-8', system: 'http://loinc.org', display: 'Birth date' },
+                        { date: options.birthYear });
+    }
+    if (options.birthState) {
+      this.addComponent({ code: '21842-0', system: 'http://loinc.org', display: 'Birthplace' },
+                        { code: options.birthState, system: 'ISO 3166-2' });
+    }
+  }
+}
+
+class MannerOfDeath extends Observation {
+  constructor(options = {}) {
+    super({ code: '69449-7', system: 'http://loinc.org', display: 'Manner of death' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Manner-of-Death');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/stu3/valueset-MannerTypeVS', options.text);
   }
 }
 

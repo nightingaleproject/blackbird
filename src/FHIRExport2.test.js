@@ -15,7 +15,13 @@ it('generates valid FHIR bundle', () => {
     certifier: {
       name: 'Bob Certifier',
       address: {
-        city: 'Bedford'
+        line: [
+          '998 Treutel River'
+        ],
+        city: 'Hyannis',
+        district: 'Barnstable',
+        state: 'Massachusetts',
+        country: 'United States'
       }
     },
     decedent: {
@@ -23,7 +29,10 @@ it('generates valid FHIR bundle', () => {
       ssn: '123456789',
       birthSex: 'M',
       birthPlace: {
-        city: 'Bedford'
+        city: 'Salem Neck',
+        district: 'Essex',
+        state: 'Massachusetts',
+        country: 'United States'
       },
       gender: 'male',
       birthDate: '1920-01-01',
@@ -59,13 +68,29 @@ it('generates valid FHIR bundle', () => {
       usualOccupationCode: '7280',
       usualOccupationText: 'Accounting, tax preparation, bookkeeping, and payroll services'
     },
+    birthRecordIdentifier: {
+      certificateNumber: '54321',
+      birthYear: '1915',
+      birthState: 'MA'
+    },
+    mannerOfDeath: {
+      code: '7878000',
+      text: 'Accident'
+    },
     mortician: {
-      name: 'Jim Mortician'
+      name: 'Jim Mortician',
+      identifier: '98765'
     },
     funeralHome: {
       name: 'Funerals by Jim',
       address: {
-        city: 'Bedford'
+        line: [
+          '145 Hamill Mountains'
+        ],
+        city: 'Milford',
+        district: 'Worcester',
+        state: 'Massachusetts',
+        country: 'United States'
       }
     },
     interestedParty: {
@@ -74,7 +99,13 @@ it('generates valid FHIR bundle', () => {
       typeDisplay: 'Healthcare Provider',
       name: 'The Healthcare Company',
       address: {
-        city: 'Bedford'
+        line: [
+          '839 Barrett Shoals'
+        ],
+        city: 'Norfolk Downs',
+        district: 'Norfolk',
+        state: 'Massachusetts',
+        country: 'United States'
       }
     },
     causeOfDeathConditions: [
