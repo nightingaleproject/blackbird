@@ -248,6 +248,8 @@ class DeathCertificateDocument extends Bundle {
     this.createAndAddEntry(DecedentMother, options.decedentMother, decedentEntry);
     this.createAndAddEntry(DecedentSpouse, options.decedentSpouse, decedentEntry);
     this.createAndAddEntry(DecedentAge, options.decedentAge, decedentEntry);
+    this.createAndAddEntry(DecedentPregnancy, options.decedentPregnancy, decedentEntry);
+    this.createAndAddEntry(DecedentTransportationRole, options.decedentTransportationRole, decedentEntry);
     this.createAndAddEntry(TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath, decedentEntry);
     this.createAndAddEntry(DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
     this.createAndAddEntry(DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
@@ -294,15 +296,17 @@ class DeathCertificateDocument extends Bundle {
   // Many entries follow the same structure: instantiate a class with passed-in options, point the
   // instance to the decedent and/or certifier, and add an entry for that instance
   createAndAddEntry(klass, options, decedentEntry, certifierEntry) {
-    const instance = new klass(options);
-    if (decedentEntry) {
-      instance.addDecedentReference(decedentEntry);
+    if (options) {
+      const instance = new klass(options);
+      if (decedentEntry) {
+        instance.addDecedentReference(decedentEntry);
+      }
+      if (certifierEntry) {
+        instance.addCertifierReference(certifierEntry);
+      }
+      this.addEntry(instance);
+      return(instance);
     }
-    if (certifierEntry) {
-      instance.addCertifierReference(certifierEntry);
-    }
-    this.addEntry(instance);
-    return(instance);
   }
 }
 
@@ -462,6 +466,22 @@ class DecedentAge extends Observation {
       value: options.value
     };
     // TODO: This also has an effectiveDateTime, which is the date of death; this is duplicative information
+  }
+}
+
+class DecedentPregnancy extends Observation {
+  constructor(options = {}) {
+    super({ code: '69442-2', system: 'http://loinc.org', display: 'Timing of recent pregnancy in relation to death' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Pregnancy');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/stu3/valueset-PregnancyStatusVS', options.text);
+  }
+}
+
+class DecedentTransportationRole extends Observation {
+  constructor(options = {}) {
+    super({ code: '69451-3', system: 'http://loinc.org', display: 'Transportation role of decedent' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Transportation-Role');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/TransportationRelationships', options.text);
   }
 }
 

@@ -56,6 +56,14 @@ it('generates valid FHIR bundle', () => {
       unit: 'a', // Years
       value: '97'
     },
+    decedentPregnancy: {
+      code: 'PHC1260',
+      text: 'Not pregnant within past year'
+    },
+    decedentTransportationRole: {
+      code: '236320001',
+      text: 'Vehicle driver'
+    },
     tobaccoUseContributedToDeath: {
       code: 'Y',
       text: 'Yes'
