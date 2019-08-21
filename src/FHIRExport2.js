@@ -247,6 +247,7 @@ class DeathCertificateDocument extends Bundle {
     this.createAndAddEntry(DecedentFather, options.decedentFather, decedentEntry);
     this.createAndAddEntry(DecedentMother, options.decedentMother, decedentEntry);
     this.createAndAddEntry(DecedentSpouse, options.decedentSpouse, decedentEntry);
+    this.createAndAddEntry(DecedentAge, options.decedentAge, decedentEntry);
     this.createAndAddEntry(TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath, decedentEntry);
     this.createAndAddEntry(DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
     this.createAndAddEntry(DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
@@ -449,6 +450,18 @@ class DecedentSpouse extends RelatedPerson {
     super(options);
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Spouse');
     this.relationship = new CodeableConcept('SPS');
+  }
+}
+
+class DecedentAge extends Observation {
+  constructor(options = {}) {
+    super({ code: '30525-0', system: 'http://loinc.org', display: 'Age' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Age');
+    this.valueQuantity = {
+      unit: options.unit,
+      value: options.value
+    };
+    // TODO: This also has an effectiveDateTime, which is the date of death; this is duplicative information
   }
 }
 

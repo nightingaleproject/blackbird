@@ -52,6 +52,10 @@ it('generates valid FHIR bundle', () => {
     decedentSpouse: {
       name: 'Spouse Decedent'
     },
+    decedentAge: {
+      unit: 'a', // Years
+      value: '97'
+    },
     tobaccoUseContributedToDeath: {
       code: 'Y',
       text: 'Yes'
