@@ -62,9 +62,18 @@ class Procedure extends Resource {
 }
 
 class Condition extends Resource {
-  constructor() {
+  constructor(options = {}) {
     super();
     this.resourceType = 'Condition';
+    if (options.text) {
+      this.code = new CodeableConcept(null, null, options.text);
+    }
+  }
+  addDecedentReference(decedentEntry) {
+    this.subject = { reference: decedentEntry.fullUrl };
+  }
+  addCertifierReference(certifierEntry) {
+    this.asserter = { reference: certifierEntry.fullUrl };
   }
 }
 
@@ -143,7 +152,7 @@ class Observation extends Resource {
     this.subject = { reference: decedentEntry.fullUrl };
   }
   addCertifierReference(certifierEntry) {
-    this.performer = { reference: certifierEntry.fullUrl };
+    this.performer = [{ reference: certifierEntry.fullUrl }];
   }
   addComponent(typeOptions, valueOptions) {
     this.component = this.component || [];
@@ -168,13 +177,17 @@ class Location extends Resource {
       this.description = options.description;
     }
     if (options.address) {
-      this.address = [new Address(options.address)];
+      this.address = new Address(options.address);
     }
     if (options.type) {
-      this.type = new CodeableConcept(options.type.code, 'http://hl7.org/fhir/ValueSet/v3-ServiceDeliveryLocationRoleType', options.type.text);
+      this.type = new CodeableConcept(options.type.code,
+                                      'http://hl7.org/fhir/ValueSet/v3-ServiceDeliveryLocationRoleType',
+                                      options.type.text);
     }
     if (options.physicalType) {
-      this.physicalType = new CodeableConcept(options.physicalType.code, 'http://hl7.org/fhir/ValueSet/location-physical-type', options.physicalType.text);
+      this.physicalType = new CodeableConcept(options.physicalType.code,
+                                              'http://hl7.org/fhir/ValueSet/location-physical-type',
+                                              options.physicalType.text);
     }
   }
 }
@@ -238,22 +251,22 @@ class DeathCertificateDocument extends Bundle {
       this.identifier = { value: options.identifier };
     }
 
-    const certificate = this.createAndAddEntry(DeathCertificate, options.deathCertificate);
+    const certificate = this.createAndAddEntry(null, DeathCertificate, options.deathCertificate);
 
     const decedent = new Decedent(options.decedent);
     const decedentEntry = this.addEntry(decedent);
     certificate.addDecedentReference(decedentEntry);
 
-    this.createAndAddEntry(DecedentFather, options.decedentFather, decedentEntry);
-    this.createAndAddEntry(DecedentMother, options.decedentMother, decedentEntry);
-    this.createAndAddEntry(DecedentSpouse, options.decedentSpouse, decedentEntry);
-    this.createAndAddEntry(DecedentAge, options.decedentAge, decedentEntry);
-    this.createAndAddEntry(DecedentPregnancy, options.decedentPregnancy, decedentEntry);
-    this.createAndAddEntry(DecedentTransportationRole, options.decedentTransportationRole, decedentEntry);
-    this.createAndAddEntry(TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath, decedentEntry);
-    this.createAndAddEntry(DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
-    this.createAndAddEntry(DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
-    this.createAndAddEntry(BirthRecordIdentifier, options.birthRecordIdentifier, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentFather, options.decedentFather, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentMother, options.decedentMother, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentSpouse, options.decedentSpouse, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentAge, options.decedentAge, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentPregnancy, options.decedentPregnancy, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentTransportationRole, options.decedentTransportationRole, decedentEntry);
+    this.createAndAddEntry(certificate, TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
+    this.createAndAddEntry(certificate, BirthRecordIdentifier, options.birthRecordIdentifier, decedentEntry);
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
@@ -264,12 +277,12 @@ class DeathCertificateDocument extends Bundle {
     const certificationEntry = this.addEntry(certification);
     certificate.addCertificationReference(certificationEntry);
 
-    this.createAndAddEntry(MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
-    this.createAndAddEntry(AutopsyPerformedIndicator, options.autopsyPerformed);
+    this.createAndAddEntry(certificate, MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
+    this.createAndAddEntry(certificate, AutopsyPerformedIndicator, options.autopsyPerformed);
 
-    this.createAndAddEntry(FuneralHome, options.funeralHome);
-    this.createAndAddEntry(Mortician, options.mortician);
-    this.createAndAddEntry(InterestedParty, options.interestedParty);
+    this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
+    this.createAndAddEntry(certificate, Mortician, options.mortician);
+    this.createAndAddEntry(certificate, InterestedParty, options.interestedParty);
 
     const causeOfDeathPathway = new CauseOfDeathPathway();
     causeOfDeathPathway.addCertifierReference(certifierEntry);
@@ -284,10 +297,14 @@ class DeathCertificateDocument extends Bundle {
     }
     this.addEntry(causeOfDeathPathway);
 
+    this.createAndAddEntry(certificate, ConditionContributingToDeath,
+                           options.conditionContributingToDeath,
+                           decedentEntry, certifierEntry);
+
     const deathLocation = new DeathLocation(options.deathLocation);
     const deathLocationEntry = this.addEntry(deathLocation);
 
-    const deathDate = this.createAndAddEntry(DeathDate, options.deathDate, decedentEntry, certifierEntry);
+    const deathDate = this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry);
     deathDate.addLocationReference(deathLocationEntry);
 
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
@@ -295,7 +312,7 @@ class DeathCertificateDocument extends Bundle {
 
   // Many entries follow the same structure: instantiate a class with passed-in options, point the
   // instance to the decedent and/or certifier, and add an entry for that instance
-  createAndAddEntry(klass, options, decedentEntry, certifierEntry) {
+  createAndAddEntry(certificate, klass, options, decedentEntry, certifierEntry) {
     if (options) {
       const instance = new klass(options);
       if (decedentEntry) {
@@ -304,7 +321,10 @@ class DeathCertificateDocument extends Bundle {
       if (certifierEntry) {
         instance.addCertifierReference(certifierEntry);
       }
-      this.addEntry(instance);
+      const entry = this.addEntry(instance);
+      if (certificate) {
+        certificate.addSectionEntry(entry);
+      }
       return(instance);
     }
   }
@@ -328,6 +348,10 @@ class DeathCertificate extends Composition {
   addCertificationReference(certificationReference) {
     const code = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
     this.event = [{ code: [code], detail: [{ reference: certificationReference.fullUrl }] }];
+  }
+  addSectionEntry(entry) {
+    this.section = this.section || [{ entry: [] }];
+    this.section[0].entry.push({ reference: entry.fullUrl });
   }
 }
 
@@ -481,7 +505,9 @@ class DecedentTransportationRole extends Observation {
   constructor(options = {}) {
     super({ code: '69451-3', system: 'http://loinc.org', display: 'Transportation role of decedent' });
     this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Transportation-Role');
-    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/TransportationRelationships', options.text);
+    this.valueCodeableConcept = new CodeableConcept(options.code,
+                                                    'http://hl7.org/fhir/ValueSet/TransportationRelationships',
+                                                    options.text);
   }
 }
 
@@ -526,20 +552,18 @@ class CauseOfDeathPathway extends List {
 
 class CauseOfDeathCondition extends Condition {
   constructor(options) {
-    super();
+    super(options);
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
-    if (options.text) {
-      this.code = new CodeableConcept(null, null, options.text);
-    }
     if (options.interval) {
       this.onsetString = options.interval;
     }
   }
-  addDecedentReference(decedentEntry) {
-    this.subject = { reference: decedentEntry.fullUrl };
-  }
-  addCertifierReference(certifierEntry) {
-    this.asserter = { reference: certifierEntry.fullUrl };
+}
+
+class ConditionContributingToDeath extends Condition {
+  constructor(options) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Condition-Contributing-To-Death');
   }
 }
 

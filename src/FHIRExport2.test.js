@@ -169,7 +169,10 @@ it('generates valid FHIR bundle', () => {
     causeOfDeathConditions: [
       { text: 'Example Cause Of Death 1', interval: '1 week' },
       { text: 'Example Cause Of Death 2', interval: '1 year' }
-    ]
+    ],
+    conditionContributingToDeath: {
+      text: 'Example Contributing Condition'
+    }
   };
 
   const document = new DeathCertificateDocument(options);
