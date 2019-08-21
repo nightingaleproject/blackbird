@@ -278,7 +278,8 @@ class DeathCertificateDocument extends Bundle {
     certificate.addCertificationReference(certificationEntry);
 
     this.createAndAddEntry(certificate, MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
-    this.createAndAddEntry(certificate, AutopsyPerformedIndicator, options.autopsyPerformed);
+    this.createAndAddEntry(certificate, AutopsyPerformedIndicator, options.autopsyPerformed, decedentEntry);
+    this.createAndAddEntry(certificate, ExaminerContacted, options.examinerContacted, decedentEntry);
 
     this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
     this.createAndAddEntry(certificate, Mortician, options.mortician);
@@ -564,6 +565,14 @@ class ConditionContributingToDeath extends Condition {
   constructor(options) {
     super(options);
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Condition-Contributing-To-Death');
+  }
+}
+
+class ExaminerContacted extends Observation {
+  constructor(options = {}) {
+    super({ code: '74497-9', system: 'http://loinc.org', display: 'Medical examiner or coroner was contacted' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Examiner-Contacted');
+    this.valueBoolean = options.value;
   }
 }
 

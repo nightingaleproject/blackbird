@@ -172,6 +172,9 @@ it('generates valid FHIR bundle', () => {
     ],
     conditionContributingToDeath: {
       text: 'Example Contributing Condition'
+    },
+    examinerContacted: {
+      value: false
     }
   };
 
