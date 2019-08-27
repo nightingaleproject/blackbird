@@ -154,6 +154,10 @@ class Observation extends Resource {
   addCertifierReference(certifierEntry) {
     this.performer = [{ reference: certifierEntry.fullUrl }];
   }
+  addLocationReference(locationEntry) {
+    const valueReference = { reference: locationEntry.fullUrl };
+    this.addExtension({ url: 'http://hl7.org/fhir/us/vrdr/StructureDefinition/Patient-Location', valueReference });
+  }
   addComponent(typeOptions, valueOptions) {
     this.component = this.component || [];
     const content = { code: new CodeableConcept(typeOptions.code, typeOptions.system, typeOptions.display) };
@@ -161,6 +165,8 @@ class Observation extends Resource {
       content['valueCodeableConcept'] = new CodeableConcept(valueOptions.code, valueOptions.system, valueOptions.display);
     } else if (valueOptions.date) {
       content['valueDateTime'] = formatDateAndTime(valueOptions.date, valueOptions.time);
+    } else if (valueOptions.text) {
+      content['valueString'] = valueOptions.text;
     }
     this.component.push(content);
   }
@@ -307,6 +313,9 @@ class DeathCertificateDocument extends Bundle {
 
     const deathDate = this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry);
     deathDate.addLocationReference(deathLocationEntry);
+
+    const injuryIncident = this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry);
+    injuryIncident.addLocationReference(deathLocationEntry);
 
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
@@ -598,15 +607,18 @@ class DecedentEmploymentHistory extends Observation {
     this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Employment-History');
     if (options.militaryService) {
       this.addComponent({ code: '55280-2', system: 'http://loinc.org', display: 'Military service Narrative' },
-                        { code: options.militaryService.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532', display: options.militaryService.text });
+                        { code: options.militaryService.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.militaryService.text });
     }
     if (options.usualIndustry) {
       this.addComponent({ code: '21844-6', system: 'http://loinc.org', display: 'History of Usual industry' },
-                        { code: options.usualIndustry.code, system: 'http://hl7.org/fhir/ValueSet/industry-cdc-census-2010', display: options.usualIndustry.text });
+                        { code: options.usualIndustry.code, system: 'http://hl7.org/fhir/ValueSet/industry-cdc-census-2010',
+                          display: options.usualIndustry.text });
     }
     if (options.usualOccupation) {
       this.addComponent({ code: '21847-9', system: 'http://loinc.org', display: 'Usual occupation Narrative' },
-                        { code: options.usualOccupation.code, system: 'http://hl7.org/fhir/ValueSet/Usual-occupation', display: options.usualOccupation.text });
+                        { code: options.usualOccupation.code, system: 'http://hl7.org/fhir/ValueSet/Usual-occupation',
+                          display: options.usualOccupation.text });
     }
   }
 }
@@ -635,6 +647,32 @@ class MannerOfDeath extends Observation {
   }
 }
 
+class InjuryIncident extends Observation {
+  constructor(options = {}) {
+    super({ code: '11374-6', system: 'http://loinc.org', display: 'Injury incident description' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Injury-Incident');
+    this.valueString = options.text;
+    if (options.effectiveDate) {
+      this.effectiveDateTime = formatDateAndTime(options.effectiveDate, options.effectiveTime);
+    }
+    if (options.placeOfInjury) {
+      this.addComponent({ code: '69450-5', system: 'http://loinc.org', display: 'Place of injury' },
+                        { text: options.placeOfInjury });
+    }
+    if (options.transportationEventIndicator) {
+      this.addComponent({ code: '69448-9', system: 'http://loinc.org',
+                          display: 'Injury leading to death associated with transportation event' },
+                        { code: options.transportationEventIndicator.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.transportationEventIndicator.text });
+    }
+    if (options.workInjuryIndicator) {
+      this.addComponent({ code: '69444-8', system: 'http://loinc.org', display: 'Injury at work?' },
+                        { code: options.workInjuryIndicator.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.workInjuryIndicator.text });
+    }
+  }
+}
+
 class AutopsyPerformedIndicator extends Observation {
   constructor(options = {}) {
     super({ code: '85699-7', system: 'http://loinc.org', display: 'Autopsy was performed' });
@@ -642,7 +680,8 @@ class AutopsyPerformedIndicator extends Observation {
     this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/v2-0532', options.text);
     if (options.autopsyAvailable) {
       this.addComponent({ code: '69436-4', system: 'http://loinc.org', display: 'Autopsy results available' },
-                        { code: options.autopsyAvailable.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532', display: options.autopsyAvailable.text });
+                        { code: options.autopsyAvailable.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.autopsyAvailable.text });
     }
   }
 }
@@ -671,10 +710,6 @@ class DeathDate extends Observation {
       this.addComponent({ code: '80616-6', system: 'http://loinc.org', display: 'Date and time pronounced dead' },
                         { date: options.pronouncedDate, time: options.pronouncedTime });
     }
-  }
-  addLocationReference(locationEntry) {
-    const valueReference = { reference: locationEntry.fullUrl };
-    this.addExtension({ url: 'http://hl7.org/fhir/us/vrdr/StructureDefinition/Patient-Location', valueReference });
   }
 }
 

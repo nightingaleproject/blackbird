@@ -135,6 +135,20 @@ it('generates valid FHIR bundle', () => {
       pronouncedDate: '2019-01-01',
       pronouncedTime: '9:00'
     },
+    injuryIncident: {
+      text: 'Example injury description text',
+      effectiveDate: '2019-01-01',
+      effectiveTime: '11:15',
+      placeOfInjury: 'Decedent home',
+      transportationEventIndicator: {
+        code: 'Y',
+        text: 'Yes'
+      },
+      workInjuryIndicator: {
+        code: 'N',
+        text: 'No'
+      }
+    },
     mortician: {
       name: 'Jim Mortician',
       identifier: '98765'
