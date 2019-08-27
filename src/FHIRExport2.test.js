@@ -139,7 +139,7 @@ it('generates valid FHIR bundle', () => {
       text: 'Example injury description text',
       effectiveDate: '2019-01-01',
       effectiveTime: '11:15',
-      placeOfInjury: 'Decedent home',
+      placeOfInjury: 'Decedent\'s home',
       transportationEventIndicator: {
         code: 'Y',
         text: 'Yes'
@@ -147,6 +147,27 @@ it('generates valid FHIR bundle', () => {
       workInjuryIndicator: {
         code: 'N',
         text: 'No'
+      }
+    },
+    injuryLocation: {
+      name: 'restaurant',
+      description: 'Shot by another person using a handgun',
+      address: {
+        line: [
+          '85 Anais Street'
+        ],
+        city: 'Mount Hope',
+        district: 'Suffolk',
+        state: 'Massachusetts',
+        country: 'United States'
+      },
+      type: {
+        code: 'PTRES',
+        text: 'Patient\'s Residence'
+      },
+      physicalType: {
+        code: 'ro',
+        text: 'Room'
       }
     },
     mortician: {

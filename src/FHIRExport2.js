@@ -317,6 +317,8 @@ class DeathCertificateDocument extends Bundle {
     const injuryIncident = this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry);
     injuryIncident.addLocationReference(deathLocationEntry);
 
+    this.createAndAddEntry(certificate, InjuryLocation, options.injuryLocation);
+
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
 
@@ -670,6 +672,13 @@ class InjuryIncident extends Observation {
                         { code: options.workInjuryIndicator.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
                           display: options.workInjuryIndicator.text });
     }
+  }
+}
+
+class InjuryLocation extends Location {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Injury-Location');
   }
 }
 
