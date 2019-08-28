@@ -37,6 +37,9 @@ class Bundle extends Resource {
     this.resourceType = 'Bundle';
   }
   addEntry(resource) {
+    if (!resource) {
+      throw new Error('Error: addEntry called without a resource to add');
+    }
     this.entry = this.entry || [];
     const entry = {
       fullUrl: `urn:uuid:${uuid()}`,
@@ -72,7 +75,7 @@ class Condition extends Resource {
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
   }
-  addCertifierReference(certifierEntry) {
+  addPerformerReference(certifierEntry) {
     this.asserter = { reference: certifierEntry.fullUrl };
   }
 }
@@ -151,11 +154,12 @@ class Observation extends Resource {
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
   }
-  addCertifierReference(certifierEntry) {
+  addPerformerReference(certifierEntry) {
     this.performer = [{ reference: certifierEntry.fullUrl }];
   }
   addLocationReference(locationEntry) {
     const valueReference = { reference: locationEntry.fullUrl };
+    // TODO: Not all locations are patient locations
     this.addExtension({ url: 'http://hl7.org/fhir/us/vrdr/StructureDefinition/Patient-Location', valueReference });
   }
   addComponent(typeOptions, valueOptions) {
@@ -276,10 +280,10 @@ class DeathCertificateDocument extends Bundle {
 
     const certifier = new Certifier(options.certifier);
     const certifierEntry = this.addEntry(certifier);
-    certificate.addCertifierReference(certifierEntry);
+    certificate.addPerformerReference(certifierEntry);
 
     const certification = new DeathCertification(options.deathCertification);
-    certification.addCertifierReference(certifierEntry);
+    certification.addPerformerReference(certifierEntry);
     const certificationEntry = this.addEntry(certification);
     certificate.addCertificationReference(certificationEntry);
 
@@ -288,16 +292,19 @@ class DeathCertificateDocument extends Bundle {
     this.createAndAddEntry(certificate, ExaminerContacted, options.examinerContacted, decedentEntry);
 
     this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
-    this.createAndAddEntry(certificate, Mortician, options.mortician);
     this.createAndAddEntry(certificate, InterestedParty, options.interestedParty);
 
+    const mortician = new Mortician(options.mortician);
+    const morticianEntry = this.addEntry(mortician);
+    certificate.addSectionEntry(mortician);
+
     const causeOfDeathPathway = new CauseOfDeathPathway();
-    causeOfDeathPathway.addCertifierReference(certifierEntry);
+    causeOfDeathPathway.addPerformerReference(certifierEntry);
     if (options.causeOfDeathConditions) {
       for (let causeOptions of options.causeOfDeathConditions) {
         const causeOfDeathCondition = new CauseOfDeathCondition(causeOptions);
         causeOfDeathCondition.addDecedentReference(decedentEntry);
-        causeOfDeathCondition.addCertifierReference(certifierEntry);
+        causeOfDeathCondition.addPerformerReference(certifierEntry);
         const causeOfDeathConditionEntry = this.addEntry(causeOfDeathCondition)
         causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
       }
@@ -311,27 +318,30 @@ class DeathCertificateDocument extends Bundle {
     const deathLocation = new DeathLocation(options.deathLocation);
     const deathLocationEntry = this.addEntry(deathLocation);
 
-    const deathDate = this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry);
-    deathDate.addLocationReference(deathLocationEntry);
-
-    const injuryIncident = this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry);
-    injuryIncident.addLocationReference(deathLocationEntry);
-
+    this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry, deathLocationEntry);
+    this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry, deathLocationEntry);
     this.createAndAddEntry(certificate, InjuryLocation, options.injuryLocation);
+
+    const dispositionLocation = this.createAndAddEntry(certificate, DispositionLocation, options.dispositionLocation);
+    const dispositionLocationEntry = this.addEntry(dispositionLocation);
+    this.createAndAddEntry(certificate, DecedentDispositionMethod, options.decedentDispositionMethod, decedentEntry, morticianEntry, dispositionLocationEntry)
 
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
 
   // Many entries follow the same structure: instantiate a class with passed-in options, point the
   // instance to the decedent and/or certifier, and add an entry for that instance
-  createAndAddEntry(certificate, klass, options, decedentEntry, certifierEntry) {
+  createAndAddEntry(certificate, klass, options, decedentEntry, performerEntry, locationEntry) {
     if (options) {
       const instance = new klass(options);
       if (decedentEntry) {
         instance.addDecedentReference(decedentEntry);
       }
-      if (certifierEntry) {
-        instance.addCertifierReference(certifierEntry);
+      if (performerEntry) {
+        instance.addPerformerReference(performerEntry);
+      }
+      if (locationEntry) {
+        instance.addLocationReference(locationEntry);
       }
       const entry = this.addEntry(instance);
       if (certificate) {
@@ -354,7 +364,7 @@ class DeathCertificate extends Composition {
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
   }
-  addCertifierReference(certifierEntry) {
+  addPerformerReference(certifierEntry) {
     this.attester = [{ mode: ['legal'], party: { reference: certifierEntry.fullUrl } }];
   }
   addCertificationReference(certificationReference) {
@@ -376,7 +386,7 @@ class DeathCertification extends Procedure {
     this.code = new CodeableConcept('308646001', 'http://snomed.info/sct', 'Death certification');
     this.performedDateTime = formatDateAndTime(options.performedDate, options.performedTime);
   }
-  addCertifierReference(certifierEntry) {
+  addPerformerReference(certifierEntry) {
     this.performer = [{
       role: new CodeableConcept('309343006', 'http://snomed.info/sct', 'Physician'),
       actor: { reference: certifierEntry.fullUrl }
@@ -553,7 +563,7 @@ class CauseOfDeathPathway extends List {
     this.mode = 'snapshot';
     this.orderedBy = new CodeableConcept('priority');
   }
-  addCertifierReference(certifierEntry) {
+  addPerformerReference(certifierEntry) {
     this.source = { reference: certifierEntry.fullUrl };
   }
   addCauseOfDeathReference(causeOfDeathEntry) {
@@ -719,6 +729,17 @@ class DeathDate extends Observation {
       this.addComponent({ code: '80616-6', system: 'http://loinc.org', display: 'Date and time pronounced dead' },
                         { date: options.pronouncedDate, time: options.pronouncedTime });
     }
+  }
+}
+
+class DispositionLocation extends Location {
+}
+
+class DecedentDispositionMethod extends Observation {
+  constructor(options = {}) {
+    super({ code: '80905-3', system: 'http://loinc.org', display: 'Body disposition method' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Disposition-Method');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/stu3/DispositionTypeVS', options.text);
   }
 }
 

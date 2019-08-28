@@ -186,6 +186,19 @@ it('generates valid FHIR bundle', () => {
         country: 'United States'
       }
     },
+    dispositionLocation: {
+      name: 'Harber Cemetery',
+      address: {
+        city: 'Mount Bowdoin',
+        district: 'Suffolk',
+        state: 'Massachusetts',
+        country: 'United States'
+      }
+    },
+    decedentDispositionMethod: {
+      code: '449971000124106',
+      text: 'Burial'
+    },
     interestedParty: {
       identifier: '12345',
       typeCode: 'prov',
