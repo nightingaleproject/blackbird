@@ -68,7 +68,10 @@ class Condition extends Resource {
   constructor(options = {}) {
     super();
     this.resourceType = 'Condition';
-    if (options.text) {
+    // Currently supports either code (TRANSAX format replacement) or text (IJE format replacement), not both
+    if (options.code) {
+      this.code = new CodeableConcept(options.code, 'http://hl7.org/fhir/sid/icd-10', null);
+    } else if (options.text) {
       this.code = new CodeableConcept(null, null, options.text);
     }
   }
@@ -261,11 +264,30 @@ class DeathCertificateDocument extends Bundle {
       this.identifier = { value: options.identifier };
     }
 
-    const certificate = this.createAndAddEntry(null, DeathCertificate, options.deathCertificate);
+    const [certificate] = this.createAndAddEntry(null, DeathCertificate, options.deathCertificate);
 
-    const decedent = new Decedent(options.decedent);
-    const decedentEntry = this.addEntry(decedent);
-    certificate.addDecedentReference(decedentEntry);
+    const [decedent, decedentEntry] = this.createAndAddEntry(certificate, Decedent, options.decedent);
+    if (decedentEntry) {
+      certificate.addDecedentReference(decedentEntry);
+    }
+
+    const [certifier, certifierEntry] = this.createAndAddEntry(certificate, Certifier, options.certifier)
+    if (certifierEntry) {
+      certificate.addPerformerReference(certifierEntry);
+    }
+
+    const [deathCertification, deathCertificationEntry] = this.createAndAddEntry(certificate, DeathCertification,
+                                                                                 options.deathCertification, null, certifierEntry)
+    if (deathCertificationEntry) {
+      certificate.addCertificationReference(deathCertificationEntry);
+    }
+
+    const [deathLocation, deathLocationEntry] = this.createAndAddEntry(certificate, DeathLocation, options.deathLocation);
+
+    const [mortician, morticianEntry] = this.createAndAddEntry(certificate, Mortician, options.mortician);
+
+    const [dispositionLocation, dispositionLocationEntry] = this.createAndAddEntry(certificate, DispositionLocation,
+                                                                                   options.dispositionLocation);
 
     this.createAndAddEntry(certificate, DecedentFather, options.decedentFather, decedentEntry);
     this.createAndAddEntry(certificate, DecedentMother, options.decedentMother, decedentEntry);
@@ -277,54 +299,27 @@ class DeathCertificateDocument extends Bundle {
     this.createAndAddEntry(certificate, DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
     this.createAndAddEntry(certificate, DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
     this.createAndAddEntry(certificate, BirthRecordIdentifier, options.birthRecordIdentifier, decedentEntry);
-
-    const certifier = new Certifier(options.certifier);
-    const certifierEntry = this.addEntry(certifier);
-    certificate.addPerformerReference(certifierEntry);
-
-    const certification = new DeathCertification(options.deathCertification);
-    certification.addPerformerReference(certifierEntry);
-    const certificationEntry = this.addEntry(certification);
-    certificate.addCertificationReference(certificationEntry);
-
     this.createAndAddEntry(certificate, MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
     this.createAndAddEntry(certificate, AutopsyPerformedIndicator, options.autopsyPerformed, decedentEntry);
     this.createAndAddEntry(certificate, ExaminerContacted, options.examinerContacted, decedentEntry);
-
     this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
     this.createAndAddEntry(certificate, InterestedParty, options.interestedParty);
-
-    const mortician = new Mortician(options.mortician);
-    const morticianEntry = this.addEntry(mortician);
-    certificate.addSectionEntry(mortician);
-
-    const causeOfDeathPathway = new CauseOfDeathPathway();
-    causeOfDeathPathway.addPerformerReference(certifierEntry);
-    if (options.causeOfDeathConditions) {
-      for (let causeOptions of options.causeOfDeathConditions) {
-        const causeOfDeathCondition = new CauseOfDeathCondition(causeOptions);
-        causeOfDeathCondition.addDecedentReference(decedentEntry);
-        causeOfDeathCondition.addPerformerReference(certifierEntry);
-        const causeOfDeathConditionEntry = this.addEntry(causeOfDeathCondition)
-        causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
-      }
-    }
-    this.addEntry(causeOfDeathPathway);
-
-    this.createAndAddEntry(certificate, ConditionContributingToDeath,
-                           options.conditionContributingToDeath,
+    this.createAndAddEntry(certificate, ConditionContributingToDeath, options.conditionContributingToDeath,
                            decedentEntry, certifierEntry);
-
-    const deathLocation = new DeathLocation(options.deathLocation);
-    const deathLocationEntry = this.addEntry(deathLocation);
-
     this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry, deathLocationEntry);
     this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry, deathLocationEntry);
     this.createAndAddEntry(certificate, InjuryLocation, options.injuryLocation);
+    this.createAndAddEntry(certificate, DecedentDispositionMethod, options.decedentDispositionMethod,
+                           decedentEntry, morticianEntry, dispositionLocationEntry)
 
-    const dispositionLocation = this.createAndAddEntry(certificate, DispositionLocation, options.dispositionLocation);
-    const dispositionLocationEntry = this.addEntry(dispositionLocation);
-    this.createAndAddEntry(certificate, DecedentDispositionMethod, options.decedentDispositionMethod, decedentEntry, morticianEntry, dispositionLocationEntry)
+    const [causeOfDeathPathway] = this.createAndAddEntry(certificate, CauseOfDeathPathway, {}, null, certifierEntry)
+    if (options.causeOfDeathConditions) {
+      for (let causeOptions of options.causeOfDeathConditions) {
+        const [causeOfDeathCondition, causeOfDeathConditionEntry] = this.createAndAddEntry(certificate, CauseOfDeathCondition,
+                                                                                           causeOptions, decedentEntry, certifierEntry);
+        causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
+      }
+    }
 
     this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
   }
@@ -332,23 +327,26 @@ class DeathCertificateDocument extends Bundle {
   // Many entries follow the same structure: instantiate a class with passed-in options, point the
   // instance to the decedent and/or certifier, and add an entry for that instance
   createAndAddEntry(certificate, klass, options, decedentEntry, performerEntry, locationEntry) {
-    if (options) {
-      const instance = new klass(options);
-      if (decedentEntry) {
-        instance.addDecedentReference(decedentEntry);
-      }
-      if (performerEntry) {
-        instance.addPerformerReference(performerEntry);
-      }
-      if (locationEntry) {
-        instance.addLocationReference(locationEntry);
-      }
-      const entry = this.addEntry(instance);
-      if (certificate) {
-        certificate.addSectionEntry(entry);
-      }
-      return(instance);
+    if (!options) {
+      // If information for an entry is not provided to the API we just don't create the entry
+      return([null, null]);
     }
+
+    const instance = new klass(options);
+    if (decedentEntry) {
+      instance.addDecedentReference(decedentEntry);
+    }
+    if (performerEntry) {
+      instance.addPerformerReference(performerEntry);
+    }
+    if (locationEntry) {
+      instance.addLocationReference(locationEntry);
+    }
+    const entry = this.addEntry(instance);
+    if (certificate) {
+      certificate.addSectionEntry(entry);
+    }
+    return([instance, entry]);
   }
 }
 
@@ -575,7 +573,7 @@ class CauseOfDeathPathway extends List {
 class CauseOfDeathCondition extends Condition {
   constructor(options) {
     super(options);
-    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Condition');
     if (options.interval) {
       this.onsetString = options.interval;
     }

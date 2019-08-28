@@ -231,3 +231,25 @@ it('generates valid FHIR bundle', () => {
   console.warn(JSON.stringify(document, null, 2));
 
 });
+
+it('generates valid FHIR bundle to replace TRANSAX format', () => {
+
+  const options = {
+    identifier: '123',
+    deathCertificate: {
+      identifier: '321'
+    },
+    deathCertification: {
+    },
+    causeOfDeathConditions: [
+      { code: 'I251' },
+      { code: 'I259' },
+      { code: 'I250' }
+    ]
+  }
+
+  const document = new DeathCertificateDocument(options);
+
+  console.warn(JSON.stringify(document, null, 2));
+
+});
