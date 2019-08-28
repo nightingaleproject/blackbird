@@ -159,8 +159,8 @@ class Observation extends Resource {
   }
   addLocationReference(locationEntry) {
     const valueReference = { reference: locationEntry.fullUrl };
-    // TODO: Not all locations are patient locations
-    this.addExtension({ url: 'http://hl7.org/fhir/us/vrdr/StructureDefinition/Patient-Location', valueReference });
+    const url = locationEntry.resource.meta.profile[0];
+    this.addExtension({ url, valueReference });
   }
   addComponent(typeOptions, valueOptions) {
     this.component = this.component || [];
@@ -733,6 +733,10 @@ class DeathDate extends Observation {
 }
 
 class DispositionLocation extends Location {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Disposition-Location');
+  }
 }
 
 class DecedentDispositionMethod extends Observation {
