@@ -93,12 +93,16 @@ class Person extends Resource {
     if (options.address) {
       this.address = [new Address(options.address)];
     }
-    if (options.identifier) {
-      this.qualification = [{
-        identifier: [{
-          value: options.identifier
-        }]
-      }];
+    if (options.qualification) {
+      const qualification = {};
+      if (options.qualification.identifier) {
+        qualification['identifier'] = [{ value: options.qualification.identifier }];
+      }
+      if (options.qualification.code) {
+        qualification['code'] = new CodeableConcept(options.qualification.code, 'http://hl7.org/fhir/v2/0360/2.7',
+                                                    options.qualification.text);
+      }
+      this.qualification = [qualification];
     }
   }
 }
@@ -107,6 +111,13 @@ class Practitioner extends Person {
   constructor(options = {}) {
     super(options);
     this.resourceType = 'Practitioner';
+  }
+}
+
+class PractitionerRole extends Resource {
+  constructor() {
+    super();
+    this.resourceType = 'PractitionerRole';
   }
 }
 
@@ -289,6 +300,8 @@ class DeathCertificateDocument extends Bundle {
     const [dispositionLocation, dispositionLocationEntry] = this.createAndAddEntry(certificate, DispositionLocation,
                                                                                    options.dispositionLocation);
 
+    const [funeralHome, funeralHomeEntry] = this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
+
     this.createAndAddEntry(certificate, DecedentFather, options.decedentFather, decedentEntry);
     this.createAndAddEntry(certificate, DecedentMother, options.decedentMother, decedentEntry);
     this.createAndAddEntry(certificate, DecedentSpouse, options.decedentSpouse, decedentEntry);
@@ -302,15 +315,23 @@ class DeathCertificateDocument extends Bundle {
     this.createAndAddEntry(certificate, MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
     this.createAndAddEntry(certificate, AutopsyPerformedIndicator, options.autopsyPerformed, decedentEntry);
     this.createAndAddEntry(certificate, ExaminerContacted, options.examinerContacted, decedentEntry);
-    this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
     this.createAndAddEntry(certificate, InterestedParty, options.interestedParty);
-    this.createAndAddEntry(certificate, ConditionContributingToDeath, options.conditionContributingToDeath,
-                           decedentEntry, certifierEntry);
+    // TODO: The IG is unclear about whether Condition Contributing to Death points to certifier
+    // this.createAndAddEntry(certificate, ConditionContributingToDeath, options.conditionContributingToDeath,
+    //                        decedentEntry, certifierEntry);
+    this.createAndAddEntry(certificate, ConditionContributingToDeath, options.conditionContributingToDeath, decedentEntry);
     this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry, deathLocationEntry);
+    this.createAndAddEntry(certificate, DeathPronouncementPerformer, options.deathPronouncementPerformer);
     this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry, deathLocationEntry);
     this.createAndAddEntry(certificate, InjuryLocation, options.injuryLocation);
     this.createAndAddEntry(certificate, DecedentDispositionMethod, options.decedentDispositionMethod,
                            decedentEntry, morticianEntry, dispositionLocationEntry)
+
+    const [funeralHomeDirector] = this.createAndAddEntry(certificate, FuneralHomeDirector, options.funeralHomeDirector,
+                                                         null, morticianEntry);
+    if (funeralHomeDirector) {
+      funeralHomeDirector.addFuneralHomeReference(funeralHomeEntry);
+    }
 
     const [causeOfDeathPathway] = this.createAndAddEntry(certificate, CauseOfDeathPathway, {}, null, certifierEntry)
     if (options.causeOfDeathConditions) {
@@ -539,6 +560,20 @@ class FuneralHome extends Organization {
   }
 }
 
+class FuneralHomeDirector extends PractitionerRole {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home-Director');
+    // TODO: The code in the IG doesn't reference an appropriate value set
+  }
+  addPerformerReference(performerEntry) {
+    this.practitioner = { reference: performerEntry.fullUrl };
+  }
+  addFuneralHomeReference(funeralHomeEntry) {
+    this.organization = { reference: funeralHomeEntry.fullUrl };
+  }
+}
+
 class InterestedParty extends Organization {
   constructor(options = {}) {
     super(options);
@@ -727,6 +762,13 @@ class DeathDate extends Observation {
       this.addComponent({ code: '80616-6', system: 'http://loinc.org', display: 'Date and time pronounced dead' },
                         { date: options.pronouncedDate, time: options.pronouncedTime });
     }
+  }
+}
+
+class DeathPronouncementPerformer extends Practitioner {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Death-Pronouncement-Performer');
   }
 }
 

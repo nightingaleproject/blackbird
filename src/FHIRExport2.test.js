@@ -1,12 +1,33 @@
 import moment from 'moment';
+import _ from 'lodash';
 import { DeathCertificateDocument } from './FHIRExport2';
+
+// Simplistic tests: just ensure that every field in the input is present somewhere in the output; we handle
+// names specially since they get broken up within the code and skip dates/times since they get formatted
+function getAllNestedValues(object) {
+  if (_.isObject(object)) {
+    // Skip dates and times
+    object = _.omit(object, ['performedDate', 'performedTime', 'birthDate', 'birthYear', 'effectiveDate',
+                             'effectiveTime', 'pronouncedDate', 'pronouncedTime']);
+    // Return names as substrings
+    let names = [];
+    if (_.isString(object.name)) {
+      names = object.name.split(/\s/);
+      object = _.omit(object, ['name']);
+    }
+    // Recurse
+    return _.values(object).flatMap(value => getAllNestedValues(value)).concat(names);
+  } else {
+    return [object];
+  }
+}
 
 it('generates valid FHIR bundle', () => {
 
   const options = {
-    identifier: '123',
+    identifier: '1574687908',
     deathCertificate: {
-      identifier: '321'
+      identifier: '6623951253'
     },
     deathCertification: {
       performedDate: '2019-01-01',
@@ -87,7 +108,7 @@ it('generates valid FHIR bundle', () => {
       }
     },
     birthRecordIdentifier: {
-      certificateNumber: '54321',
+      certificateNumber: '2208471975',
       birthYear: '1915',
       birthState: 'MA'
     },
@@ -135,6 +156,14 @@ it('generates valid FHIR bundle', () => {
       pronouncedDate: '2019-01-01',
       pronouncedTime: '9:00'
     },
+    deathPronouncementPerformer: {
+      name: 'Death Pronouncer',
+      qualification: {
+        identifier: '4041603882',
+        code: 'MD',
+        text: 'Doctor of Medicine'
+      }
+    },
     injuryIncident: {
       text: 'Example injury description text',
       effectiveDate: '2019-01-01',
@@ -172,7 +201,9 @@ it('generates valid FHIR bundle', () => {
     },
     mortician: {
       name: 'Jim Mortician',
-      identifier: '98765'
+      qualification: {
+        identifier: '3522912928'
+      }
     },
     funeralHome: {
       name: 'Funerals by Jim',
@@ -185,6 +216,8 @@ it('generates valid FHIR bundle', () => {
         state: 'Massachusetts',
         country: 'United States'
       }
+    },
+    funeralHomeDirector: {
     },
     dispositionLocation: {
       name: 'Harber Cemetery',
@@ -200,7 +233,7 @@ it('generates valid FHIR bundle', () => {
       text: 'Burial'
     },
     interestedParty: {
-      identifier: '12345',
+      identifier: '8032275691',
       typeCode: 'prov',
       typeDisplay: 'Healthcare Provider',
       name: 'The Healthcare Company',
@@ -228,7 +261,9 @@ it('generates valid FHIR bundle', () => {
 
   const document = new DeathCertificateDocument(options);
 
-  console.warn(JSON.stringify(document, null, 2));
+  expect(_.difference(getAllNestedValues(options), getAllNestedValues(document))).toEqual([]);
+
+  // console.warn(JSON.stringify(document, null, 2));
 
 });
 
@@ -239,8 +274,7 @@ it('generates valid FHIR bundle to replace TRANSAX format', () => {
     deathCertificate: {
       identifier: '321'
     },
-    deathCertification: {
-    },
+    deathCertification: {},
     causeOfDeathConditions: [
       { code: 'I251' },
       { code: 'I259' },
@@ -250,6 +284,8 @@ it('generates valid FHIR bundle to replace TRANSAX format', () => {
 
   const document = new DeathCertificateDocument(options);
 
-  console.warn(JSON.stringify(document, null, 2));
+  expect(_.difference(getAllNestedValues(options), getAllNestedValues(document))).toEqual([]);
+
+  // console.warn(JSON.stringify(document, null, 2));
 
 });
