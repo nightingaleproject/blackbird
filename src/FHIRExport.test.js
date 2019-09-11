@@ -1,182 +1,293 @@
-import React from 'react';
 import moment from 'moment';
-import Patient from './Patient';
-import { recordToFHIR } from './FHIRExport';
-import { mount } from 'enzyme';
-import recordFixture from '../fixtures/record';
-import patientFixture from '../fixtures/patient';
 import _ from 'lodash';
+import { DeathCertificateDocument } from './FHIRExport';
+
+// This utility function allows all values to be extracted from a nested structure and supports simplistic
+// tests: just ensure that every field in the input is present somewhere in the output; we handle names
+// specially since they get broken up within the code and skip dates/times since they get formatted
+
+function getAllNestedValues(object) {
+  if (_.isObject(object)) {
+    // Skip dates and times
+    object = _.omit(object, ['performedDate', 'performedTime', 'birthDate', 'birthYear', 'effectiveDate',
+                             'effectiveTime', 'pronouncedDate', 'pronouncedTime']);
+    // Return names as substrings split by whitespace
+    let names = [];
+    if (_.isString(object.name)) {
+      names = object.name.split(/\s/);
+      object = _.omit(object, ['name']);
+    }
+    // Recurse
+    return _.values(object).flatMap(value => getAllNestedValues(value)).concat(names);
+  } else {
+    return [object];
+  }
+}
 
 it('generates valid FHIR bundle', () => {
-  const decedentRecord = new Patient(patientFixture);
-  const deathRecord = recordToFHIR(recordFixture, decedentRecord);
 
-  const util = require('util')
+  const options = {
+    identifier: '1574687908',
+    deathCertificate: {
+      identifier: '6623951253'
+    },
+    deathCertification: {
+      performedDate: '2019-01-01',
+      performedTime: '11:15'
+    },
+    certifier: {
+      name: 'Bob Certifier',
+      address: {
+        line: [
+          '998 Treutel River'
+        ],
+        city: 'Hyannis',
+        district: 'Barnstable',
+        state: 'Massachusetts',
+        country: 'United States'
+      }
+    },
+    decedent: {
+      name: 'Joe Decedent',
+      ssn: '123456789',
+      birthSex: 'M',
+      birthPlace: {
+        city: 'Salem Neck',
+        district: 'Essex',
+        state: 'Massachusetts',
+        country: 'United States'
+      },
+      gender: 'male',
+      birthDate: '1920-01-01',
+      maritalStatus: 'M',
+      ethnicity: { text: 'Not Hispanic or Latino', code: '2186-5' },
+      race: [
+        { type: 'ombCategory', text: 'White', code: '2106-3' },
+        { type: 'detailed', text: 'French', code: '2111-3' }
+      ]
+    },
+    decedentFather: {
+      name: 'Dad Decedent'
+    },
+    decedentMother: {
+      name: 'Mom Decedent'
+    },
+    decedentSpouse: {
+      name: 'Spouse Decedent'
+    },
+    decedentAge: {
+      unit: 'a', // Years
+      value: '97'
+    },
+    decedentPregnancy: {
+      code: 'PHC1260',
+      text: 'Not pregnant within past year'
+    },
+    decedentTransportationRole: {
+      code: '236320001',
+      text: 'Vehicle driver'
+    },
+    tobaccoUseContributedToDeath: {
+      code: 'Y',
+      text: 'Yes'
+    },
+    decedentEducationLevel: {
+      code: 'GD',
+      text: 'Graduate or professional Degree complete'
+    },
+    decedentEmploymentHistory: {
+      militaryService: {
+        code: 'Y',
+        text: 'Yes'
+      },
+      usualIndustry: {
+        code: '1320',
+        text: 'Aerospace engineers'
+      },
+      usualOccupation: {
+        code: '7280',
+        text: 'Accounting, tax preparation, bookkeeping, and payroll services'
+      }
+    },
+    birthRecordIdentifier: {
+      certificateNumber: '2208471975',
+      birthYear: '1915',
+      birthState: 'MA'
+    },
+    mannerOfDeath: {
+      code: '7878000',
+      text: 'Accident'
+    },
+    autopsyPerformed: {
+      code: 'Y',
+      text: 'Yes',
+      autopsyAvailable: {
+        code: 'Y',
+        text: 'Yes'
+      }
+    },
+    deathLocation: {
+      name: 'Example Hospital',
+      description: 'Example Hospital Wing B',
+      address: {
+        line: [
+          '241 Jordy Neck'
+        ],
+        city: 'Oak Grove',
+        district: 'Middlesex',
+        state: 'Massachusetts',
+        country: 'United States'
+      },
+      type: {
+        code: 'HOSP',
+        text: 'Hospital'
+      },
+      physicalType: {
+        code: 'wa',
+        text: 'Ward'
+      }
+    },
+    deathDate: {
+      effectiveDate: '2019-01-01',
+      effectiveTime: '11:15',
+      comment: 'Example comment text',
+      method: {
+        code: '414135002',
+        text: 'Estimated'
+      },
+      pronouncedDate: '2019-01-01',
+      pronouncedTime: '9:00'
+    },
+    deathPronouncementPerformer: {
+      name: 'Death Pronouncer',
+      qualification: {
+        identifier: '4041603882',
+        code: 'MD',
+        text: 'Doctor of Medicine'
+      }
+    },
+    injuryIncident: {
+      text: 'Example injury description text',
+      effectiveDate: '2019-01-01',
+      effectiveTime: '11:15',
+      placeOfInjury: 'Decedent\'s home',
+      transportationEventIndicator: {
+        code: 'Y',
+        text: 'Yes'
+      },
+      workInjuryIndicator: {
+        code: 'N',
+        text: 'No'
+      }
+    },
+    injuryLocation: {
+      name: 'restaurant',
+      description: 'Shot by another person using a handgun',
+      address: {
+        line: [
+          '85 Anais Street'
+        ],
+        city: 'Mount Hope',
+        district: 'Suffolk',
+        state: 'Massachusetts',
+        country: 'United States'
+      },
+      type: {
+        code: 'PTRES',
+        text: 'Patient\'s Residence'
+      },
+      physicalType: {
+        code: 'ro',
+        text: 'Room'
+      }
+    },
+    mortician: {
+      name: 'Jim Mortician',
+      qualification: {
+        identifier: '3522912928'
+      }
+    },
+    funeralHome: {
+      name: 'Funerals by Jim',
+      address: {
+        line: [
+          '145 Hamill Mountains'
+        ],
+        city: 'Milford',
+        district: 'Worcester',
+        state: 'Massachusetts',
+        country: 'United States'
+      }
+    },
+    funeralHomeDirector: {
+    },
+    dispositionLocation: {
+      name: 'Harber Cemetery',
+      address: {
+        city: 'Mount Bowdoin',
+        district: 'Suffolk',
+        state: 'Massachusetts',
+        country: 'United States'
+      }
+    },
+    decedentDispositionMethod: {
+      code: '449971000124106',
+      text: 'Burial'
+    },
+    interestedParty: {
+      identifier: '8032275691',
+      typeCode: 'prov',
+      typeDisplay: 'Healthcare Provider',
+      name: 'The Healthcare Company',
+      address: {
+        line: [
+          '839 Barrett Shoals'
+        ],
+        city: 'Norfolk Downs',
+        district: 'Norfolk',
+        state: 'Massachusetts',
+        country: 'United States'
+      }
+    },
+    causeOfDeathConditions: [
+      { text: 'Example Cause Of Death 1', interval: '1 week' },
+      { text: 'Example Cause Of Death 2', interval: '1 year' }
+    ],
+    conditionContributingToDeath: {
+      text: 'Example Contributing Condition'
+    },
+    examinerContacted: {
+      value: false
+    }
+  };
 
-  //header
-  expect(deathRecord.resourceType).toBe("Bundle");
-  expect(deathRecord.type).toBe("document");
+  const document = new DeathCertificateDocument(options);
 
-  //composition
-  const composition = deathRecord.entry[0].resource
-  expect(composition.resourceType).toBe("Composition");
+  expect(_.difference(getAllNestedValues(options), getAllNestedValues(document))).toEqual([]);
 
-  expect(composition.type.coding[0].system).toBe('http://loinc.org');
-  expect(composition.type.coding[0].code).toBe('64297-5');
-  expect(composition.type.coding[0].display).toBe('Death certificate');
-  expect(composition.type.text).toBe('Death certificate');
+  // console.warn(JSON.stringify(document, null, 2));
 
-  expect(composition.meta.profile).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-DeathRecordContents');
+});
 
-  expect(composition.section[0].code.coding[0].system).toBe('http://loinc.org');
-  expect(composition.section[0].code.coding[0].code).toBe('69453-9');
-  expect(composition.section[0].code.coding[0].display).toBe('Cause of death');
-  expect(composition.section[0].code.text).toBe('Cause of death');
-  expect(composition.section[0].entry.length).toBe(8);
+it('generates valid FHIR bundle to replace TRANSAX format', () => {
 
-  //decedent
-  const decedent = deathRecord.entry[1].resource
-  expect(decedent.resourceType).toBe("Patient")
+  const options = {
+    identifier: '123',
+    deathCertificate: {
+      identifier: '321'
+    },
+    deathCertification: {},
+    causeOfDeathConditions: [
+      { code: 'I251' },
+      { code: 'I259' },
+      { code: 'I250' }
+    ]
+  }
 
-  expect(decedent.name[0].given[0]).toBe("Nils374");
-  expect(decedent.name[0].family).toBe("Doyle303");
-  expect(decedent.name[0].use).toBe("official");
+  const document = new DeathCertificateDocument(options);
 
-  expect(decedent.birthDate).toBe('1971-07-25');
+  expect(_.difference(getAllNestedValues(options), getAllNestedValues(document))).toEqual([]);
 
-  expect(moment.utc(decedent.deceasedDateTime).format()).toBe(moment.utc(`2018-04-19T01:30:00Z`).format());
-
-  expect(decedent.address[0].type).toBe('postal');
-  expect(decedent.address[0].line[0]).toBe('37700 Nannie Island');
-  expect(decedent.address[0].city).toBe('Wareham');
-  expect(decedent.address[0].state).toBe('MA');
-  expect(decedent.address[0].postalCode).toBe('02571');
-
-  expect(decedent.gender).toBe('female');
-
-  const placeOfDeath = _.find(decedent.extension, function (extension) {
-    return extension.url === 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeath-extension';
-  });
-  expect(placeOfDeath.extension[0].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeathType-extension')
-  expect(placeOfDeath.extension[0].valueCodeableConcept.coding[0].display).toBe('Death in hospital-based emergency department or outpatient department')
-  expect(placeOfDeath.extension[1].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-FacilityName-extension')
-  expect(placeOfDeath.extension[1].valueString).toBe('Example Hospital')
-  expect(placeOfDeath.extension[2].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension')
-  expect(placeOfDeath.extension[2].valueAddress.city).toBe('Bedford')
-  expect(placeOfDeath.extension[2].valueAddress.district).toBe('Middlesex')
-
-  //certifier
-  const certifier = deathRecord.entry[2].resource
-  expect(certifier.resourceType).toBe("Practitioner");
-
-  expect(certifier.name[0].given[0]).toBe("Example");
-  expect(certifier.name[0].family).toBe("Pronouncer");
-  expect(certifier.name[0].use).toBe("official");
-
-  expect(certifier.extension[0].url).toBe('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-CertifierType-extension');
-  expect(certifier.extension[0].valueCodeableConcept.coding[0].system).toBe('http://snomed.info/sct');
-  expect(certifier.extension[0].valueCodeableConcept.coding[0].code).toBe('434651000124107');
-  expect(certifier.extension[0].valueCodeableConcept.coding[0].display).toBe('Physician (Pronouncer and Certifier)');
-  expect(certifier.extension[0].valueCodeableConcept.text).toBe('Physician (Pronouncer and Certifier)');
-
-  expect(certifier.identifier[0].use).toBe('official');
-  expect(certifier.identifier[0].value).toBe('12345');
-
-  expect(certifier.qualification.code.coding[0].system).toBe('http://hl7.org/fhir/v2/0360/2.7');
-  expect(certifier.qualification.code.coding[0].code).toBe('MD');
-  expect(certifier.qualification.code.coding[0].display).toBe('Doctor of Medicine');
-  expect(certifier.qualification.code.text).toBe('Doctor of Medicine');
-
-  //cause of death
-  const causeOfDeath = deathRecord.entry[3].resource
-  expect(causeOfDeath.resourceType).toBe('Condition');
-  expect(causeOfDeath.clinicalStatus).toBe('active');
-  expect(causeOfDeath.text.status).toBe('additional');
-  expect(causeOfDeath.text.div).toBe('<div xmlns=\'http://www.w3.org/1999/xhtml\'>Diabetes</div>');
-  expect(moment.utc(causeOfDeath.onsetString).format()).toBe(moment.utc('2006-03-05T05:08:45Z').format());
-
-  //actual or presumed date of death
-  const actualOrPresumedDateOfDeath = deathRecord.entry[4].resource
-  expect(actualOrPresumedDateOfDeath.resourceType).toBe('Observation');
-  expect(actualOrPresumedDateOfDeath.status).toBe('final');
-  expect(actualOrPresumedDateOfDeath.code.coding[0].system).toBe('http://loinc.org');
-  expect(actualOrPresumedDateOfDeath.code.coding[0].code).toBe('81956-5');
-  expect(actualOrPresumedDateOfDeath.code.coding[0].display).toBe('Date and time of death');
-  expect(actualOrPresumedDateOfDeath.code.text).toBe('Date and time of death');
-  expect(moment.utc(actualOrPresumedDateOfDeath.valueDateTime).format()).toBe(moment.utc('2018-04-19T01:30:00Z').format());
-  expect(actualOrPresumedDateOfDeath.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
-  //autopsy performed
-  const autopsyPerformed = deathRecord.entry[5].resource
-  expect(autopsyPerformed.resourceType).toBe('Observation');
-  expect(autopsyPerformed.status).toBe('final');
-  expect(autopsyPerformed.code.coding[0].system).toBe('http://loinc.org');
-  expect(autopsyPerformed.code.coding[0].code).toBe('85699-7');
-  expect(autopsyPerformed.code.coding[0].display).toBe('Autopsy was performed');
-  expect(autopsyPerformed.code.text).toBe('Autopsy was performed');
-  expect(autopsyPerformed.valueBoolean).toBe(false);
-  expect(autopsyPerformed.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
-  //autopsy results available
-  const autopsyResultsAvailable = deathRecord.entry[6].resource
-  expect(autopsyResultsAvailable.resourceType).toBe('Observation');
-  expect(autopsyResultsAvailable.status).toBe('final');
-  expect(autopsyResultsAvailable.code.coding[0].system).toBe('http://loinc.org');
-  expect(autopsyResultsAvailable.code.coding[0].code).toBe('69436-4');
-  expect(autopsyResultsAvailable.code.coding[0].display).toBe('Autopsy results available');
-  expect(autopsyResultsAvailable.code.text).toBe('Autopsy results available');
-  expect(autopsyResultsAvailable.valueBoolean).toBe(false);
-  expect(autopsyResultsAvailable.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
-  //date pronounced dead
-  const datePronouncedDead = deathRecord.entry[7].resource
-  expect(datePronouncedDead.resourceType).toBe('Observation');
-  expect(datePronouncedDead.status).toBe('final');
-  expect(datePronouncedDead.code.coding[0].system).toBe('http://loinc.org');
-  expect(datePronouncedDead.code.coding[0].code).toBe('80616-6');
-  expect(datePronouncedDead.code.coding[0].display).toBe('Date and time pronounced dead');
-  expect(datePronouncedDead.code.text).toBe('Date and time pronounced dead');
-  expect(moment.utc(datePronouncedDead.valueDateTime).format()).toBe(moment.utc('2018-04-19T03:00:00Z').format());
-  expect(datePronouncedDead.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
-  //manner of death
-  const mannerOfDeath = deathRecord.entry[8].resource
-  expect(mannerOfDeath.resourceType).toBe('Observation');
-  expect(mannerOfDeath.status).toBe('final');
-  expect(mannerOfDeath.code.coding[0].system).toBe('http://loinc.org');
-  expect(mannerOfDeath.code.coding[0].code).toBe('69449-7');
-  expect(mannerOfDeath.code.coding[0].display).toBe('Manner of death');
-  expect(mannerOfDeath.code.text).toBe('Manner of death');
-  expect(mannerOfDeath.valueCodeableConcept.coding[0].system).toBe('http://snomed.info/sct');
-  expect(mannerOfDeath.valueCodeableConcept.coding[0].code).toBe('38605008');
-  expect(mannerOfDeath.valueCodeableConcept.coding[0].display).toBe('Natural');
-  expect(mannerOfDeath.valueCodeableConcept.text).toBe('Natural');
-  expect(mannerOfDeath.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
-  //medical examiner or coroner contacted
-  const medicalExaminerOrCoronerContacted = deathRecord.entry[9].resource
-  expect(medicalExaminerOrCoronerContacted.resourceType).toBe('Observation');
-  expect(medicalExaminerOrCoronerContacted.status).toBe('final');
-  expect(medicalExaminerOrCoronerContacted.code.coding[0].system).toBe('http://loinc.org');
-  expect(medicalExaminerOrCoronerContacted.code.coding[0].code).toBe('74497-9');
-  expect(medicalExaminerOrCoronerContacted.code.coding[0].display).toBe('Medical examiner or coroner was contacted');
-  expect(medicalExaminerOrCoronerContacted.code.text).toBe('Medical examiner or coroner was contacted');
-  expect(medicalExaminerOrCoronerContacted.valueBoolean).toBe(false);
-  expect(medicalExaminerOrCoronerContacted.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
-  //tobacco use contributed to death
-  const tobaccoUseContributedToDeath = deathRecord.entry[10].resource
-  expect(tobaccoUseContributedToDeath.resourceType).toBe('Observation');
-  expect(tobaccoUseContributedToDeath.status).toBe('final');
-  expect(tobaccoUseContributedToDeath.code.coding[0].system).toBe('http://loinc.org');
-  expect(tobaccoUseContributedToDeath.code.coding[0].code).toBe('69443-0');
-  expect(tobaccoUseContributedToDeath.code.coding[0].display).toBe('Did tobacco use contribute to death');
-  expect(tobaccoUseContributedToDeath.code.text).toBe('Did tobacco use contribute to death');
-  expect(tobaccoUseContributedToDeath.valueCodeableConcept.coding[0].system).toBe('http://snomed.info/sct');
-  expect(tobaccoUseContributedToDeath.valueCodeableConcept.coding[0].code).toBe('373066001');
-  expect(tobaccoUseContributedToDeath.valueCodeableConcept.coding[0].display).toBe('Yes');
-  expect(tobaccoUseContributedToDeath.valueCodeableConcept.text).toBe('Yes');
-  expect(tobaccoUseContributedToDeath.subject.reference.substring(0, 9)).toBe('urn:uuid:');
-
+  // console.warn(JSON.stringify(document, null, 2));
 
 });

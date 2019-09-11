@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Message, Form, Button, Input } from 'semantic-ui-react';
 import FormPage from './FormPage';
-import { recordToFHIR } from './FHIRExport';
+import { recordAndPatientToFHIR } from './RecordAndPatientToFHIR';
 // jQuery for AJAX is overkill, but it's already a dependency
 import jQuery from 'jquery';
 
@@ -19,7 +19,7 @@ class ReviewAndSubmit extends FormPage {
   }
 
   handleSubmit() {
-    const fhirData = recordToFHIR(this.props.record, this.props.patient);
+    const fhirData = recordAndPatientToFHIR(this.props.record, this.props.patient);
     jQuery.ajax({
       url: this.state.edrsEndpoint,
       type: 'POST',
@@ -162,8 +162,8 @@ class ReviewAndSubmit extends FormPage {
               </Form.Field>
 
               <Button primary floated='right' onClick={this.handleSubmit}>Submit</Button>
-              <Button primary floated='right' onClick={() => console.log(JSON.stringify(recordToFHIR(this.props.record, this.props.patient), null, 2))}>Log FHIR to Console</Button>
-              <Button primary floated='right' as='a' href={"data: text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(recordToFHIR(this.props.record, this.props.patient), null, 2))} download="fhir-bundle.json">Download FHIR Bundle</Button>
+              <Button primary floated='right' onClick={() => console.log(JSON.stringify(recordAndPatientToFHIR(this.props.record, this.props.patient), null, 2))}>Log FHIR to Console</Button>
+              <Button primary floated='right' as='a' href={"data: text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(recordAndPatientToFHIR(this.props.record, this.props.patient), null, 2))} download="fhir-bundle.json">Download FHIR Bundle</Button>
             </Form>
           </Grid.Column>
         </Grid.Row>
