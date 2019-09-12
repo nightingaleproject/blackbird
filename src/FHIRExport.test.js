@@ -18,7 +18,7 @@ function getAllNestedValues(object) {
       object = _.omit(object, ['name']);
     }
     // Recurse
-    return _.values(object).flatMap(value => getAllNestedValues(value)).concat(names);
+    return _.flatMap(_.values(object), value => getAllNestedValues(value)).concat(names);
   } else {
     return [object];
   }
