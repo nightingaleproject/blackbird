@@ -28,26 +28,31 @@ class Practitioner {
     if (this.resource.address && this.resource.address[0] && this.resource.address[0].line[0]) {
       return this.resource.address[0].line[0];
     }
+    return null;
   }
   get city() {
     if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].city;
     }
+    return null;
   }
   get county() {
     if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].district;
     }
+    return null;
   }
   get state() {
     if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].state;
     }
+    return null;
   }
   get zip() {
     if (this.resource.address && this.resource.address[0]) {
       return this.resource.address[0].postalCode;
     }
+    return null;
   }
 }
 

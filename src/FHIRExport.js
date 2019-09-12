@@ -335,7 +335,7 @@ class DeathCertificateDocument extends Bundle {
 
     const [causeOfDeathPathway] = this.createAndAddEntry(certificate, CauseOfDeathPathway, {}, null, certifierEntry)
     if (options.causeOfDeathConditions) {
-      for (let causeOptions of options.causeOfDeathConditions) {
+      for (var causeOptions of options.causeOfDeathConditions) {
         const [ , causeOfDeathConditionEntry] = this.createAndAddEntry(certificate, CauseOfDeathCondition,
                                                                        causeOptions, decedentEntry, certifierEntry);
         causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
@@ -440,7 +440,7 @@ class Decedent extends Patient {
       if (raceText.length > 0) {
         extension.push({ url: 'text', valueString: raceText });
       }
-      for (let raceEntry of raceEntries.filter((e) => e.code)) {
+      for (var raceEntry of raceEntries.filter((e) => e.code)) {
         const valueCoding = { system: 'urn:oid:2.16.840.1.113883.6.238', code: raceEntry.code, display: raceEntry.text };
         extension.push({ url: raceEntry.type, valueCoding });
       }

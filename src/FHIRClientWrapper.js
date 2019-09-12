@@ -78,7 +78,7 @@ const loadResources = (smart, patientId) => {
   const any = (promises) => {
     return new Promise((resolve) => {
       Promise.all(promises).then((results) => {
-        for (const result of results) {
+        for (var result of results) {
           if (result.length > 0) {
             resolve(result)
           }

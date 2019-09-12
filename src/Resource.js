@@ -38,6 +38,7 @@ class Resource {
     } else if (this.resource.code && this.resource.code.coding && this.resource.code.coding[0].display) {
       return this.resource.code.coding[0].display;
     }
+    return null;
   }
 
   get formattedStartDate() {
@@ -54,6 +55,7 @@ class Resource {
     } else if (this.startDate) {
       return this.formattedStartDate;
     }
+    return null;
   }
 
   // Sometimes we want to look at a referred resource, e.g. give a MedicationOrder we may want to look at the
@@ -90,11 +92,13 @@ class Procedure extends Resource {
     if (this.resource.performedPeriod) {
       return this.resource.performedPeriod.end;
     }
+    return null;
   }
   get additionalText() {
     if (this.resource.reasonReference && this.resource.reasonReference[0] && this.resource.reasonReference[0].display) {
       return `Reason: ${this.resource.reasonReference[0].display}`;
     }
+    return null;
   }
 }
 
@@ -109,6 +113,7 @@ class Observation extends Resource {
     if (this.resource.valueQuantity && this.resource.valueQuantity.value) {
       return `Value: ${this.resource.valueQuantity.value} ${this.resource.valueQuantity.unit}`;
     }
+    return null;
   }
 }
 
@@ -123,6 +128,7 @@ class MedicationRequest extends Resource {
     } else if (this.resource.medicationCodeableConcept && this.resource.medicationCodeableConcept.coding) {
       return this.resource.medicationCodeableConcept.coding[0].display;
     }
+    return null;
   }
   get startDate() {
     return this.resource.dateWritten || this.resource.authoredOn;
@@ -139,6 +145,7 @@ class MedicationOrder extends Resource {
     } else if (this.resource.medicationCodeableConcept && this.resource.medicationCodeableConcept.coding) {
       return this.resource.medicationCodeableConcept.coding[0].display;
     }
+    return null;
   }
   get startDate() {
     return this.resource.dateWritten || this.resource.authoredOn;
