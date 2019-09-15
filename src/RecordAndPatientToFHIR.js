@@ -23,6 +23,77 @@ function formatAddress(street, city, county, state, postalCode) {
   return (address);
 }
 
+// TODO: Some of these code lookups could share code
+
+function yesNoToCode(text) {
+  const lookup = {
+    'Yes': 'Y',
+    'No': 'N'
+  }
+  const code = lookup[text];
+  if (code) {
+    return { code, text };
+  } else {
+    return null;
+  }
+}
+
+function yesNoToBoolean(text) {
+  const lookup = {
+    'Yes': 'true',
+    'No': 'false'
+  }
+  return lookup[text];
+}
+
+function mannerOfDeathToCode(text) {
+  const lookup = {
+    'Natural': '38605008',
+    'Accident': '7878000',
+    'Suicide': '44301001',
+    'Homicide': '27935005',
+    'Pending Investigation': '185973002',
+    'Could not be determined': '65037004'
+  }
+  const code = lookup[text];
+  if (code) {
+    return { code, text };
+  } else {
+    return null;
+  }
+}
+
+function pregnancyToCode(text) {
+  const lookup = {
+    'Not pregnant within past year': 'PHC1260',
+    'Pregnant at time of death': 'PHC1261',
+    'Not pregnant, but pregnant within 42 days of death': 'PHC1262',
+    'Not pregnant, but pregnant 43 days to 1 year before death': 'PHC1263',
+    'Unknown if pregnant within the past year': 'PHC1264'
+  }
+  const code = lookup[text];
+  if (code) {
+    return { code, text };
+  } else {
+    return null;
+  }
+}
+
+function transportationRoleToCode(text) {
+  const lookup = {
+    'Vehicle driver': '236320001',
+    'Passenger': '257500003',
+    'Pedestrian': '257518000',
+    'Other': 'OTH'
+  }
+  const code = lookup[text];
+  if (code) {
+    return { code, text };
+  } else {
+    return null;
+  }
+}
+
 function appendCOD(array, text, interval) {
   if (text && interval) {
     array.push({ text, interval });
@@ -79,18 +150,16 @@ function recordAndPatientToFHIR(model, patient) {
   //   unit: 'a', // Years
   //   value: '97'
   // },
-  // decedentPregnancy: {
-  //   code: 'PHC1260',
-  //   text: 'Not pregnant within past year'
-  // },
-  // decedentTransportationRole: {
-  //   code: '236320001',
-  //   text: 'Vehicle driver'
-  // },
-  // tobaccoUseContributedToDeath: {
-  //   code: 'Y',
-  //   text: 'Yes'
-  // },
+
+  if (model.pregnancy) {
+    options.decedentPregnancy = pregnancyToCode(model.pregnancy);
+  }
+
+  if (model.tobacco) {
+    // TODO: The IG doesn't have a value set for this, just support Y and N for now
+    options.tobaccoUseContributedToDeath = yesNoToCode(model.tobacco);
+  }
+
   // decedentEducationLevel: {
   //   code: 'GD',
   //   text: 'Graduate or professional Degree complete'
@@ -114,50 +183,53 @@ function recordAndPatientToFHIR(model, patient) {
   //   birthYear: '1915',
   //   birthState: 'MA'
   // },
-  // mannerOfDeath: {
-  //   code: '7878000',
-  //   text: 'Accident'
-  // },
-  // autopsyPerformed: {
-  //   code: 'Y',
-  //   text: 'Yes',
-  //   autopsyAvailable: {
-  //     code: 'Y',
-  //     text: 'Yes'
-  //   }
-  // },
-  // deathLocation: {
-  //   name: 'Example Hospital',
-  //   description: 'Example Hospital Wing B',
-  //   address: {
-  //     line: [
-  //       '241 Jordy Neck'
-  //     ],
-  //     city: 'Oak Grove',
-  //     district: 'Middlesex',
-  //     state: 'Massachusetts',
-  //     country: 'United States'
-  //   },
-  //   type: {
-  //     code: 'HOSP',
-  //     text: 'Hospital'
-  //   },
-  //   physicalType: {
-  //     code: 'wa',
-  //     text: 'Ward'
-  //   }
-  // },
-  // deathDate: {
-  //   effectiveDate: record.actualDeathDate,
-  //   effectiveTime: actualDeathTime,
-  //   // comment: 'Example comment text',
-  //   //method: {
-  //   //  code: '414135002',
-  //   //  text: 'Estimated'
-  //   //},
-  //   pronouncedDate: record.pronouncedDeathDate,
-  //   pronouncedTime: record.pronouncedDeathTime
-  // },
+
+  if (model.mannerOfDeath) {
+    options.mannerOfDeath = mannerOfDeathToCode(model.mannerOfDeath);
+  }
+
+  if (model.autopsyPerformed) {
+    options.autopsyPerformed = yesNoToCode(model.autopsyPerformed);
+    if (model.autopsyAvailable) {
+      options.autopsyPerformed.autopsyAvailable = yesNoToCode(model.autopsyAvailable);
+    }
+  }
+
+  if (model.placeOfDeathName) {
+    options.deathLocation = {
+      name: model.placeOfDeathName,
+      // TODO: currently ignores placeOfDeathApt
+      address: formatAddress(model.placeOfDeathStreet, model.placeOfDeathCity, model.placeOfDeathCounty,
+                             model.placeOfDeathStat, model.placeOfDeathZip),
+      // TODO: These will likely change in the standard, so we'll hard code for now
+      // TODO: This ignores the "Place of Death Type" in the form
+      type: {
+        code: 'HOSP',
+        text: 'Hospital'
+      },
+      physicalType: {
+        code: 'wa',
+        text: 'Ward'
+      }
+    }
+  }
+
+  if (model.actualDeathDate) {
+    options.deathDate = {
+      effectiveDate: model.actualDeathDate,
+      effectiveTime: model.actualDeathTime,
+      method: {
+        code: '414135002',
+        text: 'Estimated'
+      },
+    }
+  }
+  if (model.pronouncedDeathDate) {
+    options.deathDate = options.deathDate || {};
+    options.deathDate.pronouncedDate = model.pronouncedDeathDate;
+    options.deathDate.pronouncedTime = model.pronouncedDeathTime;
+  }
+
   // deathPronouncementPerformer: {
   //   name: 'Death Pronouncer',
   //   qualification: {
@@ -166,41 +238,54 @@ function recordAndPatientToFHIR(model, patient) {
   //     text: 'Doctor of Medicine'
   //   }
   // },
-  // injuryIncident: {
-  //   text: 'Example injury description text',
-  //   effectiveDate: '2019-01-01',
-  //   effectiveTime: '11:15',
-  //   placeOfInjury: 'Decedent\'s home',
-  //   transportationEventIndicator: {
-  //     code: 'Y',
-  //     text: 'Yes'
-  //   },
-  //   workInjuryIndicator: {
-  //     code: 'N',
-  //     text: 'No'
-  //   }
-  // },
-  // injuryLocation: {
-  //   name: 'restaurant',
-  //   description: 'Shot by another person using a handgun',
-  //   address: {
-  //     line: [
-  //       '85 Anais Street'
-  //     ],
-  //     city: 'Mount Hope',
-  //     district: 'Suffolk',
-  //     state: 'Massachusetts',
-  //     country: 'United States'
-  //   },
-  //   type: {
-  //     code: 'PTRES',
-  //     text: 'Patient\'s Residence'
-  //   },
-  //   physicalType: {
-  //     code: 'ro',
-  //     text: 'Room'
-  //   }
-  // },
+
+  if (model.transportationInjury) {
+    options.decedentTransportationRole = transportationRoleToCode(model.transportationInjury);
+  }
+
+  if (model.dateOfInjury) {
+    debugger
+    options.injuryIncident = {
+      // TODO: Form doesn't include the text
+      // text: 'Example injury description text',
+      effectiveDate: model.dateOfInjury,
+      effectiveTime: model.timeOfInjury
+    }
+    if (model.placeOfInjury) {
+      options.injuryIncident.placeOfInjury = model.placeOfInjury;
+    }
+    if (model.injuryAtWork) {
+      options.workInjuryIndicator = yesNoToCode(model.injuryAtWork);
+    }
+    // We use the presence of specific transportation info to determine yes or no
+    options.transportationEventIndicator = yesNoToCode(model.transportationInjury ? 'Yes' : 'No');
+  }
+
+  if (model.howInjuryOccurred) {
+    options.injuryLocation = {
+      // TODO: Form doesn't include name of location
+      // name: 'restaurant',
+      description: model.howInjuryOccurred
+    }
+  }
+
+  // TODO: Better handling of partial addresses
+  if (model.locationOfInjuryState) {
+    options.injuryLocation = options.injuryLocation || {};
+    // TODO: Currently ignores placeOfDeathApt
+    options.injuryLocation.address = formatAddress(model.locationOfInjuryStreet, model.locationOfInjuryCity, model.locationOfInjuryCounty,
+                                                   model.locationOfInjuryState, model.placeOfDeathZip);
+    // TODO: Form doesn't support type or physical type
+    //   type: {
+    //     code: 'PTRES',
+    //     text: 'Patient\'s Residence'
+    //   },
+    //   physicalType: {
+    //     code: 'ro',
+    //     text: 'Room'
+    //   }
+  }
+
   // mortician: {
   //   name: 'Jim Mortician',
   //   qualification: {
@@ -259,12 +344,17 @@ function recordAndPatientToFHIR(model, patient) {
     options.causeOfDeathConditions = causeOfDeathConditions;
   }
 
-  // conditionContributingToDeath: {
-  //   text: 'Example Contributing Condition'
-  // },
-  // examinerContacted: {
-  //   value: record.examinerContacted
-  // }
+  if (model.contributing) {
+    options.conditionContributingToDeath = {
+      text: model.contributing
+    }
+  }
+
+  if (model.examinerContacted) {
+    options.examinerContacted = {
+      value: yesNoToBoolean(model.examinerContacted)
+    }
+  }
 
   return (new DeathCertificateDocument(options));
 }
