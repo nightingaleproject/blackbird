@@ -1,4 +1,5 @@
 import moment from 'moment';
+import _ from 'lodash';
 import { DeathCertificateDocument } from './FHIRExport';
 
 // Utility functions
@@ -18,7 +19,7 @@ function formatAddress(street, city, county, state, postalCode) {
     address.state = state;
   }
   if (postalCode) {
-    address.postelCode = postalCode;
+    address.postalCode = postalCode;
   }
   return (address);
 }
@@ -137,7 +138,7 @@ function recordAndPatientToFHIR(model, patient) {
       birthPlace: patient.resource.birthPlace,
       gender: patient.resource.gender,
       birthDate: patient.resource.birthDate,
-      maritalStatus: patient.resource.maritalStatus,
+      maritalStatus: _.get(patient, 'resource.maritalStatus.coding[0].code')
       //ethnicity: { text: 'Not Hispanic or Latino', code: '2186-5' },
       //race: [
       //  { type: 'ombCategory', text: 'White', code: '2106-3' },
