@@ -2,6 +2,7 @@ import React from 'react';
 import { Grid, Message, Form, Button, Input } from 'semantic-ui-react';
 import FormPage from './FormPage';
 import { recordAndPatientToFHIR } from './RecordAndPatientToFHIR';
+import StateStorage from './StateStorage';
 // jQuery for AJAX is overkill, but it's already a dependency
 import jQuery from 'jquery';
 
@@ -9,18 +10,22 @@ class ReviewAndSubmit extends FormPage {
 
   constructor(props) {
     super(props);
-    this.state = { edrsEndpoint: 'http://localhost:4000/fhir/v1/death_records.json' };
-    this.handleEndpointChange = this.handleEndpointChange.bind(this);
+    // See if we have state from previous use stored in local browser storage
+    const defaultState = { edrsEndpoint: 'http://localhost:4000/fhir/v1/death_records.json' };
+    this.state = StateStorage.retrieveState('stateReviewAndSubmit', defaultState);
+    this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleEndpointChange(event, data) {
-    this.setState({ edrsEndpoint: data.value });
+  handleChange(event) {
+    const target = event.target;
+    // Store state in local browser storage to preserve between uses
+    this.setState({ [target.name]: target.value }, () => StateStorage.storeState('stateReviewAndSubmit', this.state));
   }
 
   handleSubmit() {
     const fhirData = recordAndPatientToFHIR(this.props.record, this.props.patient);
-    jQuery.ajax({
+    const ajaxParams = {
       url: this.state.edrsEndpoint,
       type: 'POST',
       data: JSON.stringify(fhirData),
@@ -37,7 +42,14 @@ class ReviewAndSubmit extends FormPage {
           alert("Failed to submit data to server, error reported: " + response.statusText);
         }
       }
-    });
+    }
+    // Support an optional bearer token if specified
+    if (this.state.bearerToken) {
+      // TODO: Determine which of these is actually the correct way to do it
+      ajaxParams.beforeSend = (xhr, settings) => { xhr.setRequestHeader('Authorization', 'Bearer ' + this.state.bearerToken); };
+      ajaxParams.headers = { 'Authorization': 'Bearer ' + this.state.bearerToken };
+    }
+    jQuery.ajax(ajaxParams);
   }
 
   render() {
@@ -157,8 +169,13 @@ class ReviewAndSubmit extends FormPage {
               </Form.Group>
 
               <Form.Field>
+                <label>Bearer Token (optional):</label>
+                <Input type='text' name='bearerToken' value={this.state.bearerToken} onChange={this.handleChange} />
+              </Form.Field>
+
+              <Form.Field>
                 <label>EDRS FHIR Endpoint URL:</label>
-                <Input type='text' name='edrsEndpoint' value={this.state.edrsEndpoint} onChange={this.handleEndpointChange} />
+                <Input type='text' name='edrsEndpoint' value={this.state.edrsEndpoint} onChange={this.handleChange} />
               </Form.Field>
 
               <Button primary floated='right' onClick={this.handleSubmit}>Submit</Button>
