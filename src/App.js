@@ -84,7 +84,7 @@ class App extends Component {
     this.handleConditionClick = this.handleConditionClick.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     // If we're running in a SMART on FHIR context, load the patient and all resources
     if (this.props.smart) {
       SMARTWrap.load().then(([user, patient, conditions, medications, procedures, observations]) => {

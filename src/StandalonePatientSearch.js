@@ -10,7 +10,7 @@ class StandalonePatientSearch extends Component {
     this.handlePatientSelect = this.handlePatientSelect.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     SMARTWrap.ready().then((smart) => {
       this.setState({ fhirServer: smart.server.serviceUrl });
     });

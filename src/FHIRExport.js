@@ -3,29 +3,43 @@ import moment from 'moment';
 import uuid from 'uuid/v4';
 
 // Infrastructure for creating FHIR death records based on the profile at
-// https://nightingaleproject.github.io/fhir-death-record/guide/index.html
+// http://hl7.org/fhir/us/vrdr/2019May/
+
+// Utility functions
+// In the code below we rely on "" evaluating to false
+
+const formatDateAndTime = (date, time) => {
+  if (date && time) {
+    return moment.utc(`${date} ${time}`, 'YYYY-MM-DD HH:mm').format();
+  } else if (date) {
+    return moment.utc(date, 'YYYY-MM-DD').format();
+  }
+}
 
 // Begin with classes to represent the core FHIR resources and types that are used to build a death record
 
-class Base {
-  constructor(options = {}) {
-    Object.assign(this, options);
+class Resource {
+  constructor() {
+    this.id = uuid();
   }
   addExtension(extension) {
     this.extension = this.extension || [];
     this.extension.push(extension);
   }
   setProfile(profile) {
-    this.meta = { profile };
+    this.meta = { profile: [profile] };
   }
 }
 
-class Bundle extends Base {
-  constructor(options = {}) {
-    super(options);
+class Bundle extends Resource {
+  constructor() {
+    super();
     this.resourceType = 'Bundle';
   }
   addEntry(resource) {
+    if (!resource) {
+      throw new Error('Error: addEntry called without a resource to add');
+    }
     this.entry = this.entry || [];
     const entry = {
       fullUrl: `urn:uuid:${uuid()}`,
@@ -36,64 +50,196 @@ class Bundle extends Base {
   }
 }
 
-class Composition extends Base {
-  constructor(options = {}) {
-    super(options);
+class Composition extends Resource {
+  constructor() {
+    super();
     this.resourceType = 'Composition';
   }
 }
 
-class Condition extends Base {
+class Procedure extends Resource {
+  constructor() {
+    super();
+    this.resourceType = 'Procedure';
+  }
+}
+
+class Condition extends Resource {
   constructor(options = {}) {
-    super(options);
+    super();
     this.resourceType = 'Condition';
+    // Currently supports either code (TRANSAX format replacement) or text (IJE format replacement), not both
+    if (options.code) {
+      this.code = new CodeableConcept(options.code, 'http://hl7.org/fhir/sid/icd-10', null);
+    } else if (options.text) {
+      this.code = new CodeableConcept(null, null, options.text);
+    }
+  }
+  addDecedentReference(decedentEntry) {
+    this.subject = { reference: decedentEntry.fullUrl };
+  }
+  addPerformerReference(certifierEntry) {
+    this.asserter = { reference: certifierEntry.fullUrl };
   }
 }
 
-class Observation extends Base {
+class Person extends Resource {
   constructor(options = {}) {
-    super(options);
-    this.resourceType = 'Observation';
-    this.status = 'final';
+    super();
+    if (options.name) {
+      this.name = this.name || [];
+      this.name.push(new HumanName(options.name));
+    }
+    if (options.address) {
+      this.address = [new Address(options.address)];
+    }
+    if (options.qualification) {
+      const qualification = {};
+      if (options.qualification.identifier) {
+        qualification['identifier'] = [{ value: options.qualification.identifier }];
+      }
+      if (options.qualification.code) {
+        qualification['code'] = new CodeableConcept(options.qualification.code, 'http://hl7.org/fhir/v2/0360/2.7',
+                                                    options.qualification.text);
+      }
+      this.qualification = [qualification];
+    }
   }
 }
 
-class Practitioner extends Base {
+class Practitioner extends Person {
   constructor(options = {}) {
     super(options);
     this.resourceType = 'Practitioner';
   }
-  addName(name) {
-    this.name = this.name || [];
-    this.name.push(new HumanName(name));
+}
+
+class PractitionerRole extends Resource {
+  constructor() {
+    super();
+    this.resourceType = 'PractitionerRole';
   }
 }
 
-class Patient extends Base {
+class Patient extends Person {
   constructor(options = {}) {
     super(options);
     this.resourceType = 'Patient';
   }
-  addName(name) {
-    this.name = this.name || [];
-    this.name.push(new HumanName(name));
+}
+
+class Organization extends Resource {
+  constructor(options = {}) {
+    super();
+    this.resourceType = 'Organization';
+    if (options.name) {
+      this.name = options.name;
+    }
+    if (options.address) {
+      this.address = [new Address(options.address)];
+    }
   }
 }
 
-class CodeableConcept {
-  constructor(system, code, display) {
-    if (system) {
-      this.coding = [{ system, code, display }];
-    } else {
-      this.coding = [{ code, display }];
+class List extends Resource {
+  constructor(options = {}) {
+    super();
+    this.resourceType = 'List';
+  }
+}
+
+class RelatedPerson extends Person {
+  constructor(options = {}) {
+    super(options);
+    this.resourceType = 'RelatedPerson';
+  }
+  addDecedentReference(decedentEntry) {
+    this.patient = { reference: decedentEntry.fullUrl };
+  }
+}
+
+class Observation extends Resource {
+  constructor(options = {}) {
+    super();
+    this.resourceType = 'Observation';
+    this.status = 'final';
+    this.code = new CodeableConcept(options.code, options.system, options.display);
+  }
+  addDecedentReference(decedentEntry) {
+    this.subject = { reference: decedentEntry.fullUrl };
+  }
+  addPerformerReference(certifierEntry) {
+    this.performer = [{ reference: certifierEntry.fullUrl }];
+  }
+  addLocationReference(locationEntry) {
+    const valueReference = { reference: locationEntry.fullUrl };
+    const url = locationEntry.resource.meta.profile[0];
+    this.addExtension({ url, valueReference });
+  }
+  addComponent(typeOptions, valueOptions) {
+    this.component = this.component || [];
+    const content = { code: new CodeableConcept(typeOptions.code, typeOptions.system, typeOptions.display) };
+    if (valueOptions.code) {
+      content['valueCodeableConcept'] = new CodeableConcept(valueOptions.code, valueOptions.system, valueOptions.display);
+    } else if (valueOptions.date) {
+      content['valueDateTime'] = formatDateAndTime(valueOptions.date, valueOptions.time);
+    } else if (valueOptions.text) {
+      content['valueString'] = valueOptions.text;
     }
-    this.text = display;
+    this.component.push(content);
+  }
+}
+
+class Location extends Resource {
+  constructor(options = {}) {
+    super();
+    this.resourceType = 'Location';
+    if (options.name) {
+      this.name = options.name;
+    }
+    if (options.description) {
+      this.description = options.description;
+    }
+    if (options.address) {
+      this.address = new Address(options.address);
+    }
+    if (options.type) {
+      this.type = new CodeableConcept(options.type.code,
+                                      'http://hl7.org/fhir/ValueSet/v3-ServiceDeliveryLocationRoleType',
+                                      options.type.text);
+    }
+    if (options.physicalType) {
+      this.physicalType = new CodeableConcept(options.physicalType.code,
+                                              'http://hl7.org/fhir/ValueSet/location-physical-type',
+                                              options.physicalType.text);
+    }
+  }
+}
+
+// Helper classes for other FHIR concepts
+
+class CodeableConcept {
+  constructor(code, system, display) {
+    if (code) {
+      if (system && display) {
+        this.coding = [{ system, code, display }];
+      } else if (system) {
+        this.coding = [{ system, code }];
+      } else if (display) {
+        this.coding = [{ code, display }];
+      } else {
+        this.coding = [{ code }];
+      }
+    }
+    if (display) {
+      this.text = display;
+    }
   }
 }
 
 class HumanName {
   constructor(name, use) {
-    // Start with a simple decomposition
+    // Just does a simple decomposition for now
     // TODO: This won't hold up to more complex examples with prefixes and suffixes
     let match = name.match(/(.+)\s+(\S+)/);
     if (match) {
@@ -118,656 +264,527 @@ class Address {
 
 // Classes to represent specific components of the death record
 
-class DeathRecordContents extends Composition {
+class DeathCertificateDocument extends Bundle {
   constructor(options = {}) {
-    super(options);
-    this.type = new CodeableConcept('http://loinc.org', '64297-5', 'Death certificate');
-    this.status = 'final';
-    this.date = moment().format('YYYY-MM-DD');
-    this.title = 'Record of Death';
-    this.section = [{
-      code: new CodeableConcept('http://loinc.org', '69453-9', 'Cause of death')
-    }];
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-DeathRecordContents');
+
+    super();
+
+    this.type = 'document';
+
+    if (options.identifier) {
+      this.identifier = { value: options.identifier };
+    }
+
+    const [certificate] = this.createAndAddEntry(null, DeathCertificate, options.deathCertificate);
+
+    const [ , decedentEntry] = this.createAndAddEntry(certificate, Decedent, options.decedent);
+    if (decedentEntry) {
+      certificate.addDecedentReference(decedentEntry);
+    }
+
+    const [ , certifierEntry] = this.createAndAddEntry(certificate, Certifier, options.certifier)
+    if (certifierEntry) {
+      certificate.addPerformerReference(certifierEntry);
+    }
+
+    const [ , deathCertificationEntry] = this.createAndAddEntry(certificate, DeathCertification,
+                                                                options.deathCertification, null, certifierEntry)
+    if (deathCertificationEntry) {
+      certificate.addCertificationReference(deathCertificationEntry);
+    }
+
+    const [ , deathLocationEntry] = this.createAndAddEntry(certificate, DeathLocation, options.deathLocation);
+
+    const [ , morticianEntry] = this.createAndAddEntry(certificate, Mortician, options.mortician);
+
+    const [ , dispositionLocationEntry] = this.createAndAddEntry(certificate, DispositionLocation,
+                                                                 options.dispositionLocation);
+
+    const [ , funeralHomeEntry] = this.createAndAddEntry(certificate, FuneralHome, options.funeralHome);
+
+    this.createAndAddEntry(certificate, DecedentFather, options.decedentFather, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentMother, options.decedentMother, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentSpouse, options.decedentSpouse, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentAge, options.decedentAge, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentPregnancy, options.decedentPregnancy, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentTransportationRole, options.decedentTransportationRole, decedentEntry);
+    this.createAndAddEntry(certificate, TobaccoUseContributedToDeath, options.tobaccoUseContributedToDeath, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentEducationLevel, options.decedentEducationLevel, decedentEntry);
+    this.createAndAddEntry(certificate, DecedentEmploymentHistory, options.decedentEmploymentHistory, decedentEntry);
+    this.createAndAddEntry(certificate, BirthRecordIdentifier, options.birthRecordIdentifier, decedentEntry);
+    this.createAndAddEntry(certificate, MannerOfDeath, options.mannerOfDeath, decedentEntry, certifierEntry);
+    this.createAndAddEntry(certificate, AutopsyPerformedIndicator, options.autopsyPerformed, decedentEntry);
+    this.createAndAddEntry(certificate, ExaminerContacted, options.examinerContacted, decedentEntry);
+    this.createAndAddEntry(certificate, InterestedParty, options.interestedParty);
+    // TODO: The IG is unclear about whether Condition Contributing to Death points to certifier
+    // this.createAndAddEntry(certificate, ConditionContributingToDeath, options.conditionContributingToDeath,
+    //                        decedentEntry, certifierEntry);
+    this.createAndAddEntry(certificate, ConditionContributingToDeath, options.conditionContributingToDeath, decedentEntry);
+    this.createAndAddEntry(certificate, DeathDate, options.deathDate, decedentEntry, certifierEntry, deathLocationEntry);
+    this.createAndAddEntry(certificate, DeathPronouncementPerformer, options.deathPronouncementPerformer);
+    this.createAndAddEntry(certificate, InjuryIncident, options.injuryIncident, decedentEntry, deathLocationEntry);
+    this.createAndAddEntry(certificate, InjuryLocation, options.injuryLocation);
+    this.createAndAddEntry(certificate, DecedentDispositionMethod, options.decedentDispositionMethod,
+                           decedentEntry, morticianEntry, dispositionLocationEntry)
+
+    const [funeralHomeDirector] = this.createAndAddEntry(certificate, FuneralHomeDirector, options.funeralHomeDirector,
+                                                         null, morticianEntry);
+    if (funeralHomeDirector) {
+      funeralHomeDirector.addFuneralHomeReference(funeralHomeEntry);
+    }
+
+    const [causeOfDeathPathway] = this.createAndAddEntry(certificate, CauseOfDeathPathway, {}, null, certifierEntry)
+    if (options.causeOfDeathConditions) {
+      for (var causeOptions of options.causeOfDeathConditions) {
+        const [ , causeOfDeathConditionEntry] = this.createAndAddEntry(certificate, CauseOfDeathCondition,
+                                                                       causeOptions, decedentEntry, certifierEntry);
+        causeOfDeathPathway.addCauseOfDeathReference(causeOfDeathConditionEntry);
+      }
+    }
+
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate-Document')
+  }
+
+  // Many entries follow the same structure: instantiate a class with passed-in options, point the
+  // instance to the decedent and/or certifier, and add an entry for that instance
+  createAndAddEntry(certificate, klass, options, decedentEntry, performerEntry, locationEntry) {
+    if (!options) {
+      // If information for an entry is not provided to the API we just don't create the entry
+      return([null, null]);
+    }
+
+    const instance = new klass(options);
+    if (decedentEntry) {
+      instance.addDecedentReference(decedentEntry);
+    }
+    if (performerEntry) {
+      instance.addPerformerReference(performerEntry);
+    }
+    if (locationEntry) {
+      instance.addLocationReference(locationEntry);
+    }
+    const entry = this.addEntry(instance);
+    if (certificate) {
+      certificate.addSectionEntry(entry);
+    }
+    return([instance, entry]);
+  }
+}
+
+class DeathCertificate extends Composition {
+  constructor(options = {}) {
+    super();
+    // TODO: do we want to check for missing required options?
+    if (options.identifier) {
+      this.identifier = { value: options.identifier };
+    }
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certificate');
   }
   addDecedentReference(decedentEntry) {
     this.subject = { reference: decedentEntry.fullUrl };
   }
-  addCertifierReference(certifierEntry) {
-    this.author = [{ reference: certifierEntry.fullUrl }];
+  addPerformerReference(certifierEntry) {
+    this.attester = [{ mode: ['legal'], party: { reference: certifierEntry.fullUrl } }];
   }
-  addReference(entry) {
-    this.section[0].entry = this.section[0].entry || [];
+  addCertificationReference(certificationReference) {
+    const code = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
+    this.event = [{ code: [code], detail: [{ reference: certificationReference.fullUrl }] }];
+  }
+  addSectionEntry(entry) {
+    this.section = this.section || [{ entry: [] }];
     this.section[0].entry.push({ reference: entry.fullUrl });
   }
 }
 
-class Decedent extends Patient {
+class DeathCertification extends Procedure {
   constructor(options = {}) {
-    const local = ['name', 'birthDate', 'deceasedDateTime', 'address', 'gender', 'ssn', 'servedInArmedForces', 'birthSex',
-                   'placeOfDeathType', 'placeOfDeathName', 'placeOfDeathAddress'];
-
-    // TODO: Missing fields (we only need to implement the ones where we have data from our test patients):
-    // race, ethnicity, ageAtDeath (derive), placeOfBirth, maritalStatus, placeOfDeath, disposition,
-    // education, occupation, motherMaidenName
-
-    // We can get: race, ethnicity, birthPlace, mothersMaidenName, birthSex, ssn, gender, birthDate,
-    // deceasedDateTime (user supplied, not from record!), address, maritalStatus
-
-    // TODO: Where is support for father's name in profile?
-
-    super(_.omit(options, local));
-    if (options.name) {
-      this.addName(options.name);
-    }
-    if (options.birthDate) {
-      this.birthDate = options.birthDate;
-    }
-    if (options.deceasedDateTime) {
-      this.deceasedDateTime = options.deceasedDateTime;
-    }
-    if (options.address) {
-      this.address = [new Address(options.address)];
-    }
-    if (options.gender) {
-      this.gender = options.gender;
-    }
-    if (options.ssn) {
-      this.identifier = [{
-        system: 'http://hl7.org/fhir/sid/us-ssn',
-        value: options.ssn
-      }];
-    }
-    if (!_.isNil(options.servedInArmedForces)) {
-      this.addExtension({
-        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-ServedInArmedForces-extension',
-        valueBoolean: options.servedInArmedForces
-      });
-    }
-    if (options.birthSex) {
-      this.addExtension({
-        url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
-        valueCode: options.birthSex
-      });
-    }
-    if (options.placeOfDeathType || options.placeOfDeathName || options.placeOfDeathAddress) {
-      const extensions = [];
-      if (options.placeOfDeathType) {
-        const placeOfDeathTypeCodeLookup = {
-          'Dead on arrival at hospital': '63238001',
-          'Death in home': '440081000124100',
-          'Death in hospice': '440071000124103',
-          'Death in hospital': '16983000',
-          'Death in hospital-based emergency department or outpatient department': '450391000124102',
-          'Death in nursing home or long term care facility': '450381000124100'
-        };
-        const placeOfDeathTypeCode = placeOfDeathTypeCodeLookup[options.placeOfDeathType];
-        if (placeOfDeathTypeCode) {
-          extensions.push({
-            url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeathType-extension',
-            valueCodeableConcept: new CodeableConcept('http://snomed.info/sct', placeOfDeathTypeCode, options.placeOfDeathType)
-          });
-        }
-      }
-      if (options.placeOfDeathName) {
-        extensions.push({
-          url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-FacilityName-extension',
-          valueString: options.placeOfDeathName
-        })
-      }
-      if (options.placeOfDeathAddress) {
-        extensions.push({
-          url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension',
-          valueAddress: new Address(options.placeOfDeathAddress)
-        })
-      }
-      this.addExtension({
-        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-PlaceOfDeath-extension',
-        extension: extensions
-      });
-    }
-    this.setProfile([
-      'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-decedent-Decedent',
-      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
-    ]);
+    super();
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Death-Certification');
+    this.status = 'completed';
+    this.category = new CodeableConcept('103693007', 'http://snomed.info/sct', 'Diagnostic procedure');
+    this.code = new CodeableConcept('308646001', 'http://snomed.info/sct', 'Death certification');
+    this.performedDateTime = formatDateAndTime(options.performedDate, options.performedTime);
+  }
+  addPerformerReference(certifierEntry) {
+    this.performer = [{
+      role: new CodeableConcept('309343006', 'http://snomed.info/sct', 'Physician'),
+      actor: { reference: certifierEntry.fullUrl }
+    }];
   }
 }
 
 class Certifier extends Practitioner {
   constructor(options = {}) {
-    const local = ['name', 'certifierType', 'identifier', 'address'];
-    super(_.omit(options, local));
-    if (options.name) {
-      this.addName(options.name);
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Certifier');
+  }
+}
+
+class Mortician extends Practitioner {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Mortician');
+  }
+}
+
+class Decedent extends Patient {
+  constructor(options = {}) {
+    super(options);
+    // Race
+    if (options.race) {
+      const extension = [];
+      // Race can handle either a single value or an array
+      const raceEntries = _.castArray(options.race);
+      // Only a single text extension is allowed, so concatenate the text from all the entries
+      const raceText = raceEntries.filter((e) => e.text).map((e) => e.text).join(' ')
+      if (raceText.length > 0) {
+        extension.push({ url: 'text', valueString: raceText });
+      }
+      for (var raceEntry of raceEntries.filter((e) => e.code)) {
+        const valueCoding = { system: 'urn:oid:2.16.840.1.113883.6.238', code: raceEntry.code, display: raceEntry.text };
+        extension.push({ url: raceEntry.type, valueCoding });
+      }
+      this.addExtension({ url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race', extension });
     }
-    const certifierCodeLookup = {
-      'Physician (Certifier)': '434641000124105',
-      'Physician (Pronouncer and Certifier)': '434651000124107',
-      'Coroner': '310193003',
-      'Medical Examiner': '440051000124108'
-    };
-    const certifierCode = certifierCodeLookup[options.certifierType];
-    if (certifierCode) {
+    // Ethnicity
+    if (options.ethnicity) {
+      const extension = [];
+      if (options.ethnicity.text) {
+        extension.push({ url: 'text', valueString: options.ethnicity.text });
+      }
+      if (options.ethnicity.code) {
+        const valueCoding = { system: 'urn:oid:2.16.840.1.113883.6.238', code: options.ethnicity.code };
+        if (options.ethnicity.text) {
+          valueCoding['display'] = options.ethnicity.text;
+        }
+        extension.push({ url: 'ombCategory', valueCoding });
+      }
+      this.addExtension({ url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity', extension });
+    }
+    // BirthSex
+    if (options.birthSex) {
       this.addExtension({
-        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-CertifierType-extension',
-        valueCodeableConcept: new CodeableConcept('http://snomed.info/sct', certifierCode, options.certifierType)
+        url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
+        valueCodeableConcept: new CodeableConcept(options.birthSex, 'http://hl7.org/fhir/us/core/ValueSet/us-core-birthsex')
       });
     }
-    if (options.identifier) {
+    // BirthPlace
+    if (options.birthPlace) {
+      this.addExtension({
+        url: 'http://hl7.org/fhir/StructureDefinition/birthPlace',
+        valueAddress: options.birthPlace
+      });
+    }
+    // SSN
+    if (options.ssn) {
       this.identifier = [{
-        use: 'official',
-        value: options.identifier
+        type: new CodeableConcept('BR', null, 'Social Beneficiary Identifier'),
+        system: 'http://hl7.org/fhir/sid/us-ssn',
+        value: options.ssn
       }];
     }
-    if (options.address) {
-      this.address = [new Address(options.address)];
+    // Gender
+    if (options.gender) {
+      this.gender = options.gender;
     }
-    // Assuming MD by default, TODO: Investigate how to better capture this
-    this.qualification = {
-      code: new CodeableConcept('http://hl7.org/fhir/v2/0360/2.7', 'MD', 'Doctor of Medicine')
+    // BirthDate
+    if (options.birthDate) {
+      this.birthDate = formatDateAndTime(options.birthDate, null);
     }
-    this.setProfile([
-      'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-deathRecord-Certifier',
-      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner'
-    ]);
+    // MaritalStatus
+    if (options.maritalStatus) {
+      this.maritalStatus = new CodeableConcept(options.maritalStatus, 'http://hl7.org/fhir/vs/marital-status');
+    }
   }
 }
 
-class CauseOfDeath extends Condition {
-  constructor(literalText, onsetString, subjectEntry) {
-    super();
-    this.clinicalStatus = 'active';
-    this.text = {
-      status: 'additional',
-      div: `<div xmlns='http://www.w3.org/1999/xhtml'>${literalText}</div>`
+class DecedentFather extends RelatedPerson {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Father');
+    this.relationship = new CodeableConcept('FTH');
+  }
+}
+
+class DecedentMother extends RelatedPerson {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Mother');
+    this.relationship = new CodeableConcept('MTH');
+  }
+}
+
+class DecedentSpouse extends RelatedPerson {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Decedent-Spouse');
+    this.relationship = new CodeableConcept('SPS');
+  }
+}
+
+class DecedentAge extends Observation {
+  constructor(options = {}) {
+    super({ code: '30525-0', system: 'http://loinc.org', display: 'Age' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Age');
+    this.valueQuantity = {
+      unit: options.unit,
+      value: options.value
     };
-    this.onsetString = onsetString;
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-CauseOfDeathCondition');
+    // TODO: This also has an effectiveDateTime, which is the date of death; this is duplicative information
   }
 }
 
-class ContributedToDeath extends Condition {
-  constructor(text, subjectEntry) {
-    super();
-    this.clinicalStatus = 'active';
-    this.text = {
-      status: 'additional',
-      div: `<div xmlns='http://www.w3.org/1999/xhtml'>${text}</div>`
-    };
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-ContributedToDeathCondition');
+class DecedentPregnancy extends Observation {
+  constructor(options = {}) {
+    super({ code: '69442-2', system: 'http://loinc.org', display: 'Timing of recent pregnancy in relation to death' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Pregnancy');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/stu3/valueset-PregnancyStatusVS', options.text);
   }
 }
 
-class ActualOrPresumedDateOfDeath extends Observation {
-   constructor(value, subjectEntry) {
-     super();
-     this.code = new CodeableConcept('http://loinc.org', '81956-5', 'Date and time of death');
-     this.valueDateTime = value;
-     this.subject = { reference: subjectEntry.fullUrl };
-     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-ActualOrPresumedDateOfDeath');
-   }
-}
-
-class AutopsyPerformed extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '85699-7', 'Autopsy was performed');
-    this.valueBoolean = value;
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyPerformed');
+class DecedentTransportationRole extends Observation {
+  constructor(options = {}) {
+    super({ code: '69451-3', system: 'http://loinc.org', display: 'Transportation role of decedent' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Transportation-Role');
+    this.valueCodeableConcept = new CodeableConcept(options.code,
+                                                    'http://hl7.org/fhir/ValueSet/TransportationRelationships',
+                                                    options.text);
   }
 }
 
-class AutopsyResultsAvailable extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '69436-4', 'Autopsy results available');
-    this.valueBoolean = value;
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-AutopsyResultsAvailable');
+class FuneralHome extends Organization {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home');
+    this.type = [new CodeableConcept('bus', null, 'Non-Healthcare Business or Corporation')];
   }
 }
 
-class DatePronouncedDead extends Observation {
-   constructor(value, subjectEntry) {
-     super();
-     this.code = new CodeableConcept('http://loinc.org', '80616-6', 'Date and time pronounced dead');
-     this.valueDateTime = value;
-     this.subject = { reference: subjectEntry.fullUrl };
-     this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DatePronouncedDead');
-   }
-}
-
-class DeathFromWorkInjury extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '69444-8', 'Did death result from injury at work');
-    this.valueBoolean = value;
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromWorkInjury');
+class FuneralHomeDirector extends PractitionerRole {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Funeral-Home-Director');
+    // TODO: The code in the IG doesn't reference an appropriate value set
+  }
+  addPerformerReference(performerEntry) {
+    this.practitioner = { reference: performerEntry.fullUrl };
+  }
+  addFuneralHomeReference(funeralHomeEntry) {
+    this.organization = { reference: funeralHomeEntry.fullUrl };
   }
 }
 
-class InjuryAssociatedWithTransport extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '69448-9', 'Injury leading to death associated with transportation event');
-    switch (value) {
-    case 'Vehicle driver':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '236320001', value);
-      break;
-    case 'Passenger':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '257500003', value);
-      break;
-    case 'Pedestrian':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '257518000', value);
-      break;
-    case 'Other':
-      this.valueCodeableConcept = new CodeableConcept('http://hl7.org/fhir/v3/NullFlavor', 'OTH', value);
-      break;
-    default:
-      throw new Error(`InjuryAssociatedWithTransport ${value} not in value set`);
+class InterestedParty extends Organization {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Interested-Party');
+    if (options.identifier) {
+      this.identifier = [{ value: options.identifier }];
     }
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DeathFromTransportInjury');
+    this.active = 'true'; // TODO: should this be settable?
+    if (options.typeCode) {
+      this.type = [new CodeableConcept(options.typeCode, 'http://hl7.org/fhir/ValueSet/organization-type', options.typeDisplay)];
+    }
   }
 }
 
-class DetailsOfInjury extends Observation {
-  constructor(details, subjectEntry) {
+class CauseOfDeathPathway extends List {
+  constructor() {
     super();
-    this.code = new CodeableConcept('http://loinc.org', '11374-6', 'Injury incident description');
-    this.valueString = details.value;
-    // TODO: need to sensibly handle null values
-    this.effectiveDateTime = details.effectiveDateTime;
-    if (details.placeOfInjury) {
-      this.extension = this.extension || [];
-      this.extension.push({
-        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-PlaceOfInjury-extension',
-        valueString: details.placeOfInjury
-      });
-    }
-    if (details.address) {
-      this.extension = this.extension || [];
-      this.extension.push({
-        url: 'http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/shr-core-PostalAddress-extension',
-        valueAddress: new Address(details.address)
-      });
-    }
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-DetailsOfInjury');
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Pathway');
+    this.status = 'current';
+    this.mode = 'snapshot';
+    this.orderedBy = new CodeableConcept('priority');
+  }
+  addPerformerReference(certifierEntry) {
+    this.source = { reference: certifierEntry.fullUrl };
+  }
+  addCauseOfDeathReference(causeOfDeathEntry) {
+    this.entry = this.entry || [];
+    this.entry.push({ item: { reference: causeOfDeathEntry.fullUrl } });
   }
 }
 
-class MannerOfDeath extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '69449-7', 'Manner of death');
-    switch (value) {
-    case 'Natural':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '38605008', value);
-      break;
-    case 'Accident':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '7878000', value);
-      break;
-    case 'Suicide':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '44301001', value);
-      break;
-    case 'Homicide':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '27935005', value);
-      break;
-    case 'Pending Investigation':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '185973002', value);
-      break;
-    case 'Could not be determined':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '65037004', value);
-      break;
-    default:
-      throw new Error(`MannerOfDeath ${value} not in value set`);
+class CauseOfDeathCondition extends Condition {
+  constructor(options) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Cause-of-Death-Condition');
+    if (options.interval) {
+      this.onsetString = options.interval;
     }
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MannerOfDeath');
   }
 }
 
-class MedicalExaminerOrCoronerContacted extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '74497-9', 'Medical examiner or coroner was contacted');
-    this.valueBoolean = value;
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-MedicalExaminerContacted');
+class ConditionContributingToDeath extends Condition {
+  constructor(options) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/StructureDefinition/VRDR-Condition-Contributing-To-Death');
   }
 }
 
-class TimingOfPregnancy extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '69442-2', 'Timing of recent pregnancy in relation to death');
-    switch (value) {
-    case 'Not pregnant within past year':
-      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1260', value);
-      break;
-    case 'Pregnant at time of death':
-      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1261', value);
-      break;
-    case 'Not pregnant, but pregnant within 42 days of death':
-      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1262', value);
-      break;
-    case 'Not pregnant, but pregnant 43 days to 1 year before death':
-      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1263', value);
-      break;
-    case 'Unknown if pregnant within the past year':
-      this.valueCodeableConcept = new CodeableConcept(null, 'PHC1264', value);
-      break;
-    default:
-      throw new Error(`TimingOfPregnancy ${value} not in value set`);
-    }
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-TimingOfRecentPregnancyInRelationToDeath');
+class ExaminerContacted extends Observation {
+  constructor(options = {}) {
+    super({ code: '74497-9', system: 'http://loinc.org', display: 'Medical examiner or coroner was contacted' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Examiner-Contacted');
+    this.valueBoolean = options.value;
   }
 }
 
 class TobaccoUseContributedToDeath extends Observation {
-  constructor(value, subjectEntry) {
-    super();
-    this.code = new CodeableConcept('http://loinc.org', '69443-0', 'Did tobacco use contribute to death');
-    switch (value) {
-    case 'Yes':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '373066001', value);
-      break;
-    case 'No':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '373067005', value);
-      break;
-    case 'Probably':
-      this.valueCodeableConcept = new CodeableConcept('http://snomed.info/sct', '2931005', value);
-      break;
-    case 'Unknown':
-      this.valueCodeableConcept = new CodeableConcept('http://hl7.org/fhir/v3/NullFlavor', 'UNK', value);
-      break;
-    default:
-      throw new Error(`TobaccoUseContributedToDeath ${value} not in value set`);
-    }
-    this.subject = { reference: subjectEntry.fullUrl };
-    this.setProfile('http://nightingaleproject.github.io/fhirDeathRecord/StructureDefinition/sdr-causeOfDeath-TobaccoUseContributedToDeath');
-  }
-}
-
-// Top level class to represent the Death Record, which provides the basic interface for creating itself
-
-class DeathRecord extends Bundle {
   constructor(options = {}) {
-    // Figure out what options we'll handle locally and pass the rest up
-    const local = ['decedent', 'certifier', 'causeOfDeath', 'contributedToDeath', 'actualOrPresumedDateOfDeath', 'autopsyPerformed',
-                   'autopsyResultsAvailable', 'datePronouncedDead', 'deathFromWorkInjury', 'injuryAssociatedWithTransport',
-                   'detailsOfInjury', 'mannerOfDeath', 'medicalExaminerOrCoronerContacted', 'timingOfPregnancy',
-                   'tobaccoUseContributedToDeath'];
-    super(_.omit(options, local));
-
-    // Indicate that this Bundle is a document
-    this.type = 'document';
-
-    // Create the Composition that tracks all the entries
-    const deathRecordContents = new DeathRecordContents();
-    this.addEntry(deathRecordContents);
-
-    // Add the decedent and certifier information
-    const decedentEntry = this.addDecedent(options.decedent, deathRecordContents);
-    this.addCertifier(options.certifier, deathRecordContents);
-
-    // Add the cause of death information
-    options.causeOfDeath = options.causeOfDeath || [];
-    options.causeOfDeath.forEach((cod) => this.addCauseOfDeath(cod.literalText, cod.onsetString, deathRecordContents, decedentEntry));
-
-    // Add other factors that contributed to death
-    this.addContributedToDeath(options.contributedToDeath, deathRecordContents, decedentEntry);
-
-    // Add all the observations
-    this.addObservation(options.actualOrPresumedDateOfDeath, ActualOrPresumedDateOfDeath, deathRecordContents, decedentEntry);
-    this.addObservation(options.autopsyPerformed, AutopsyPerformed, deathRecordContents, decedentEntry);
-    this.addObservation(options.autopsyResultsAvailable, AutopsyResultsAvailable, deathRecordContents, decedentEntry);
-    this.addObservation(options.datePronouncedDead, DatePronouncedDead, deathRecordContents, decedentEntry);
-    this.addObservation(options.deathFromWorkInjury, DeathFromWorkInjury, deathRecordContents, decedentEntry);
-    this.addObservation(options.injuryAssociatedWithTransport, InjuryAssociatedWithTransport, deathRecordContents, decedentEntry);
-    this.addObservation(options.detailsOfInjury, DetailsOfInjury, deathRecordContents, decedentEntry);
-    this.addObservation(options.mannerOfDeath, MannerOfDeath, deathRecordContents, decedentEntry);
-    this.addObservation(options.medicalExaminerOrCoronerContacted, MedicalExaminerOrCoronerContacted, deathRecordContents, decedentEntry);
-    this.addObservation(options.timingOfPregnancy, TimingOfPregnancy, deathRecordContents, decedentEntry);
-    this.addObservation(options.tobaccoUseContributedToDeath, TobaccoUseContributedToDeath, deathRecordContents, decedentEntry);
+    super({ code: '69443-0', system: 'http://loinc.org', display: 'Did tobacco use contribute to death' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Tobacco-Use-Contributed-To-Death');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/v2-0532', options.text);
   }
-  addDecedent(decedent, deathRecordContents) {
-    if (!_.isNil(decedent)) {
-      const decedentResource = new Decedent(decedent);
-      const decedentEntry = this.addEntry(decedentResource);
-      deathRecordContents.addDecedentReference(decedentEntry);
-      return decedentEntry;
+}
+
+class DecedentEducationLevel extends Observation {
+  constructor(options = {}) {
+    super({ code: '80913-7', system: 'http://loinc.org', display: 'Highest level of education' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Education-Level');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://www.hl7.org/fhir/ValueSet/v3-EducationLevel', options.text);
+  }
+}
+
+class DecedentEmploymentHistory extends Observation {
+  constructor(options = {}) {
+    super({ code: '74165-2', system: 'http://loinc.org', display: 'History of employment status' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Employment-History');
+    if (options.militaryService) {
+      this.addComponent({ code: '55280-2', system: 'http://loinc.org', display: 'Military service Narrative' },
+                        { code: options.militaryService.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.militaryService.text });
     }
-  }
-  addCertifier(certifier, deathRecordContents) {
-    if (!_.isNil(certifier)) {
-      const certifierResource = new Certifier(certifier);
-      const certifierEntry = this.addEntry(certifierResource);
-      deathRecordContents.addCertifierReference(certifierEntry);
+    if (options.usualIndustry) {
+      this.addComponent({ code: '21844-6', system: 'http://loinc.org', display: 'History of Usual industry' },
+                        { code: options.usualIndustry.code, system: 'http://hl7.org/fhir/ValueSet/industry-cdc-census-2010',
+                          display: options.usualIndustry.text });
     }
-  }
-  addCauseOfDeath(literalText, onsetString, deathRecordContents, decedentEntry) {
-    if (!_.isNil(literalText) && !_.isNil(onsetString)) {
-      const causeOfDeathResource = new CauseOfDeath(literalText, onsetString, decedentEntry);
-      const causeOfDeathEntry = this.addEntry(causeOfDeathResource);
-      deathRecordContents.addReference(causeOfDeathEntry);
-    }
-  }
-  addContributedToDeath(text, deathRecordContents, decedentEntry) {
-    if (text) {
-      const contributedToDeathResource = new ContributedToDeath(text, decedentEntry);
-      const contributedToDeathEntry = this.addEntry(contributedToDeathResource);
-      deathRecordContents.addReference(contributedToDeathEntry);
-    }
-  }
-  addObservation(observation, observationClass, deathRecordContents, decedentEntry) {
-    if (!_.isNil(observation)) {
-      const observationResource = new observationClass(observation, decedentEntry);
-      const observationEntry = this.addEntry(observationResource);
-      deathRecordContents.addReference(observationEntry);
+    if (options.usualOccupation) {
+      this.addComponent({ code: '21847-9', system: 'http://loinc.org', display: 'Usual occupation Narrative' },
+                        { code: options.usualOccupation.code, system: 'http://hl7.org/fhir/ValueSet/Usual-occupation',
+                          display: options.usualOccupation.text });
     }
   }
 }
 
-// An example, which can be used for testing if uncommented
-
-// const example = new DeathRecord({
-//   id: '1',
-//   actualOrPresumedDateOfDeath: moment().format(),
-//   autopsyPerformed: false,
-//   autopsyResultsAvailable: false,
-//   datePronouncedDead: moment().format(),
-//   deathFromWorkInjury: false,
-//   injuryAssociatedWithTransport: 'Other',
-//   detailsOfInjury: {
-//     value: 'Example details of injury',
-//     effectiveDateTime: moment().format(),
-//     placeOfInjury: 'Example place of injury',
-//     address: {
-//       line: [
-//         "7 Example Street"
-//       ],
-//       city: "Bedford",
-//       state: "Massachusetts",
-//       postalCode: "01730",
-//       country: "United States"
-//     },
-//   },
-//   mannerOfDeath: 'Accident',
-//   medicalExaminerOrCoronerContacted: false,
-//   timingOfPregnancy: 'Not pregnant within past year',
-//   tobaccoUseContributedToDeath: 'No',
-//   causeOfDeath: [
-//     { literalText: 'Example Immediate COD', onsetString: 'minutes' },
-//     { literalText: 'Example Underlying COD 1', onsetString: '2 hours' },
-//     { literalText: 'Example Underlying COD 2', onsetString: '6 months' },
-//     { literalText: 'Example Underlying COD 3', onsetString: '15 years' }
-//   ],
-//   contributedToDeath: 'Contributed',
-//   decedent: {
-//     name: 'Example Middle Person',
-//     birthDate: '1970-04-24',
-//     deceasedDateTime: '2018-04-24T00:00:00+00:00',
-//     address:  {
-//       line: [
-//         "1 Example Street"
-//       ],
-//       city: "Boston",
-//       state: "Massachusetts",
-//       postalCode: "02101",
-//       country: "United States"
-//     },
-//     gender: 'male',
-//     ssn: '111223333',
-//     servedInArmedForces: false,
-//     birthSex: 'M'
-//   },
-//   certifier: {
-//     name: 'Example Middle Doctor',
-//     certifierType: 'Physician (Pronouncer and Certifier)',
-//     identifier: '1',
-//     address:  {
-//       line: [
-//         "100 Example St."
-//       ],
-//       city: "Bedford",
-//       state: "Massachusetts",
-//       postalCode: "01730",
-//       country: "United States"
-//     },
-//   }
-// });
-
-
-// In the code below we rely on "" evaluating to false
-
-const formatDateAndTime = (date, time) => {
-  if (date && time) {
-    return moment.utc(`${date} ${time}`, 'YYYY-MM-DD HH:mm').format();
-  } else if (date) {
-    return moment.utc(date, 'YYYY-MM-DD').format();
+class BirthRecordIdentifier extends Observation {
+  constructor(options = {}) {
+    super({ code: 'BR', system: 'urn:oid:2.16.840.1.113883.6.290', display: 'Birth Record' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Birth-Record-Identifier');
+    this.valueString = options.certificateNumber;
+    if (options.birthYear) {
+      this.addComponent({ code: '21112-8', system: 'http://loinc.org', display: 'Birth date' },
+                        { date: options.birthYear });
+    }
+    if (options.birthState) {
+      this.addComponent({ code: '21842-0', system: 'http://loinc.org', display: 'Birthplace' },
+                        { code: options.birthState, system: 'ISO 3166-2' });
+    }
   }
 }
 
-const formatAddress = (street, city, county, state, zip) => {
-  let address = null;
-  if (street || city || state || zip || county) {
-    address = {};
-    if (street) {
-      address.line = [street];
-    }
-    if (city) {
-      address.city = city;
-    }
-    if (county) {
-      address.district = county;
-    }
-    if (state) {
-      address.state = state;
-    }
-    if (zip) {
-      address.postalCode = zip;
-    }
+class MannerOfDeath extends Observation {
+  constructor(options = {}) {
+    super({ code: '69449-7', system: 'http://loinc.org', display: 'Manner of death' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Manner-of-Death');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/stu3/valueset-MannerTypeVS', options.text);
   }
-  return address;
 }
 
-const recordToFHIR = (record, decedent) => {
-
-  // TODO: Consider changing switches above to lookup table approach
-  // TODO: Consider using lookup table approach for 'Yes' and 'No' answers so we can just pass through
-  // TODO: Consider routing all the decedent information through the record
-
-  // Build the input for translation to FHIR
-  const fhirInput = {};
-
-  fhirInput.actualOrPresumedDateOfDeath = formatDateAndTime(record.actualDeathDate, record.actualDeathTime);
-
-  fhirInput.datePronouncedDead = formatDateAndTime(record.pronouncedDeathDate, record.pronouncedDeathTime);
-
-  if (!_.isNil(record.autopsyPerformed)) {
-    fhirInput.autopsyPerformed = record.autopsyPerformed === 'Yes';
-  }
-
-  if (!_.isNil(record.autopsyAvailable)) {
-    fhirInput.autopsyResultsAvailable = record.autopsyAvailable === 'Yes';
-  }
-
-  if (!_.isNil(record.injuryAtWork)) {
-    fhirInput.deathFromWorkInjury = record.injuryAtWork === 'Yes';
-  }
-
-  fhirInput.injuryAssociatedWithTransport = record.transportationInjury;
-
-  const locationOfInjury = formatAddress(record.locationOfInjuryStreet, record.locationOfInjuryCity,
-                                         record.locationOfInjuryCounty, record.locationOfInjuryState,
-                                         record.locationOfInjuryZip);
-  if (record.howInjuryOccurred || locationOfInjury || record.placeOfInjury || record.dateOfInjury) {
-    fhirInput.detailsOfInjury = {};
-    if (record.howInjuryOccurred) {
-      fhirInput.detailsOfInjury.value = record.howInjuryOccurred;
+class InjuryIncident extends Observation {
+  constructor(options = {}) {
+    super({ code: '11374-6', system: 'http://loinc.org', display: 'Injury incident description' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Injury-Incident');
+    this.valueString = options.text;
+    if (options.effectiveDate) {
+      this.effectiveDateTime = formatDateAndTime(options.effectiveDate, options.effectiveTime);
     }
-    if (locationOfInjury) {
-      fhirInput.detailsOfInjury.address = locationOfInjury;
+    if (options.placeOfInjury) {
+      this.addComponent({ code: '69450-5', system: 'http://loinc.org', display: 'Place of injury' },
+                        { text: options.placeOfInjury });
     }
-    if (record.placeOfInjury) {
-      fhirInput.detailsOfInjury.placeOfInjury = record.placeOfInjury;
+    if (options.transportationEventIndicator) {
+      this.addComponent({ code: '69448-9', system: 'http://loinc.org',
+                          display: 'Injury leading to death associated with transportation event' },
+                        { code: options.transportationEventIndicator.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.transportationEventIndicator.text });
     }
-    if (record.dateOfInjury) {
-      fhirInput.detailsOfInjury.effectiveDateTime = formatDateAndTime(record.dateOfInjury, record.timeOfInjury);
+    if (options.workInjuryIndicator) {
+      this.addComponent({ code: '69444-8', system: 'http://loinc.org', display: 'Injury at work?' },
+                        { code: options.workInjuryIndicator.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.workInjuryIndicator.text });
     }
   }
-
-  fhirInput.mannerOfDeath = record.mannerOfDeath;
-
-  if (!_.isNil(record.examinerContacted)) {
-    fhirInput.medicalExaminerOrCoronerContacted = record.examinerContacted === 'Yes';
-  }
-
-  fhirInput.timingOfPregnancy = record.pregnancy;
-
-  fhirInput.tobaccoUseContributedToDeath = record.tobacco;
-
-  for (let i = 1; i <= 4; i += 1) {
-    if (record[`cod${i}Text`]) {
-      fhirInput.causeOfDeath = fhirInput.causeOfDeath || [];
-      fhirInput.causeOfDeath.push({ literalText: record[`cod${i}Text`], onsetString: record[`cod${i}Time`] });
-    }
-  }
-
-  fhirInput.contributedToDeath = record.contributing;
-
-  const placeOfDeathAddress = formatAddress(record.placeOfDeathStreet, record.placeOfDeathCity,
-                                            record.placeOfDeathCounty, record.placeOfDeathState,
-                                            record.placeOfDeathZip);
-  fhirInput.decedent = {
-    name: decedent.name,
-    birthDate: decedent.resource.birthDate,
-    deceasedDateTime: formatDateAndTime(record.actualDeathDate, record.actualDeathTime),
-    address: decedent.resource.address && decedent.resource.address[0], // handle missing address
-    gender: decedent.resource.gender,
-    placeOfDeathName: record.placeOfDeathName,
-    placeOfDeathType: record.placeOfDeathType,
-    placeOfDeathAddress: placeOfDeathAddress
-    //ssn: '111223333'
-    //servedInArmedForces: false,
-    //birthSex: 'M'
-  };
-
-  fhirInput.certifier = {
-    name: record.certifierName,
-    certifierType: 'Physician (Pronouncer and Certifier)',
-    identifier: record.certifierNumber,
-    address: formatAddress(record.certifierStreet, record.certifierCity, record.certifierCounty, record.certifierState, record.certifierZip)
-  }
-
-  return new DeathRecord(fhirInput);
 }
 
-export { recordToFHIR  };
+class InjuryLocation extends Location {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Injury-Location');
+  }
+}
+
+class AutopsyPerformedIndicator extends Observation {
+  constructor(options = {}) {
+    super({ code: '85699-7', system: 'http://loinc.org', display: 'Autopsy was performed' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Autopsy-Performed-Indicator');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/ValueSet/v2-0532', options.text);
+    if (options.autopsyAvailable) {
+      this.addComponent({ code: '69436-4', system: 'http://loinc.org', display: 'Autopsy results available' },
+                        { code: options.autopsyAvailable.code, system: 'http://hl7.org/fhir/ValueSet/v2-0532',
+                          display: options.autopsyAvailable.text });
+    }
+  }
+}
+
+class DeathLocation extends Location {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Death-Location');
+  }
+}
+
+class DeathDate extends Observation {
+  constructor(options = {}) {
+    super({ code: '81956-5', system: 'http://loinc.org', display: 'Date and time of death' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Death-Date');
+    if (options.effectiveDate) {
+      this.effectiveDateTime = formatDateAndTime(options.effectiveDate, options.effectiveTime);
+    }
+    if (options.comment) {
+      this.comment = options.comment;
+    }
+    if (options.method) {
+      this.method = new CodeableConcept(options.method.code, 'http://snomed.info/sct', options.method.text)
+    }
+    if (options.pronouncedDate) {
+      this.addComponent({ code: '80616-6', system: 'http://loinc.org', display: 'Date and time pronounced dead' },
+                        { date: options.pronouncedDate, time: options.pronouncedTime });
+    }
+  }
+}
+
+class DeathPronouncementPerformer extends Practitioner {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Death-Pronouncement-Performer');
+  }
+}
+
+class DispositionLocation extends Location {
+  constructor(options = {}) {
+    super(options);
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Disposition-Location');
+  }
+}
+
+class DecedentDispositionMethod extends Observation {
+  constructor(options = {}) {
+    super({ code: '80905-3', system: 'http://loinc.org', display: 'Body disposition method' });
+    this.setProfile('http://hl7.org/fhir/us/vrdr/VRDR-Decedent-Disposition-Method');
+    this.valueCodeableConcept = new CodeableConcept(options.code, 'http://hl7.org/fhir/stu3/DispositionTypeVS', options.text);
+  }
+}
+
+export { DeathCertificateDocument };
