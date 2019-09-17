@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/fhir-death-refactor/precache-manifest.92119beb0a7a4f69b855a4d26366bfa9.js"
+  "/fhir-death-refactor/precache-manifest.23f575217d4821423333bd193f697a22.js"
 );
 
 self.addEventListener('message', (event) => {
