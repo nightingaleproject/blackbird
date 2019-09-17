@@ -4,7 +4,7 @@ import { DeathCertificateDocument } from './FHIRExport';
 
 // Utility functions
 
-function formatAddress(street, city, county, state, postalCode) {
+function formatAddress(street, city, district, state, postalCode) {
   const address = {};
   if (street) {
     address.line = [street];
@@ -12,8 +12,8 @@ function formatAddress(street, city, county, state, postalCode) {
   if (city) {
     address.city = city;
   }
-  if (county) {
-    address.county = county;
+  if (district) {
+    address.district = district;
   }
   if (state) {
     address.state = state;
