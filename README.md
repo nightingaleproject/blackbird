@@ -5,7 +5,7 @@ certify to jurisdiction electronic death registration systems (EDRS)
 from a hospital setting. It uses [SMART on FHIR](https://smarthealthit.org/)
 to pull decedent information from hospital electronic health record
 (EHR) systems and
-[FHIR profiles for mortality data](https://nightingaleproject.github.io/fhir-death-record/guide/index.html)
+[FHIR profiles for mortality data](http://hl7.org/fhir/us/vrdr/2019May/)
 to submit information to EDRS.
 
 This app is based on [software](https://github.com/BioMIBLab/fhir-death)
