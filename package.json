@@ -1,8 +1,8 @@
 {
-  "name": "fhir-death-refactor",
+  "name": "blackbird",
   "version": "0.1.0",
   "private": true,
-  "homepage": "http://nightingaleproject.github.io/fhir-death-refactor",
+  "homepage": "http://nightingaleproject.github.io/blackbird",
   "dependencies": {
     "core-js": "^2.6.9",
     "enzyme": "^3.3.0",

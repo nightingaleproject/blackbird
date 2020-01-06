@@ -35,12 +35,12 @@ You can see how the app works by testing it in the SMART on FHIR
 Sandbox environment, using synthetic patient data. This simulates the
 experience of a certifier running the app from within an EHR.
 
-1. [Launch the App](https://launch.smarthealthit.org/ehr.html?app=https%3A%2F%2Fnightingaleproject.github.io%2Ffhir-death-refactor%2Flaunch%3Flaunch%3DeyJhIjoiMSIsImYiOiIxIn0%26iss%3Dhttps%253A%252F%252Flaunch.smarthealthit.org%252Fv%252Fr3%252Ffhir&user=)
+1. [Launch the App](https://launch.smarthealthit.org/ehr.html?app=https%3A%2F%2Fnightingaleproject.github.io%2Fblackbird%2Flaunch%3Flaunch%3DeyJhIjoiMSIsImYiOiIxIn0%26iss%3Dhttps%253A%252F%252Flaunch.smarthealthit.org%252Fv%252Fr3%252Ffhir&user=)
 2. Sign in using the pre-populated provider credentials on the login screen
 3. Select a synthetic patient record from the options provided; the app itself will then launch
 4. Fill out the death certificate form on each tab of the app; you can select conditions from the patient record to provide cause of death information
 
-You can also try the app against a FHIR server or via standalone SMART on FHIR launch by using [this version](https://nightingaleproject.github.io/fhir-death-refactor/).
+You can also try the app against a FHIR server or via standalone SMART on FHIR launch by using [this version](https://nightingaleproject.github.io/blackbird/).
 
 ## Installation and Setup for Development or Testing
 
