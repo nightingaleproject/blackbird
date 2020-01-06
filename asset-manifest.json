@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/fhir-death-refactor/static/css/main.ec726c8d.chunk.css",
-    "main.js": "/fhir-death-refactor/static/js/main.7e703694.chunk.js",
-    "main.js.map": "/fhir-death-refactor/static/js/main.7e703694.chunk.js.map",
-    "runtime~main.js": "/fhir-death-refactor/static/js/runtime~main.1c7fcb12.js",
-    "runtime~main.js.map": "/fhir-death-refactor/static/js/runtime~main.1c7fcb12.js.map",
-    "static/css/2.9ff3b654.chunk.css": "/fhir-death-refactor/static/css/2.9ff3b654.chunk.css",
-    "static/js/2.a76c1272.chunk.js": "/fhir-death-refactor/static/js/2.a76c1272.chunk.js",
-    "static/js/2.a76c1272.chunk.js.map": "/fhir-death-refactor/static/js/2.a76c1272.chunk.js.map",
-    "index.html": "/fhir-death-refactor/index.html",
-    "precache-manifest.23f575217d4821423333bd193f697a22.js": "/fhir-death-refactor/precache-manifest.23f575217d4821423333bd193f697a22.js",
-    "service-worker.js": "/fhir-death-refactor/service-worker.js",
-    "static/css/2.9ff3b654.chunk.css.map": "/fhir-death-refactor/static/css/2.9ff3b654.chunk.css.map",
-    "static/css/main.ec726c8d.chunk.css.map": "/fhir-death-refactor/static/css/main.ec726c8d.chunk.css.map",
-    "static/media/semantic.min.css": "/fhir-death-refactor/static/media/outline-icons.ef60a4f6.woff"
+    "main.css": "/blackbird/static/css/main.ec726c8d.chunk.css",
+    "main.js": "/blackbird/static/js/main.78e0a9f4.chunk.js",
+    "main.js.map": "/blackbird/static/js/main.78e0a9f4.chunk.js.map",
+    "runtime~main.js": "/blackbird/static/js/runtime~main.ca93bb02.js",
+    "runtime~main.js.map": "/blackbird/static/js/runtime~main.ca93bb02.js.map",
+    "static/css/2.49d1c315.chunk.css": "/blackbird/static/css/2.49d1c315.chunk.css",
+    "static/js/2.517a6486.chunk.js": "/blackbird/static/js/2.517a6486.chunk.js",
+    "static/js/2.517a6486.chunk.js.map": "/blackbird/static/js/2.517a6486.chunk.js.map",
+    "index.html": "/blackbird/index.html",
+    "precache-manifest.8de0fe8b1bd4ffa289ca83ba3644256f.js": "/blackbird/precache-manifest.8de0fe8b1bd4ffa289ca83ba3644256f.js",
+    "service-worker.js": "/blackbird/service-worker.js",
+    "static/css/2.49d1c315.chunk.css.map": "/blackbird/static/css/2.49d1c315.chunk.css.map",
+    "static/css/main.ec726c8d.chunk.css.map": "/blackbird/static/css/main.ec726c8d.chunk.css.map",
+    "static/media/semantic.min.css": "/blackbird/static/media/outline-icons.ef60a4f6.woff"
   }
 }
