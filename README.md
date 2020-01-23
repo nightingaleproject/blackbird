@@ -1,4 +1,4 @@
-# FHIR For Death Reporting
+# Blackbird: FHIR For Death Reporting
 
 This prototype app gives medical certifiers the ability to report and
 certify to jurisdiction electronic death registration systems (EDRS)
