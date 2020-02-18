@@ -1,8 +1,12 @@
 # Blackbird: FHIR For Death Reporting
 
-This prototype app gives medical certifiers the ability to report and
-certify to jurisdiction electronic death registration systems (EDRS)
-from a hospital setting. It uses [SMART on FHIR](https://smarthealthit.org/)
+This proof-of-concept application demonstrates a technical approach
+for allowing medical certifiers to report and certify to jurisdiction
+electronic death registration systems (EDRS) from a hospital
+setting. Note that this is only intended as a technical demonstration;
+no testing has been performed to determine potential impact on data
+quality. It uses
+[SMART on FHIR](https://smarthealthit.org/)
 to pull decedent information from hospital electronic health record
 (EHR) systems and
 [FHIR profiles for mortality data](http://hl7.org/fhir/us/vrdr/2019May/)
