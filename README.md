@@ -10,10 +10,9 @@ quality. It uses
 to pull decedent information from hospital electronic health record
 (EHR) systems and
 [FHIR profiles for mortality data](http://hl7.org/fhir/us/vrdr/2019May/)
-to submit information to EDRS.
-
-This app is based on [software](https://github.com/BioMIBLab/fhir-death)
-originally created as part of a collaboration between Georgia Tech and the CDC.
+to submit information to EDRS. Note that the version of the VRDR IG
+currently supported by Blackbird is not the most recent version of
+that standard.
 
 ## Background
 
